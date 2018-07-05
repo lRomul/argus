@@ -180,7 +180,6 @@ class BuildModel(metaclass=ModelMeta):
     def _build_predict_transform(self, params):
         transform_meta = self._meta['predict_transform']
         if transform_meta is default:
-            print("LUL")
             self.predict_transform = lambda x: x
             return
 
