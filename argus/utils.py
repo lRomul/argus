@@ -4,6 +4,10 @@ from torch._six import string_classes
 
 default = object()
 
+TRAIN_ATTRS = {'nn_module', 'optimizer', 'loss', 'device'}
+PREDICT_ATTRS = {'nn_module', 'predict_transform', 'device'}
+ALL_ATTRS = TRAIN_ATTRS | PREDICT_ATTRS
+
 
 def to_device(input_, device):
     if torch.is_tensor(input_):
