@@ -112,9 +112,9 @@ class Model(metaclass=ModelMeta):
         self.nn_module = nn_module
 
     def _build_optimizer(self, params):
+        assert 'params' not in params
         optimizer_meta = self._meta['optimizer']
-        if hasattr(self, 'nn_module'):
-            nn_params = {'params': self.nn_module.parameters()}
+        if self.nn_module is not default:
             if isinstance(optimizer_meta, collections.Mapping):
                 if 'optimizer' not in params:
                     return
@@ -125,11 +125,11 @@ class Model(metaclass=ModelMeta):
                     optim_name, optim_params = optim_info, dict()
                 else:
                     raise ValueError
-                optim_params = {**optim_params, **nn_params}
+                optim_params['params'] = self.nn_module.parameters()
                 optimizer = optimizer_meta[optim_name](**optim_params)
             else:
                 optim_params = params.get('optimizer', dict())
-                optim_params = {**optim_params, **nn_params}
+                optim_params['params'] = self.nn_module.parameters()
                 optimizer = optimizer_meta(**optim_params)
 
             self.optimizer = optimizer
