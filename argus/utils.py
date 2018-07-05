@@ -1,6 +1,5 @@
 import torch
 import collections
-from torch._six import string_classes
 
 default = object()
 
@@ -14,7 +13,7 @@ def to_device(input_, device):
         if device:
             input_ = input_.to(device=device)
         return input_
-    elif isinstance(input_, string_classes):
+    elif isinstance(input_, str):
         return input_
     elif isinstance(input_, collections.Mapping):
         return {k: to_device(sample, device=device) for k, sample in input_.items()}

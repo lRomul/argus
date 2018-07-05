@@ -85,7 +85,17 @@ class ModelMeta(type):
 class BuildModel(metaclass=ModelMeta):
     def __init__(self, params):
         self.params = params
-        self._build_model(params)
+
+        self._build_nn_module(params)
+        self._build_optimizer(params)
+        self._build_loss(params)
+
+        if 'device' in params:
+            self.device = torch.device(params['device'])
+        else:
+            self.device = self._meta['device']
+
+        self.set_device(self.device)
 
     def _build_nn_module(self, params):
         nn_module_meta = self._meta['nn_module']
@@ -156,16 +166,3 @@ class BuildModel(metaclass=ModelMeta):
         self.nn_module = self.nn_module.to(self.device)
         if self.loss is not default:
             self.loss = self.loss.to(self.device)
-
-    def _build_model(self, params):
-
-        if 'device' in params:
-            self.device = torch.device(params['device'])
-        else:
-            self.device = self._meta['device']
-
-        self._build_nn_module(params)
-        self._build_optimizer(params)
-        self._build_loss(params)
-
-        self.set_device(self.device)
