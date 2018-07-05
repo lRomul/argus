@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from torch import optim
 import collections
+import types
 
 from argus.utils import default
 from argus.loss import pytorch_losses
@@ -13,7 +14,9 @@ ALL_ATTRS = TRAIN_ATTRS | PREDICT_ATTRS
 
 
 def cast_optimizer(optimizer):
-    if isinstance(optimizer, type) and hasattr(optimizer, 'step'):
+    if isinstance(optimizer, types.FunctionType):
+        return optimizer
+    elif isinstance(optimizer, type) and hasattr(optimizer, 'step'):
         return optimizer
     elif isinstance(optimizer, str) and optimizer in pytorch_optimizers:
         optimizer = getattr(optim, optimizer)
@@ -22,14 +25,18 @@ def cast_optimizer(optimizer):
 
 
 def cast_nn_module(nn_module):
-    if isinstance(nn_module, type):
+    if isinstance(nn_module, types.FunctionType):
+        return nn_module
+    elif isinstance(nn_module, type):
         if issubclass(nn_module, nn.Module):
             return nn_module
     raise TypeError
 
 
 def cast_loss(loss):
-    if isinstance(loss, type) and callable(loss):
+    if isinstance(loss, types.FunctionType):
+        return loss
+    elif isinstance(loss, type) and callable(loss):
         return loss
     elif isinstance(loss, str) and loss in pytorch_losses:
         loss = getattr(nn.modules.loss, loss)
