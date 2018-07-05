@@ -113,7 +113,7 @@ class BuildModel(metaclass=ModelMeta):
             elif isinstance(nn_module_info, str):
                 nn_name, nn_params = nn_module_info, dict()
             else:
-                raise ValueError
+                raise TypeError
             nn_module = nn_module_meta[nn_name](**nn_params)
         else:
             nn_params = params.get('nn_module', dict())
@@ -134,7 +134,7 @@ class BuildModel(metaclass=ModelMeta):
                 elif isinstance(optim_info, str):
                     optim_name, optim_params = optim_info, dict()
                 else:
-                    raise ValueError
+                    raise TypeError
                 optim_params['params'] = self.nn_module.parameters()
                 optimizer = optimizer_meta[optim_name](**optim_params)
             else:
@@ -157,7 +157,7 @@ class BuildModel(metaclass=ModelMeta):
             elif isinstance(loss_info, str):
                 loss_name, loss_params = loss_info, dict()
             else:
-                raise ValueError
+                raise TypeError
             loss = loss_meta[loss_name](**loss_params)
         else:
             loss_params = params.get('loss', dict())
@@ -192,7 +192,7 @@ class BuildModel(metaclass=ModelMeta):
             elif isinstance(trns_info, str):
                 trns_name, trns_params = trns_info, dict()
             else:
-                raise ValueError
+                raise TypeError
             predict_transform = transform_meta[trns_name](**trns_params)
         else:
             trns_params = params.get('predict_transform', dict())

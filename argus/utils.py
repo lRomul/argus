@@ -20,8 +20,7 @@ def to_device(input_, device):
     elif isinstance(input_, collections.Sequence):
         return [to_device(sample, device=device) for sample in input_]
     else:
-        raise TypeError(("input must contain tensors, dicts or lists; found {}"
-                         .format(type(input_))))
+        raise TypeError(f"Input must contain tensors, dicts or lists, found {type(input_)}")
 
 
 def inheritors(cls):
