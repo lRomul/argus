@@ -40,6 +40,14 @@ def cast_loss(loss):
     raise TypeError
 
 
+def cast_predict_transform(transform):
+    if isinstance(transform, types.FunctionType):
+        return transform
+    elif isinstance(transform, type) and callable(transform):
+        return transform
+    raise TypeError
+
+
 def cast_device(device):
     return torch.device(device)
 
@@ -48,7 +56,8 @@ ATTRIBUTE_CASTS = {
     'nn_module': cast_nn_module,
     'optimizer': cast_optimizer,
     'loss': cast_loss,
-    'device': cast_device
+    'device': cast_device,
+    'predict_transform': cast_predict_transform
 }
 
 DEFAULT_ATTRIBUTE_VALUES = {
@@ -56,7 +65,7 @@ DEFAULT_ATTRIBUTE_VALUES = {
     'optimizer': pytorch_optimizers,
     'loss': pytorch_losses,
     'device': torch.device('cpu'),
-    'predict_transform': lambda x: x
+    'predict_transform': default
 }
 
 
@@ -85,16 +94,11 @@ class ModelMeta(type):
 class BuildModel(metaclass=ModelMeta):
     def __init__(self, params):
         self.params = params
-
         self._build_nn_module(params)
         self._build_optimizer(params)
         self._build_loss(params)
-
-        if 'device' in params:
-            self.device = torch.device(params['device'])
-        else:
-            self.device = self._meta['device']
-
+        self._build_device(params)
+        self._build_predict_transform(params)
         self.set_device(self.device)
 
     def _build_nn_module(self, params):
@@ -166,3 +170,33 @@ class BuildModel(metaclass=ModelMeta):
         self.nn_module = self.nn_module.to(self.device)
         if self.loss is not default:
             self.loss = self.loss.to(self.device)
+
+    def _build_device(self, params):
+        if 'device' in params:
+            self.device = torch.device(params['device'])
+        else:
+            self.device = self._meta['device']
+
+    def _build_predict_transform(self, params):
+        transform_meta = self._meta['predict_transform']
+        if transform_meta is default:
+            print("LUL")
+            self.predict_transform = lambda x: x
+            return
+
+        if isinstance(transform_meta, collections.Mapping):
+            if 'predict_transform' not in params:
+                return
+            trns_info = params['predict_transform']
+            if isinstance(trns_info, (list, tuple)) and len(trns_info) == 2:
+                trns_name, trns_params = trns_info
+            elif isinstance(trns_info, str):
+                trns_name, trns_params = trns_info, dict()
+            else:
+                raise ValueError
+            predict_transform = transform_meta[trns_name](**trns_params)
+        else:
+            trns_params = params.get('predict_transform', dict())
+            predict_transform = transform_meta(**trns_params)
+
+        self.predict_transform = predict_transform
