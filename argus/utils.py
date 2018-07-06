@@ -1,3 +1,4 @@
+import os
 import torch
 import collections
 
@@ -20,7 +21,12 @@ def to_device(input_, device):
     elif isinstance(input_, collections.Sequence):
         return [to_device(sample, device=device) for sample in input_]
     else:
-        raise TypeError(f"Input must contain tensors, dicts or lists, found {type(input_)}")
+        raise TypeError(f"Input must contain tensor, dict or list, found {type(input_)}")
+
+
+def mkdir(dir):
+    if not os.path.exists(dir):
+        os.makedirs(dir)
 
 
 def inheritors(cls):

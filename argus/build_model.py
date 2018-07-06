@@ -3,6 +3,8 @@ from torch import nn
 from torch import optim
 import collections
 import types
+import logging
+import sys
 
 from argus.utils import default, ALL_ATTRS
 from argus.loss import pytorch_losses
@@ -94,12 +96,21 @@ class ModelMeta(type):
 class BuildModel(metaclass=ModelMeta):
     def __init__(self, params):
         self.params = params
-        self._build_nn_module(params)
-        self._build_optimizer(params)
-        self._build_loss(params)
-        self._build_device(params)
-        self._build_predict_transform(params)
+        self.logger = self._build_logger(params)
+        self.nn_module = self._build_nn_module(params)
+        self.optimizer = self._build_optimizer(params)
+        self.loss = self._build_loss(params)
+        self.device = self._build_device(params)
+        self.predict_transform = self._build_predict_transform(params)
         self.set_device(self.device)
+
+    def _build_logger(self, params):
+        logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+        formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(module)s: %(message)s')
+        stream_handler = logging.StreamHandler(stream=sys.stdout)
+        stream_handler.setFormatter(formatter)
+        logger.addHandler(stream_handler)
+        return logger
 
     def _build_nn_module(self, params):
         nn_module_meta = self._meta['nn_module']
@@ -119,7 +130,7 @@ class BuildModel(metaclass=ModelMeta):
             nn_params = params.get('nn_module', dict())
             nn_module = nn_module_meta(**nn_params)
 
-        self.nn_module = nn_module
+        return nn_module
 
     def _build_optimizer(self, params):
         assert 'params' not in params
@@ -127,7 +138,7 @@ class BuildModel(metaclass=ModelMeta):
         if self.nn_module is not default:
             if isinstance(optimizer_meta, collections.Mapping):
                 if 'optimizer' not in params:
-                    return
+                    return default
                 optim_info = params['optimizer']
                 if isinstance(optim_info, (list, tuple)) and len(optim_info) == 2:
                     optim_name, optim_params = optim_info
@@ -142,7 +153,7 @@ class BuildModel(metaclass=ModelMeta):
                 optim_params['params'] = self.nn_module.parameters()
                 optimizer = optimizer_meta(**optim_params)
 
-            self.optimizer = optimizer
+            return optimizer
         else:
             raise ValueError("Can't assign optimizer without nn_module")
 
@@ -150,7 +161,7 @@ class BuildModel(metaclass=ModelMeta):
         loss_meta = self._meta['loss']
         if isinstance(loss_meta, collections.Mapping):
             if 'loss' not in params:
-                return
+                return default
             loss_info = params['loss']
             if isinstance(loss_info, (list, tuple)) and len(loss_info) == 2:
                 loss_name, loss_params = loss_info
@@ -163,7 +174,7 @@ class BuildModel(metaclass=ModelMeta):
             loss_params = params.get('loss', dict())
             loss = loss_meta(**loss_params)
 
-        self.loss = loss
+        return loss
 
     def set_device(self, device):
         self.device = torch.device(device)
@@ -173,19 +184,20 @@ class BuildModel(metaclass=ModelMeta):
 
     def _build_device(self, params):
         if 'device' in params:
-            self.device = torch.device(params['device'])
+            device = torch.device(params['device'])
         else:
-            self.device = self._meta['device']
+            device = self._meta['device']
+
+        return device
 
     def _build_predict_transform(self, params):
         transform_meta = self._meta['predict_transform']
         if transform_meta is default:
-            self.predict_transform = lambda x: x
-            return
+            return lambda x: x
 
         if isinstance(transform_meta, collections.Mapping):
             if 'predict_transform' not in params:
-                return
+                return lambda x: x
             trns_info = params['predict_transform']
             if isinstance(trns_info, (list, tuple)) and len(trns_info) == 2:
                 trns_name, trns_params = trns_info
@@ -198,4 +210,4 @@ class BuildModel(metaclass=ModelMeta):
             trns_params = params.get('predict_transform', dict())
             predict_transform = transform_meta(**trns_params)
 
-        self.predict_transform = predict_transform
+        return predict_transform
