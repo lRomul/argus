@@ -3,8 +3,6 @@ from torch import nn
 from torch import optim
 import collections
 import types
-import logging
-import sys
 
 from argus.utils import default, ALL_ATTRS
 from argus.loss import pytorch_losses
@@ -96,21 +94,12 @@ class ModelMeta(type):
 class BuildModel(metaclass=ModelMeta):
     def __init__(self, params):
         self.params = params
-        self.logger = self._build_logger(params)
         self.nn_module = self._build_nn_module(params)
         self.optimizer = self._build_optimizer(params)
         self.loss = self._build_loss(params)
         self.device = self._build_device(params)
         self.predict_transform = self._build_predict_transform(params)
         self.set_device(self.device)
-
-    def _build_logger(self, params):
-        logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-        formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(module)s: %(message)s')
-        stream_handler = logging.StreamHandler(stream=sys.stdout)
-        stream_handler.setFormatter(formatter)
-        logger.addHandler(stream_handler)
-        return logger
 
     def _build_nn_module(self, params):
         nn_module_meta = self._meta['nn_module']

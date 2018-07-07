@@ -1,2 +1,2 @@
 
-from argus.model import Model
+from argus.model.model import Model

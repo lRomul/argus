@@ -1,6 +1,8 @@
 import os
 import torch
 import collections
+import logging
+import sys
 
 default = object()
 
@@ -11,9 +13,7 @@ ALL_ATTRS = TRAIN_ATTRS | PREDICT_ATTRS
 
 def to_device(input_, device):
     if torch.is_tensor(input_):
-        if device:
-            input_ = input_.to(device=device)
-        return input_
+        return input_.to(device=device)
     elif isinstance(input_, str):
         return input_
     elif isinstance(input_, collections.Mapping):
@@ -39,3 +39,18 @@ def inheritors(cls):
                 subclasses.add(child)
                 cls_list.append(child)
     return subclasses
+
+
+def get_logger(log_file_path=None):
+    logger = logging.getLogger()
+    formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(module)s: %(message)s')
+    stream_handler = logging.StreamHandler(stream=sys.stdout)
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
+
+    if log_file_path is not None:
+        file_handler = logging.FileHandler(log_file_path)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+
+    return logger
