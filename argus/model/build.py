@@ -4,7 +4,8 @@ from torch import optim
 import collections
 import types
 
-from argus.utils import default, ALL_ATTRS
+from argus.model import ALL_ATTRS
+from argus.utils import default
 from argus.loss import pytorch_losses
 from argus.optimizer import pytorch_optimizers
 

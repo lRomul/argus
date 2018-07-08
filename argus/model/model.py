@@ -5,13 +5,19 @@ class Model(BuildModel):
     def __init__(self, params):
         super().__init__(params)
 
-    def fit(self, train_loader, val_loader, max_epochs=None, handlers=None):
+    def _train_step(self):
+        pass
+
+    def _val_step(self):
+        pass
+
+    def fit(self, train_loader, val_loader=None, max_epochs=None, handlers=None):
         pass
 
     def set_lr(self, lr):
         pass
 
-    def save_model(self, file_path):
+    def save(self, file_path):
         pass
 
     def validate(self, val_loader):
