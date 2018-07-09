@@ -7,17 +7,17 @@ import sys
 default = object()
 
 
-def to_device(input_, device):
-    if torch.is_tensor(input_):
-        return input_.to(device=device)
-    elif isinstance(input_, str):
-        return input_
-    elif isinstance(input_, collections.Mapping):
-        return {k: to_device(sample, device=device) for k, sample in input_.items()}
-    elif isinstance(input_, collections.Sequence):
-        return [to_device(sample, device=device) for sample in input_]
+def to_device(input, device):
+    if torch.is_tensor(input):
+        return input.to(device=device)
+    elif isinstance(input, str):
+        return input
+    elif isinstance(input, collections.Mapping):
+        return {k: to_device(sample, device=device) for k, sample in input.items()}
+    elif isinstance(input, collections.Sequence):
+        return [to_device(sample, device=device) for sample in input]
     else:
-        raise TypeError(f"Input must contain tensor, dict or list, found {type(input_)}")
+        raise TypeError(f"Input must contain tensor, dict or list, found {type(input)}")
 
 
 def mkdir(dir):

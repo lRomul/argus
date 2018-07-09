@@ -15,7 +15,7 @@ class Model(BuildModel):
         return to_device(inp, device), to_device(trg, device)
 
     def _train_step(self, batch):
-        self.model.train()
+        self.nn_module.train()
         self.optimizer.zero_grad()
         inp, trg = self._prepare_batch(batch, self.device)
         pred = self.nn_module(inp)
@@ -25,7 +25,7 @@ class Model(BuildModel):
         return loss.item()
 
     def _val_step(self, batch):
-        self.model.eval()
+        self.nn_module.eval()
         with torch.no_grad():
             inp, trg = self._prepare_batch(batch, self.device)
             pred = self.nn_module(inp)
