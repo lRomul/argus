@@ -13,11 +13,11 @@ class Events(Enum):
 
 
 class State(object):
-    def __init__(self, data_loader, iteration, epoch, max_epochs, **kwargs):
-        self.data_loader = data_loader
+    def __init__(self, iteration, epoch, max_epochs, **kwargs):
         self.iteration = iteration
         self.epoch = epoch
         self.max_epochs = max_epochs
+        self.step_output = None
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -44,10 +44,10 @@ class Engine(object):
                 func(self, *(event_args + args), **kwargs)
 
     def run(self, data_loader, max_epochs=1):
-        self.state = State(data_loader=data_loader,
-                           iteration=0,
+        self.state = State(iteration=0,
                            epoch=0,
                            max_epochs=max_epochs,
+                           data_loader=data_loader,
                            metrics={})
 
         try:
@@ -57,11 +57,11 @@ class Engine(object):
                 self.state.epoch += 1
                 self.raise_event(Events.EPOCH_START)
 
-                for batch in self.state.data_loader:
+                for batch in data_loader:
                     self.state.batch = batch
                     self.state.iteration += 1
                     self.raise_event(Events.ITERATION_STARTED)
-                    self.state.output = self.step_function(self, batch)
+                    self.state.step_output = self.step_function(batch)
                     self.raise_event(Events.ITERATION_COMPLETED)
                     if self.stopped:
                         break
