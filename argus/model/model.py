@@ -2,9 +2,10 @@ import torch
 import logging
 
 from argus.model.build import BuildModel
-from argus.engine import Engine, Events, validation_logging
+from argus.engine import Engine, Events
+from argus.engine import validation_logging, train_loss_logging
 from argus.utils import to_device, setup_logging
-from argus.metrics.loss import Loss
+from argus.metrics.loss import Loss, TrainLoss
 
 
 class Model(BuildModel):
@@ -25,7 +26,7 @@ class Model(BuildModel):
         loss = self.loss(pred, trg)
         loss.backward()
         self.optimizer.step()
-        return loss.item()
+        return loss.item(), trg.shape[0]
 
     def _val_step(self, batch):
         self.nn_module.eval()
@@ -41,6 +42,11 @@ class Model(BuildModel):
 
         train_engine = Engine(self._train_step)
 
+        train_loss = TrainLoss()
+        train_loss.attach(train_engine, 'train_loss')
+        train_engine.add_event_handler(Events.EPOCH_COMPLETE,
+                                       train_loss_logging)
+
         if val_loader is not None:
             val_engine = Engine(self._val_step)
 
@@ -50,6 +56,7 @@ class Model(BuildModel):
             for name, metric in metrics.items():
                 metric.attach(val_engine, name)
 
+            validation_logging(train_engine, val_engine, val_loader)
             train_engine.add_event_handler(Events.EPOCH_COMPLETE,
                                            validation_logging,
                                            val_engine,
@@ -58,13 +65,14 @@ class Model(BuildModel):
         train_engine.run(train_loader, max_epochs)
 
     def set_lr(self, lr):
-        pass
+        for param_group in self.optimizer.param_groups:
+            param_group['lr'] = lr
 
     def save(self, file_path):
-        pass
+        raise NotImplemented
 
     def validate(self, val_loader):
-        pass
+        raise NotImplemented
 
     def predict(self, input):
-        pass
+        raise NotImplemented

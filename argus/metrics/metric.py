@@ -15,7 +15,7 @@ class Metric(object):
         pass
 
     @abstractmethod
-    def update(self, output):
+    def update(self, step_output):
         pass
 
     @abstractmethod
@@ -26,8 +26,8 @@ class Metric(object):
         self.reset()
 
     def iteration_complete(self, engine):
-        output = self._output_transform(engine.state.step_output)
-        self.update(output)
+        step_output = self._output_transform(engine.state.step_output)
+        self.update(step_output)
 
     def epoch_complete(self, engine, name):
         engine.state.metrics[name] = self.compute()

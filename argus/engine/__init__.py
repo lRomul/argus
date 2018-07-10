@@ -4,6 +4,18 @@ from argus.engine.engine import Engine, Events
 
 def validation_logging(train_engine, val_engine, val_loader):
     val_engine.run(val_loader)
-    metrics = val_engine.state.metrics
-    avg_loss = metrics['val_loss']
-    val_engine.logger.info(f"Validation - Epoch: {train_engine.state.epoch}  Avg loss: {avg_loss}")
+
+    if train_engine.state is None:
+        train_epoch = None
+    else:
+        train_epoch = train_engine.state.epoch
+    message = [f"Validation - Epoch: {train_epoch}"]
+    for metric_name, metric_value in val_engine.state.metrics.items():
+        message.append(f"{metric_name}: {metric_value}")
+    val_engine.logger.info(", ".join(message))
+
+
+def train_loss_logging(train_engine):
+    train_loss = train_engine.state.metrics.get('train_loss', None)
+    message = f"Train - Epoch: {train_engine.state.epoch}, train_loss: {train_loss}"
+    train_engine.logger.info(message)
