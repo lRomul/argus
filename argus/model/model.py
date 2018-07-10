@@ -36,6 +36,8 @@ class Model(BuildModel):
             return pred, trg
 
     def fit(self, train_loader, val_loader=None, max_epochs=1, metrics=None):
+        assert self.train_ready()
+
         setup_logging()
         if metrics is None:
             metrics = dict()
@@ -75,4 +77,5 @@ class Model(BuildModel):
         raise NotImplemented
 
     def predict(self, input):
+        assert self.predict_ready()
         raise NotImplemented

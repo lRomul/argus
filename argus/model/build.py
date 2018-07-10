@@ -205,3 +205,16 @@ class BuildModel(metaclass=ModelMeta):
             predict_transform = transform_meta(**trns_params)
 
         return predict_transform
+
+    def _check_attributes(self, attrs):
+        for attr_name in attrs:
+            attr_value = getattr(self, attr_name, default)
+            if attr_value is default:
+                return False
+        return True
+
+    def train_ready(self):
+        return self._check_attributes(TRAIN_ATTRS)
+
+    def predict_ready(self):
+        return self._check_attributes(PREDICT_ATTRS)
