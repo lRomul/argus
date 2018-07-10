@@ -2,9 +2,21 @@ import os
 import torch
 import collections
 import logging
-import sys
+import time
+
 
 default = object()
+
+
+def setup_logging(file_path=None):
+    handlers = [logging.StreamHandler()]
+    if file_path is not None:
+        handlers.append(logging.FileHandler(file_path))
+    logging.basicConfig(
+        format='%(asctime)s %(levelname)s %(message)s',
+        level=logging.getLevelName(logging.INFO),
+        handlers=handlers,
+    )
 
 
 def to_device(input, device):
@@ -37,16 +49,40 @@ def inheritors(cls):
     return subclasses
 
 
-def get_logger(log_file_path=None):
-    logger = logging.getLogger()
-    formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(module)s: %(message)s')
-    stream_handler = logging.StreamHandler(stream=sys.stdout)
-    stream_handler.setFormatter(formatter)
-    logger.addHandler(stream_handler)
+class AverageMeter(object):
+    """Computes and stores the average by Welford's algorithm"""
 
-    if log_file_path is not None:
-        file_handler = logging.FileHandler(log_file_path)
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
+    def __init__(self):
+        self.reset()
 
-    return logger
+    def reset(self):
+        self.average = 0
+        self.count = 0
+
+    def update(self, value, n=1):
+        self.count += n
+        self.average += (value - self.average) / self.count
+
+
+class DeltaTimeProfiler:
+    def __init__(self):
+        self.mean = 0.0
+        self.count = 0
+        self.prev_time = time.time()
+
+    def start(self):
+        self.prev_time = time.time()
+
+    def end(self):
+        self.count += 1
+        now_time = time.time()
+        delta = now_time - self.prev_time
+        self.mean += (delta - self.mean) / self.count
+        self.prev_time = now_time
+
+    def mean_delta(self):
+        return self.mean
+
+    def reset(self):
+        self.mean = 0.0
+        self.count = 0

@@ -4,10 +4,14 @@ from torch import optim
 import collections
 import types
 
-from argus.model import ALL_ATTRS
 from argus.utils import default
 from argus.loss import pytorch_losses
 from argus.optimizer import pytorch_optimizers
+
+
+TRAIN_ATTRS = {'nn_module', 'optimizer', 'loss', 'device'}
+PREDICT_ATTRS = {'nn_module', 'predict_transform', 'device'}
+ALL_ATTRS = TRAIN_ATTRS | PREDICT_ATTRS
 
 
 def cast_optimizer(optimizer):

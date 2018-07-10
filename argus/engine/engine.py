@@ -1,5 +1,5 @@
+import logging
 from enum import Enum
-from argus.utils import get_logger
 from typing import Callable
 
 
@@ -24,21 +24,19 @@ class State(object):
 
 class Engine(object):
 
-    def __init__(self, step_function: Callable, logger=None):
+    def __init__(self, step_function: Callable):
         self.event_handlers = {event: [] for event in Events.__members__.values()}
         self.step_function = step_function
         self.state = None
         self.stopped = True
-
-        if logger is None:
-            self.logger = get_logger()
-        else:
-            self.logger = logger
+        self.logger = logging.getLogger(__name__)
 
     def add_event_handler(self, event: Events, handler: Callable, *args, **kwargs):
         self.event_handlers[event].append((handler, args, kwargs))
 
     def raise_event(self, event: Events, *event_args):
+        assert isinstance(event, Events)
+
         if event in self.event_handlers:
             for func, args, kwargs in self.event_handlers[event]:
                 func(self, *(event_args + args), **kwargs)
@@ -49,6 +47,7 @@ class Engine(object):
                            max_epochs=max_epochs,
                            data_loader=data_loader,
                            metrics={})
+        self.stopped = False
 
         try:
             self.raise_event(Events.START)
@@ -60,9 +59,9 @@ class Engine(object):
                 for batch in data_loader:
                     self.state.batch = batch
                     self.state.iteration += 1
-                    self.raise_event(Events.ITERATION_STARTED)
+                    self.raise_event(Events.ITERATION_START)
                     self.state.step_output = self.step_function(batch)
-                    self.raise_event(Events.ITERATION_COMPLETED)
+                    self.raise_event(Events.ITERATION_COMPLETE)
                     if self.stopped:
                         break
 
@@ -72,5 +71,7 @@ class Engine(object):
 
         except Exception as e:
             self.logger.exception(e)
+        finally:
+            self.stopped = True
 
         return self.state
