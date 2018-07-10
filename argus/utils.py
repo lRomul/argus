@@ -1,8 +1,6 @@
-import os
 import torch
 import collections
 import logging
-import time
 
 
 default = object()
@@ -32,11 +30,6 @@ def to_device(input, device):
         raise TypeError(f"Input must contain tensor, dict or list, found {type(input)}")
 
 
-def mkdir(dir):
-    if not os.path.exists(dir):
-        os.makedirs(dir)
-
-
 def inheritors(cls):
     subclasses = set()
     cls_list = [cls]
@@ -62,27 +55,3 @@ class AverageMeter(object):
     def update(self, value, n=1):
         self.count += n
         self.average += (value - self.average) / self.count
-
-
-class DeltaTimeProfiler:
-    def __init__(self):
-        self.mean = 0.0
-        self.count = 0
-        self.prev_time = time.time()
-
-    def start(self):
-        self.prev_time = time.time()
-
-    def end(self):
-        self.count += 1
-        now_time = time.time()
-        delta = now_time - self.prev_time
-        self.mean += (delta - self.mean) / self.count
-        self.prev_time = now_time
-
-    def mean_delta(self):
-        return self.mean
-
-    def reset(self):
-        self.mean = 0.0
-        self.count = 0

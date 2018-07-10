@@ -6,7 +6,7 @@ def validation_logging(train_engine, val_engine, val_loader):
     val_engine.run(val_loader)
 
     if train_engine.state is None:
-        train_epoch = None
+        train_epoch = "before train"
     else:
         train_epoch = train_engine.state.epoch
     message = [f"Validation - Epoch: {train_epoch}"]

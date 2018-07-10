@@ -35,7 +35,14 @@ class Model(BuildModel):
             pred = self.nn_module(inp)
             return pred, trg
 
-    def fit(self, train_loader, val_loader=None, max_epochs=1, metrics=None):
+    def fit(self,
+            train_loader,
+            val_loader=None,
+            max_epochs=1,
+            metrics=None,
+            val_event_handlers=None,
+            train_event_handlers=None):
+
         assert self.train_ready()
 
         setup_logging()
@@ -79,3 +86,7 @@ class Model(BuildModel):
     def predict(self, input):
         assert self.predict_ready()
         raise NotImplemented
+
+
+def load_model(file_path):
+    raise NotImplemented
