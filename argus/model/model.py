@@ -13,8 +13,7 @@ class Model(BuildModel):
         super().__init__(params)
         self.logger = logging.getLogger(__name__)
 
-    @staticmethod
-    def _prepare_batch(batch, device):
+    def _prepare_batch(self, batch, device):
         inp, trg = batch
         return to_device(inp, device), to_device(trg, device)
 
@@ -26,7 +25,7 @@ class Model(BuildModel):
         loss = self.loss(pred, trg)
         loss.backward()
         self.optimizer.step()
-        return loss.item(), trg.shape[0]
+        return loss.item()
 
     def _val_step(self, batch):
         self.nn_module.eval()

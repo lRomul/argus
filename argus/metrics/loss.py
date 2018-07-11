@@ -34,8 +34,8 @@ class TrainLoss(Metric):
         self.avg_meter.reset()
 
     def update(self, step_output):
-        loss, batch_size = step_output
-        self.avg_meter.update(loss, n=batch_size)
+        loss = step_output
+        self.avg_meter.update(loss)
 
     def compute(self):
         if self.avg_meter.count == 0:
