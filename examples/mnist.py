@@ -10,10 +10,10 @@ from argus import Model
 
 def get_data_loaders(train_batch_size, val_batch_size):
     data_transform = Compose([ToTensor(), Normalize((0.1307,), (0.3081,))])
-    train_loader = DataLoader(MNIST(download=True, root=".", transform=data_transform, train=True),
+    train_loader = DataLoader(MNIST(download=True, root="./mnist", transform=data_transform, train=True),
                               batch_size=train_batch_size, shuffle=True)
 
-    val_loader = DataLoader(MNIST(download=False, root=".", transform=data_transform, train=False),
+    val_loader = DataLoader(MNIST(download=False, root="./mnist", transform=data_transform, train=False),
                             batch_size=val_batch_size, shuffle=False)
     return train_loader, val_loader
 
@@ -50,10 +50,11 @@ if __name__ == "__main__":
     train_loader, val_loader = get_data_loaders(train_batch_size, val_batch_size)
 
     params = {
-        'nn_module': {'n_classes': 10, 'p_dropout': 0.3},
+        'nn_module': {'n_classes': 10, 'p_dropout': 0.1},
         'optimizer': {'lr': 0.01},
         'device': 'cpu'
     }
 
     model = MnistModel(params)
+    print("Result model:", model.__dict__)
     model.fit(train_loader, val_loader=val_loader, max_epochs=epochs)
