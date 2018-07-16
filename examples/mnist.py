@@ -9,6 +9,23 @@ import argparse
 from argus import Model
 
 
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--train_batch_size', type=int, default=64,
+                        help='input batch size for training (default: 64)')
+    parser.add_argument('--val_batch_size', type=int, default=64,
+                        help='input batch size for validation (default: 64)')
+    parser.add_argument('--epochs', type=int, default=10,
+                        help='number of epochs to train (default: 10)')
+    parser.add_argument('--lr', type=float, default=0.01,
+                        help='learning rate (default: 0.01)')
+    parser.add_argument('--dropout', type=float, default=0.5,
+                        help='dropout probability (default: 0.5)')
+    parser.add_argument('--device', type=str, default='cpu',
+                        help='device (default: cpu)')
+    return parser.parse_args()
+
+
 def get_data_loaders(train_batch_size, val_batch_size):
     data_transform = Compose([ToTensor(), Normalize((0.1307,), (0.3081,))])
     train_loader = DataLoader(MNIST(download=True, root="./mnist", transform=data_transform, train=True),
@@ -42,24 +59,6 @@ class MnistModel(Model):
     nn_module = Net
     optimizer = torch.optim.SGD
     loss = torch.nn.CrossEntropyLoss
-
-
-def parse_arguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--train_batch_size', type=int, default=64,
-                        help='input batch size for training (default: 64)')
-    parser.add_argument('--val_batch_size', type=int, default=64,
-                        help='input batch size for validation (default: 64)')
-    parser.add_argument('--epochs', type=int, default=10,
-                        help='number of epochs to train (default: 10)')
-    parser.add_argument('--lr', type=float, default=0.01,
-                        help='learning rate (default: 0.01)')
-    parser.add_argument('--dropout', type=float, default=0.5,
-                        help='dropout probability (default: 0.5)')
-    parser.add_argument('--device', type=str, default='cpu',
-                        help='device (default: cpu)')
-
-    return parser.parse_args()
 
 
 if __name__ == "__main__":
