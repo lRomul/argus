@@ -1,4 +1,3 @@
-
 from argus.metrics.metric import Metric
 from argus.utils import AverageMeter
 

@@ -218,3 +218,6 @@ class BuildModel(metaclass=ModelMeta):
 
     def predict_ready(self):
         return self._check_attributes(PREDICT_ATTRS)
+
+    def __repr__(self):
+        return str(self.__dict__)

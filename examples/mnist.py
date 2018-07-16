@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, ToTensor, Normalize
 from torchvision.datasets import MNIST
+import argparse
 
 from argus import Model
 
@@ -43,18 +44,34 @@ class MnistModel(Model):
     loss = torch.nn.CrossEntropyLoss
 
 
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--train_batch_size', type=int, default=64,
+                        help='input batch size for training (default: 64)')
+    parser.add_argument('--val_batch_size', type=int, default=64,
+                        help='input batch size for validation (default: 64)')
+    parser.add_argument('--epochs', type=int, default=10,
+                        help='number of epochs to train (default: 10)')
+    parser.add_argument('--lr', type=float, default=0.01,
+                        help='learning rate (default: 0.01)')
+    parser.add_argument('--dropout', type=float, default=0.5,
+                        help='dropout probability (default: 0.5)')
+    parser.add_argument('--device', type=str, default='cpu',
+                        help='device (default: cpu)')
+
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    train_batch_size = 8
-    val_batch_size = 8
-    epochs = 10
-    train_loader, val_loader = get_data_loaders(train_batch_size, val_batch_size)
+    args = parse_arguments()
+    train_loader, val_loader = get_data_loaders(args.train_batch_size, args.val_batch_size)
 
     params = {
-        'nn_module': {'n_classes': 10, 'p_dropout': 0.1},
-        'optimizer': {'lr': 0.01},
-        'device': 'cpu'
+        'nn_module': {'n_classes': 10, 'p_dropout': args.dropout},
+        'optimizer': {'lr': args.lr},
+        'device': args.device
     }
 
     model = MnistModel(params)
-    print("Result model:", model.__dict__)
-    model.fit(train_loader, val_loader=val_loader, max_epochs=epochs)
+    print("Result model:", model)
+    model.fit(train_loader, val_loader=val_loader, max_epochs=args.epochs)
