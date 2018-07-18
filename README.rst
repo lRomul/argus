@@ -1,12 +1,28 @@
 Argus
 =====
 
-Argus is easy-to-use flexible library for training neural networks in PyTorch.
+Argus is easy-to-use flexible library for training neural networks in PyTorch. Train engine of ``argus`` is very similar to `ignite <https://github.com/pytorch/ignite>`_ engine, but the model design has a higher level of abstraction.
 
 
 Warning
 =======
 The project is in development, so it is not yet suitable for use.
+
+
+Roadmap
+=======
+* Save and load models
+* Improve event handlers (attach callbacks)
+* ModelCheckpoint, EarlyStopping
+* PyPI installation
+* More informative README
+* More examples (imagenet, pytorch-cnn-finetune)
+* More metrics
+* Improve error handling
+* Code refactoring
+* Docs
+* Tests
+* Co-training multiple models (?)
 
 
 Installation
@@ -19,8 +35,10 @@ From source:
     python setup.py install
 
 
-Example
-=======
+Examples
+========
+
+MNIST example.
 
 .. code-block:: python
 
@@ -68,3 +86,29 @@ Example
 
         model = MnistModel(params)
         model.fit(train_loader, val_loader=val_loader, max_epochs=10)
+
+
+You can use Argus with ``make_model`` from `pytorch-cnn-finetune <https://github.com/creafz/pytorch-cnn-finetune>`_.
+
+.. code-block:: python
+
+    from cnn_finetune import make_model
+    from argus import Model
+
+    class CnnFinetune(Model):
+        nn_module = make_model
+
+
+    params = {
+        'nn_module': {
+            'model_name': 'resnet18',
+            'num_classes': 10,
+            'pretrained': False,
+            'input_size': (256, 256)
+        },
+        'optimizer': ('Adam', {'lr': 0.01}),
+        'loss': 'CrossEntropyLoss',
+        'device': 'cpu'
+    }
+
+    model = CnnFinetune(params)
