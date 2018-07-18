@@ -14,7 +14,6 @@ Roadmap
 * Save and load models
 * Improve event handlers (attach callbacks)
 * ModelCheckpoint, EarlyStopping
-* PyPI installation
 * More informative README
 * More examples (imagenet, pytorch-cnn-finetune)
 * More metrics
@@ -27,6 +26,12 @@ Roadmap
 
 Installation
 ============
+
+From pip:
+
+.. code:: bash
+
+    pip install pytorch-argus
 
 From source:
 

@@ -38,9 +38,7 @@ class Model(BuildModel):
             train_loader,
             val_loader=None,
             max_epochs=1,
-            metrics=None,
-            val_event_handlers=None,
-            train_event_handlers=None):
+            metrics=None):
 
         assert self.train_ready()
 
