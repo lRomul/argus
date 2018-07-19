@@ -1,7 +1,8 @@
 import torch
+import os
 import logging
 
-from argus.model.build import BuildModel
+from argus.model.build import BuildModel, MODEL_REGISTRY
 from argus.engine import Engine, Events
 from argus.engine import validation_logging, train_loss_logging
 from argus.utils import to_device, setup_logging
@@ -75,7 +76,13 @@ class Model(BuildModel):
             param_group['lr'] = lr
 
     def save(self, file_path):
-        raise NotImplemented
+        state = {
+            'model_name': self.__class__.__name__,
+            'params': self.params,
+            'nn_state_dict': to_device(self.nn_module.state_dict(), 'cpu')
+        }
+        torch.save(state, file_path)
+        self.logger.info(f"Model saved to {file_path}")
 
     def validate(self, val_loader):
         raise NotImplemented
@@ -85,5 +92,15 @@ class Model(BuildModel):
         raise NotImplemented
 
 
-def load_model(file_path):
-    raise NotImplemented
+def load_model(file_path, device=None):
+    if os.path.isfile(file_path):
+        state = torch.load(file_path)
+        model_class = MODEL_REGISTRY[state['model_name']]
+        model = model_class(state['params'])
+        if device is None:
+            device = model.device
+        nn_state_dict = to_device(state['nn_state_dict'], device)
+        model.nn_module.load_state_dict(nn_state_dict)
+        return model
+    else:
+        raise FileNotFoundError(f"No state found at {file_path}")

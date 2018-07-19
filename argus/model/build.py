@@ -12,6 +12,7 @@ from argus.optimizer import pytorch_optimizers
 TRAIN_ATTRS = {'nn_module', 'optimizer', 'loss', 'device'}
 PREDICT_ATTRS = {'nn_module', 'predict_transform', 'device'}
 ALL_ATTRS = TRAIN_ATTRS | PREDICT_ATTRS
+MODEL_REGISTRY = {}
 
 
 def cast_optimizer(optimizer):
@@ -93,17 +94,18 @@ class ModelMeta(type):
             cast_attrs[attr_name] = default
 
         new_class = super().__new__(mcs, name, bases, cast_attrs)
+        MODEL_REGISTRY[name] = new_class
         return new_class
 
 
 class BuildModel(metaclass=ModelMeta):
     def __init__(self, params):
-        self.params = params
-        self.nn_module = self._build_nn_module(params)
-        self.optimizer = self._build_optimizer(params)
-        self.loss = self._build_loss(params)
-        self.device = self._build_device(params)
-        self.predict_transform = self._build_predict_transform(params)
+        self.params = params.copy()
+        self.nn_module = self._build_nn_module(params.copy())
+        self.optimizer = self._build_optimizer(params.copy())
+        self.loss = self._build_loss(params.copy())
+        self.device = self._build_device(params.copy())
+        self.predict_transform = self._build_predict_transform(params.copy())
         self.set_device(self.device)
 
     def _build_nn_module(self, params):
@@ -143,7 +145,7 @@ class BuildModel(metaclass=ModelMeta):
                 optim_params['params'] = self.nn_module.parameters()
                 optimizer = optimizer_meta[optim_name](**optim_params)
             else:
-                optim_params = params.get('optimizer', dict())
+                optim_params = params.get('optimizer', dict()).copy()
                 optim_params['params'] = self.nn_module.parameters()
                 optimizer = optimizer_meta(**optim_params)
 
