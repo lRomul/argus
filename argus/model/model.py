@@ -95,11 +95,15 @@ class Model(BuildModel):
 def load_model(file_path, device=None):
     if os.path.isfile(file_path):
         state = torch.load(file_path)
+
+        params = state['params']
+        if device is not None:
+            device = torch.device(device).type
+            params['device'] = device
+
         model_class = MODEL_REGISTRY[state['model_name']]
-        model = model_class(state['params'])
-        if device is None:
-            device = model.device
-        nn_state_dict = to_device(state['nn_state_dict'], device)
+        model = model_class(params)
+        nn_state_dict = to_device(state['nn_state_dict'], model.device)
         model.nn_module.load_state_dict(nn_state_dict)
         return model
     else:
