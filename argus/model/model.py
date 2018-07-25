@@ -4,9 +4,19 @@ import logging
 
 from argus.model.build import BuildModel, MODEL_REGISTRY
 from argus.engine import Engine, Events
-from argus.engine import validation_logging, train_loss_logging
+from argus.engine import validation, train_loss_logging
 from argus.utils import to_device, setup_logging
 from argus.metrics.loss import Loss, TrainLoss
+from argus.callbacks import Callback
+
+
+def _attach_callbacks(engine, callbacks):
+    if callbacks is not None:
+        for callback in callbacks:
+            if isinstance(callback, Callback):
+                callback.attach(engine)
+            else:
+                raise TypeError
 
 
 class Model(BuildModel):
@@ -39,7 +49,9 @@ class Model(BuildModel):
             train_loader,
             val_loader=None,
             max_epochs=1,
-            metrics=None):
+            metrics=None,
+            train_callbacks=None,
+            val_callbacks=None):
 
         assert self.train_ready()
 
@@ -63,12 +75,14 @@ class Model(BuildModel):
             for name, metric in metrics.items():
                 metric.attach(val_engine, name)
 
-            validation_logging(train_engine, val_engine, val_loader)
+            validation(train_engine, val_engine, val_loader)
             train_engine.add_event_handler(Events.EPOCH_COMPLETE,
-                                           validation_logging,
+                                           validation,
                                            val_engine,
                                            val_loader)
+            _attach_callbacks(val_engine, val_callbacks)
 
+        _attach_callbacks(train_engine, train_callbacks)
         train_engine.run(train_loader, max_epochs)
 
     def set_lr(self, lr):

@@ -1,6 +1,4 @@
-from argus.model.model import Model, load_model
-from argus.engine.engine import Events
-from argus.callbacks import \
+from argus.callbacks.callback import \
     Callback,\
     on_event,\
     on_start,\
@@ -9,5 +7,3 @@ from argus.callbacks import \
     on_epoch_complete,\
     on_iteration_start,\
     on_iteration_complete
-
-__version__ = '0.0.2'

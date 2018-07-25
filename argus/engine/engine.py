@@ -34,12 +34,12 @@ class Engine(object):
     def add_event_handler(self, event: Events, handler: Callable, *args, **kwargs):
         self.event_handlers[event].append((handler, args, kwargs))
 
-    def raise_event(self, event: Events, *event_args):
+    def raise_event(self, event: Events):
         assert isinstance(event, Events)
 
         if event in self.event_handlers:
             for func, args, kwargs in self.event_handlers[event]:
-                func(self, *(event_args + args), **kwargs)
+                func(self, *args, **kwargs)
 
     def run(self, data_loader, max_epochs=1):
         self.state = State(iteration=0,

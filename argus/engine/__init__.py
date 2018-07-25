@@ -1,7 +1,7 @@
 from argus.engine.engine import Engine, Events
 
 
-def validation_logging(train_engine, val_engine, val_loader):
+def validation(train_engine, val_engine, val_loader):
     val_engine.run(val_loader)
 
     if train_engine.state is None:
