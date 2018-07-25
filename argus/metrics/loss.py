@@ -3,8 +3,8 @@ from argus.utils import AverageMeter
 
 
 class Loss(Metric):
-    def __init__(self, loss, output_transform=lambda x: x):
-        super().__init__(output_transform)
+    def __init__(self, name, loss):
+        super().__init__(name)
         self._loss = loss
         self.reset()
 
@@ -25,9 +25,9 @@ class Loss(Metric):
 
 
 class TrainLoss(Metric):
-    def __init__(self, output_transform=lambda x: x):
+    def __init__(self, name):
         self.avg_meter = AverageMeter()
-        super().__init__(output_transform)
+        super().__init__(name)
 
     def reset(self):
         self.avg_meter.reset()

@@ -1,13 +1,12 @@
 from abc import ABCMeta, abstractmethod
+from argus.callbacks import Callback
 
-from argus.engine import Events
 
-
-class Metric(object):
+class Metric(Callback):
     __metaclass__ = ABCMeta
 
-    def __init__(self, output_transform=lambda x: x):
-        self._output_transform = output_transform
+    def __init__(self, name):
+        self.name = name
         self.reset()
 
     @abstractmethod
@@ -26,13 +25,7 @@ class Metric(object):
         self.reset()
 
     def iteration_complete(self, engine):
-        step_output = self._output_transform(engine.state.step_output)
-        self.update(step_output)
+        self.update(engine.state.step_output)
 
-    def epoch_complete(self, engine, name):
-        engine.state.metrics[name] = self.compute()
-
-    def attach(self, engine, name):
-        engine.add_event_handler(Events.EPOCH_START, self.start)
-        engine.add_event_handler(Events.ITERATION_COMPLETE, self.iteration_complete)
-        engine.add_event_handler(Events.EPOCH_COMPLETE, self.epoch_complete, name)
+    def epoch_complete(self, engine):
+        engine.state.metrics[self.name] = self.compute()

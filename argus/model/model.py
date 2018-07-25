@@ -6,6 +6,7 @@ from argus.model.build import BuildModel, MODEL_REGISTRY
 from argus.engine import Engine, Events
 from argus.engine import validation, train_loss_logging
 from argus.utils import to_device, setup_logging
+from argus.metrics import Metric
 from argus.metrics.loss import Loss, TrainLoss
 from argus.callbacks import Callback
 
@@ -56,24 +57,26 @@ class Model(BuildModel):
         assert self.train_ready()
 
         setup_logging()
-        if metrics is None:
-            metrics = dict()
 
         train_engine = Engine(self._train_step)
 
-        train_loss = TrainLoss()
-        train_loss.attach(train_engine, 'train_loss')
+        train_loss = TrainLoss('train_loss')
+        train_loss.attach(train_engine)
         train_engine.add_event_handler(Events.EPOCH_COMPLETE,
                                        train_loss_logging)
 
         if val_loader is not None:
             val_engine = Engine(self._val_step)
 
-            if 'val_loss' not in metrics:
-                    metrics['val_loss'] = Loss(self.loss)
+            val_loss = Loss('val_loss', self.loss)
+            val_loss.attach(val_engine)
 
-            for name, metric in metrics.items():
-                metric.attach(val_engine, name)
+            if metrics is not None:
+                for metric in metrics:
+                    if isinstance(metric, Metric):
+                        metric.attach(val_engine)
+                    else:
+                        raise TypeError
 
             validation(train_engine, val_engine, val_loader)
             train_engine.add_event_handler(Events.EPOCH_COMPLETE,
