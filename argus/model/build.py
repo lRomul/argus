@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from torch import optim
 import collections
+import warnings
 import types
 
 from argus.utils import default
@@ -94,6 +95,10 @@ class ModelMeta(type):
             cast_attrs[attr_name] = default
 
         new_class = super().__new__(mcs, name, bases, cast_attrs)
+        if name in MODEL_REGISTRY:
+            current_class = f"<class '{attrs['__module__']}.{attrs['__qualname__']}'>"
+            warnings.warn(f"{current_class} redefined '{name}' "
+                          f"that was already registered by {MODEL_REGISTRY[name]}")
         MODEL_REGISTRY[name] = new_class
         return new_class
 

@@ -73,6 +73,8 @@ class Model(BuildModel):
 
             if metrics is not None:
                 for metric in metrics:
+                    assert metric.name not in ['train_loss', 'val_loss']
+
                     if isinstance(metric, Metric):
                         metric.attach(val_engine)
                     else:
@@ -89,8 +91,11 @@ class Model(BuildModel):
         train_engine.run(train_loader, max_epochs)
 
     def set_lr(self, lr):
-        for param_group in self.optimizer.param_groups:
-            param_group['lr'] = lr
+        if self.train_ready():
+            for param_group in self.optimizer.param_groups:
+                param_group['lr'] = lr
+        else:
+            raise AttributeError
 
     def save(self, file_path):
         state = {

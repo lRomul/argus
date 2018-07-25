@@ -18,8 +18,8 @@ class State(object):
         self.epoch = epoch
         self.max_epochs = max_epochs
         self.step_output = None
-        for k, v in kwargs.items():
-            setattr(self, k, v)
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
 
 class Engine(object):
@@ -46,7 +46,7 @@ class Engine(object):
                            epoch=0,
                            max_epochs=max_epochs,
                            data_loader=data_loader,
-                           metrics={})
+                           metrics=dict())
         self.stopped = False
 
         try:
