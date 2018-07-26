@@ -1,5 +1,6 @@
 from argus.callbacks.callback import \
     Callback,\
+    FunctionCallback,\
     on_event,\
     on_start,\
     on_complete,\

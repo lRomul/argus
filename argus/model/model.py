@@ -138,9 +138,7 @@ class Model(BuildModel):
         val_loss.attach(val_engine)
         _attach_metrics(val_engine, metrics)
         _attach_callbacks(val_engine, callbacks)
-        _val_metrics_logging.attach(val_engine, {
-            'epoch_complete': {'print_epoch': False}
-        })
+        _val_metrics_logging.attach(val_engine, {'print_epoch': False})
         return val_engine.run(val_loader).metrics
 
     def predict(self, input):

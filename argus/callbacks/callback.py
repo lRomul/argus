@@ -17,45 +17,50 @@ class Callback:
                     raise TypeError
 
 
+class FunctionCallback(Callback):
+    def __init__(self, event: Events, handler):
+        self.event = event
+        self.handler = handler
+
+    def attach(self, engine, handler_kwargs=None):
+        if handler_kwargs is None:
+            handler_kwargs = dict()
+
+        engine.add_event_handler(self.event, self.handler, **handler_kwargs)
+
+
 def on_event(event):
     def wrap(func):
-        callback = Callback()
-        setattr(callback, event.value, func)
+        callback = FunctionCallback(event, func)
         return callback
     return wrap
 
 
 def on_start(func):
-    callback = Callback()
-    callback.start = func
+    callback = FunctionCallback(Events.START, func)
     return callback
 
 
 def on_complete(func):
-    callback = Callback()
-    callback.complete = func
+    callback = FunctionCallback(Events.COMPLETE, func)
     return callback
 
 
 def on_epoch_start(func):
-    callback = Callback()
-    callback.epoch_start = func
+    callback = FunctionCallback(Events.EPOCH_START, func)
     return callback
 
 
 def on_epoch_complete(func):
-    callback = Callback()
-    callback.epoch_complete = func
+    callback = FunctionCallback(Events.EPOCH_COMPLETE, func)
     return callback
 
 
 def on_iteration_start(func):
-    callback = Callback()
-    callback.iteration_start = func
+    callback = FunctionCallback(Events.ITERATION_START, func)
     return callback
 
 
 def on_iteration_complete(func):
-    callback = Callback()
-    callback.iteration_complete = func
+    callback = FunctionCallback(Events.ITERATION_COMPLETE, func)
     return callback
