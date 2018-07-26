@@ -28,36 +28,29 @@ class FunctionCallback(Callback):
 
 def on_event(event):
     def wrap(func):
-        callback = FunctionCallback(event, func)
-        return callback
+        return FunctionCallback(event, func)
     return wrap
 
 
 def on_start(func):
-    callback = FunctionCallback(Events.START, func)
-    return callback
+    return FunctionCallback(Events.START, func)
 
 
 def on_complete(func):
-    callback = FunctionCallback(Events.COMPLETE, func)
-    return callback
+    return FunctionCallback(Events.COMPLETE, func)
 
 
 def on_epoch_start(func):
-    callback = FunctionCallback(Events.EPOCH_START, func)
-    return callback
+    return FunctionCallback(Events.EPOCH_START, func)
 
 
 def on_epoch_complete(func):
-    callback = FunctionCallback(Events.EPOCH_COMPLETE, func)
-    return callback
+    return FunctionCallback(Events.EPOCH_COMPLETE, func)
 
 
 def on_iteration_start(func):
-    callback = FunctionCallback(Events.ITERATION_START, func)
-    return callback
+    return FunctionCallback(Events.ITERATION_START, func)
 
 
 def on_iteration_complete(func):
-    callback = FunctionCallback(Events.ITERATION_COMPLETE, func)
-    return callback
+    return FunctionCallback(Events.ITERATION_COMPLETE, func)
