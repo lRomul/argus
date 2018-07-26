@@ -51,7 +51,7 @@ class Model(BuildModel):
             val_loader=None,
             max_epochs=1,
             metrics=None,
-            train_callbacks=None,
+            callbacks=None,
             val_callbacks=None):
 
         assert self.train_ready()
@@ -87,7 +87,7 @@ class Model(BuildModel):
                                            val_loader)
             _attach_callbacks(val_engine, val_callbacks)
 
-        _attach_callbacks(train_engine, train_callbacks)
+        _attach_callbacks(train_engine, callbacks)
         train_engine.run(train_loader, max_epochs)
 
     def set_lr(self, lr):
@@ -118,15 +118,18 @@ def load_model(file_path, device=None):
     if os.path.isfile(file_path):
         state = torch.load(file_path)
 
-        params = state['params']
-        if device is not None:
-            device = torch.device(device).type
-            params['device'] = device
+        if state['model_name'] in MODEL_REGISTRY:
+            params = state['params']
+            if device is not None:
+                device = torch.device(device).type
+                params['device'] = device
 
-        model_class = MODEL_REGISTRY[state['model_name']]
-        model = model_class(params)
-        nn_state_dict = to_device(state['nn_state_dict'], model.device)
-        model.nn_module.load_state_dict(nn_state_dict)
-        return model
+            model_class = MODEL_REGISTRY[state['model_name']]
+            model = model_class(params)
+            nn_state_dict = to_device(state['nn_state_dict'], model.device)
+            model.nn_module.load_state_dict(nn_state_dict)
+            return model
+        else:
+            raise ImportError(f"Model '{state['model_name']}' not found in scope")
     else:
         raise FileNotFoundError(f"No state found at {file_path}")
