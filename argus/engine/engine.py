@@ -13,11 +13,12 @@ class Events(Enum):
 
 
 class State(object):
-    def __init__(self, iteration, epoch, max_epochs, **kwargs):
-        self.iteration = iteration
-        self.epoch = epoch
-        self.max_epochs = max_epochs
+    def __init__(self, **kwargs):
+        self.iteration = None
+        self.epoch = None
         self.step_output = None
+        self.metrics = dict()
+
         for key, value in kwargs.items():
             setattr(self, key, value)
 
@@ -27,7 +28,7 @@ class Engine(object):
     def __init__(self, step_function: Callable):
         self.event_handlers = {event: [] for event in Events.__members__.values()}
         self.step_function = step_function
-        self.state = None
+        self.state = State()
         self.stopped = True
         self.logger = logging.getLogger(__name__)
 
@@ -44,9 +45,8 @@ class Engine(object):
     def run(self, data_loader, max_epochs=1):
         self.state = State(iteration=0,
                            epoch=0,
-                           max_epochs=max_epochs,
                            data_loader=data_loader,
-                           metrics=dict())
+                           max_epochs=max_epochs)
         self.stopped = False
 
         try:

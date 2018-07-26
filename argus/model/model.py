@@ -2,9 +2,10 @@ import torch
 import os
 import logging
 
+import argus
 from argus.model.build import BuildModel, MODEL_REGISTRY
 from argus.engine import Engine, Events
-from argus.engine import validation, train_loss_logging
+# from argus.engine import validation
 from argus.utils import to_device, setup_logging
 from argus.metrics import Metric
 from argus.metrics.loss import Loss, TrainLoss
@@ -18,6 +19,37 @@ def _attach_callbacks(engine, callbacks):
                 callback.attach(engine)
             else:
                 raise TypeError
+
+
+def _attach_metrics(engine, metrics):
+    if metrics is not None:
+        for metric in metrics:
+            assert metric.name not in ['train_loss', 'val_loss']
+            if isinstance(metric, Metric):
+                metric.attach(engine)
+            else:
+                raise TypeError
+
+
+@argus.callbacks.on_epoch_complete
+def _train_loss_logging(engine):
+    train_loss = engine.state.metrics.get('train_loss', None)
+    message = f"Train - Epoch: {engine.state.epoch}, train_loss: {train_loss}"
+    engine.logger.info(message)
+
+
+@argus.callbacks.on_epoch_complete
+def _val_metrics_logging(engine, print_epoch=True):
+    if print_epoch:
+        train_epoch = engine.state.epoch
+        message = [f"Validation - Epoch: {train_epoch}"]
+    else:
+        message = ["Validation"]
+    for metric_name, metric_value in engine.state.metrics.items():
+        if metric_name == 'train_loss':
+            continue
+        message.append(f"{metric_name}: {metric_value}")
+    engine.logger.info(", ".join(message))
 
 
 class Model(BuildModel):
@@ -55,36 +87,29 @@ class Model(BuildModel):
             val_callbacks=None):
 
         assert self.train_ready()
-
         setup_logging()
-
         train_engine = Engine(self._train_step)
 
         train_loss = TrainLoss('train_loss')
         train_loss.attach(train_engine)
-        train_engine.add_event_handler(Events.EPOCH_COMPLETE,
-                                       train_loss_logging)
+        _train_loss_logging.attach(train_engine)
 
         if val_loader is not None:
+            self.validate(val_loader, metrics, val_callbacks)
+
             val_engine = Engine(self._val_step)
 
             val_loss = Loss('val_loss', self.loss)
             val_loss.attach(val_engine)
+            _attach_metrics(val_engine, metrics)
 
-            if metrics is not None:
-                for metric in metrics:
-                    assert metric.name not in ['train_loss', 'val_loss']
+            @argus.callbacks.on_epoch_complete
+            def validation_epoch(train_engine):
+                val_state = val_engine.run(val_loader)
+                train_engine.state.metrics.update(val_state.metrics)
 
-                    if isinstance(metric, Metric):
-                        metric.attach(val_engine)
-                    else:
-                        raise TypeError
-
-            validation(train_engine, val_engine, val_loader)
-            train_engine.add_event_handler(Events.EPOCH_COMPLETE,
-                                           validation,
-                                           val_engine,
-                                           val_loader)
+            validation_epoch.attach(train_engine)
+            _val_metrics_logging.attach(train_engine)
             _attach_callbacks(val_engine, val_callbacks)
 
         _attach_callbacks(train_engine, callbacks)
@@ -106,8 +131,17 @@ class Model(BuildModel):
         torch.save(state, file_path)
         self.logger.info(f"Model saved to {file_path}")
 
-    def validate(self, val_loader):
-        raise NotImplemented
+    def validate(self, val_loader, metrics=None, callbacks=None):
+        val_engine = Engine(self._val_step)
+
+        val_loss = Loss('val_loss', self.loss)
+        val_loss.attach(val_engine)
+        _attach_metrics(val_engine, metrics)
+        _attach_callbacks(val_engine, callbacks)
+        _val_metrics_logging.attach(val_engine, {
+            'epoch_complete': {'print_epoch': False}
+        })
+        return val_engine.run(val_loader).metrics
 
     def predict(self, input):
         assert self.predict_ready()

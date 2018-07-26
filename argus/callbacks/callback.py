@@ -3,12 +3,16 @@ from typing import Callable
 
 
 class Callback:
-    def attach(self, engine):
+    def attach(self, engine, handler_kwargs_dict=None):
+        if handler_kwargs_dict is None:
+            handler_kwargs_dict = dict()
+
         for key, event in Events.__members__.items():
             if hasattr(self, event.value):
                 handler = getattr(self, event.value)
                 if isinstance(handler, Callable):
-                    engine.add_event_handler(event, handler)
+                    handler_kwargs = handler_kwargs_dict.get(event.value, dict())
+                    engine.add_event_handler(event, handler, **handler_kwargs)
                 else:
                     raise TypeError
 
