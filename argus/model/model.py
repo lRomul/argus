@@ -4,8 +4,7 @@ import logging
 
 import argus
 from argus.model.build import BuildModel, MODEL_REGISTRY
-from argus.engine import Engine, Events
-# from argus.engine import validation
+from argus.engine import Engine
 from argus.utils import to_device, setup_logging
 from argus.metrics import Metric
 from argus.metrics.loss import Loss, TrainLoss
@@ -50,6 +49,12 @@ def _val_metrics_logging(engine, print_epoch=True):
             continue
         message.append(f"{metric_name}: {metric_value}")
     engine.logger.info(", ".join(message))
+
+
+@argus.callbacks.on_epoch_complete
+def _validation_epoch(train_engine, val_engine, val_loader):
+    val_state = val_engine.run(val_loader)
+    train_engine.state.metrics.update(val_state.metrics)
 
 
 class Model(BuildModel):
@@ -103,12 +108,7 @@ class Model(BuildModel):
             val_loss.attach(val_engine)
             _attach_metrics(val_engine, metrics)
 
-            @argus.callbacks.on_epoch_complete
-            def validation_epoch(train_engine):
-                val_state = val_engine.run(val_loader)
-                train_engine.state.metrics.update(val_state.metrics)
-
-            validation_epoch.attach(train_engine)
+            _validation_epoch.attach(train_engine, val_engine, val_loader)
             _val_metrics_logging.attach(train_engine)
             _attach_callbacks(val_engine, val_callbacks)
 
@@ -138,7 +138,7 @@ class Model(BuildModel):
         val_loss.attach(val_engine)
         _attach_metrics(val_engine, metrics)
         _attach_callbacks(val_engine, callbacks)
-        _val_metrics_logging.attach(val_engine, {'print_epoch': False})
+        _val_metrics_logging.attach(val_engine, print_epoch=False)
         return val_engine.run(val_loader).metrics
 
     def predict(self, input):

@@ -22,11 +22,8 @@ class FunctionCallback(Callback):
         self.event = event
         self.handler = handler
 
-    def attach(self, engine, handler_kwargs=None):
-        if handler_kwargs is None:
-            handler_kwargs = dict()
-
-        engine.add_event_handler(self.event, self.handler, **handler_kwargs)
+    def attach(self, engine, *args, **kwargs):
+        engine.add_event_handler(self.event, self.handler, *args, **kwargs)
 
 
 def on_event(event):
