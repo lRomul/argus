@@ -8,3 +8,7 @@ from argus.callbacks.callback import \
     on_epoch_complete,\
     on_iteration_start,\
     on_iteration_complete
+
+from argus.callbacks.checkpoints import \
+    Checkpoint,\
+    MonitorCheckpoint
