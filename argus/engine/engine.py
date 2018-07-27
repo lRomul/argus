@@ -25,8 +25,9 @@ class State(object):
 
 class Engine(object):
 
-    def __init__(self, step_function: Callable):
+    def __init__(self, model, step_function: Callable):
         self.event_handlers = {event: [] for event in Events.__members__.values()}
+        self.model = model
         self.step_function = step_function
         self.state = State()
         self.stopped = True

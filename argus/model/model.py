@@ -62,24 +62,24 @@ class Model(BuildModel):
         super().__init__(params)
         self.logger = logging.getLogger(__name__)
 
-    def _prepare_batch(self, batch, device):
+    def prepare_batch(self, batch, device):
         inp, trg = batch
         return to_device(inp, device), to_device(trg, device)
 
-    def _train_step(self, batch):
+    def train_step(self, batch):
         self.nn_module.train()
         self.optimizer.zero_grad()
-        inp, trg = self._prepare_batch(batch, self.device)
+        inp, trg = self.prepare_batch(batch, self.device)
         pred = self.nn_module(inp)
         loss = self.loss(pred, trg)
         loss.backward()
         self.optimizer.step()
         return loss.item()
 
-    def _val_step(self, batch):
+    def val_step(self, batch):
         self.nn_module.eval()
         with torch.no_grad():
-            inp, trg = self._prepare_batch(batch, self.device)
+            inp, trg = self.prepare_batch(batch, self.device)
             pred = self.nn_module(inp)
             return pred, trg
 
@@ -93,7 +93,7 @@ class Model(BuildModel):
 
         assert self.train_ready()
         setup_logging()
-        train_engine = Engine(self._train_step)
+        train_engine = Engine(self, self.train_step)
 
         train_loss = TrainLoss('train_loss')
         train_loss.attach(train_engine)
@@ -102,7 +102,7 @@ class Model(BuildModel):
         if val_loader is not None:
             self.validate(val_loader, metrics, val_callbacks)
 
-            val_engine = Engine(self._val_step)
+            val_engine = Engine(self, self.val_step)
 
             val_loss = Loss('val_loss', self.loss)
             val_loss.attach(val_engine)
@@ -132,8 +132,7 @@ class Model(BuildModel):
         self.logger.info(f"Model saved to {file_path}")
 
     def validate(self, val_loader, metrics=None, callbacks=None):
-        val_engine = Engine(self._val_step)
-
+        val_engine = Engine(self, self.val_step)
         val_loss = Loss('val_loss', self.loss)
         val_loss.attach(val_engine)
         _attach_metrics(val_engine, metrics)
