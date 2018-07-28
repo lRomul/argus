@@ -1,5 +1,9 @@
+import os
+import logging
+
 import argus
 from argus.engine import State
+from argus.callbacks.callback import Callback
 
 
 @argus.callbacks.on_epoch_complete
@@ -21,3 +25,18 @@ def metrics_logging(state: State, train=False, print_epoch=True):
             continue
         message.append(f"{metric_name}: {metric_value:.8f}")
     state.logger.info(", ".join(message))
+
+
+class LoggingToFile(Callback):
+    def __init__(self, file_path, create_dir=True):
+        self.file_path = file_path
+        self.create_dir = create_dir
+
+    def start(self, state: State):
+        if self.create_dir:
+            dir_path = os.path.dirname(self.file_path)
+            if dir_path:
+                if not os.path.exists(dir_path):
+                    os.mkdir(dir_path)
+        file_handler = logging.FileHandler(self.file_path)
+        state.logger.addHandler(file_handler)

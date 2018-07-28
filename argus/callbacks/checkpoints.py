@@ -12,7 +12,8 @@ class Checkpoint(Callback):
                  dir_path='',
                  file_format='model-{epoch:03d}-{train_loss:.3f}.pth',
                  max_saves=None,
-                 period=1):
+                 period=1,
+                 copy_last=True):
         assert max_saves is None or max_saves > 0
 
         self.dir_path = dir_path
@@ -25,6 +26,7 @@ class Checkpoint(Callback):
             else:
                 warnings.warn(f"Directory '{dir_path}' already exists")
         self.period = period
+        self.copy_last = copy_last
         self.epochs_since_last_save = 0
 
     def format_file_path(self, state: State):
@@ -40,8 +42,9 @@ class Checkpoint(Callback):
 
             file_path = self.format_file_path(state)
             state.model.save(file_path)
-            last_model_path = os.path.join(os.path.dirname(file_path), 'model-last.pth')
-            shutil.copy(file_path, last_model_path)
+            if self.copy_last:
+                last_model_path = os.path.join(os.path.dirname(file_path), 'model-last.pth')
+                shutil.copy(file_path, last_model_path)
             self.saved_files_paths.append(file_path)
 
             if self.max_saves is not None:
@@ -61,12 +64,14 @@ class MonitorCheckpoint(Checkpoint):
                  file_format='model-{epoch:03d}-{monitor:.3f}.pth',
                  max_saves=None,
                  period=1,
+                 copy_last=True,
                  monitor='val_loss',
                  mode='min'):
         super().__init__(dir_path=dir_path,
                          file_format=file_format,
                          max_saves=max_saves,
-                         period=period)
+                         period=period,
+                         copy_last=copy_last)
         self.monitor = monitor
         self.mode = mode
 

@@ -76,7 +76,7 @@ class Model(BuildModel):
         assert self.train_ready()
         setup_logging()
 
-        train_engine = Engine(self.train_step, model=self)
+        train_engine = Engine(self.train_step, model=self, logger=self.logger)
         train_loss = TrainLoss()
         train_loss.attach(train_engine)
         if metrics_on_train:
@@ -85,9 +85,10 @@ class Model(BuildModel):
 
         if val_loader is not None:
             self.validate(val_loader, metrics, val_callbacks)
-            val_engine = Engine(self.val_step, model=self)
+            val_engine = Engine(self.val_step, model=self, logger=self.logger)
             val_loss = Loss(self.loss)
             _attach_metrics(val_engine, [val_loss] + metrics, name_prefix='val_')
+            _attach_callbacks(val_engine, val_callbacks)
 
             @argus.callbacks.on_epoch_complete
             def validation_epoch(train_state, val_engine, val_loader):
@@ -96,7 +97,6 @@ class Model(BuildModel):
 
             validation_epoch.attach(train_engine, val_engine, val_loader)
             metrics_logging.attach(train_engine, train=False)
-            _attach_callbacks(val_engine, val_callbacks)
 
         _attach_callbacks(train_engine, callbacks)
         train_engine.run(train_loader, max_epochs)
@@ -120,7 +120,7 @@ class Model(BuildModel):
     def validate(self, val_loader, metrics=None, callbacks=None):
         metrics = [] if metrics is None else metrics
         assert self.train_ready()
-        val_engine = Engine(self.val_step, model=self)
+        val_engine = Engine(self.val_step, model=self, logger=self.logger)
         val_loss = Loss(self.loss)
         _attach_metrics(val_engine, [val_loss] + metrics, name_prefix='val_')
         _attach_callbacks(val_engine, callbacks)

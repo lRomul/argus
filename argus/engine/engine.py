@@ -35,13 +35,12 @@ class State(object):
 
 
 class Engine(object):
-    def __init__(self, step_function: Callable, model=None):
+    def __init__(self, step_function: Callable, **kwargs):
         self.event_handlers = {event: [] for event in Events.__members__.values()}
         self.step_function = step_function
         self.state = State(
-            model=model,
             step_function=step_function,
-            logger=logging.getLogger(__name__)
+            **kwargs
         )
 
     def add_event_handler(self, event: Events, handler: Callable, *args, **kwargs):
