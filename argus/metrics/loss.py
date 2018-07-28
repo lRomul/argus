@@ -3,8 +3,10 @@ from argus.utils import AverageMeter
 
 
 class Loss(Metric):
-    def __init__(self, name, loss):
-        super().__init__(name)
+    name = 'loss'
+
+    def __init__(self, loss):
+        super().__init__()
         self._loss = loss
         self.reset()
 
@@ -12,8 +14,9 @@ class Loss(Metric):
         self._sum = 0
         self.count = 0
 
-    def update(self, step_output):
-        pred, trg = step_output
+    def update(self, step_output: dict):
+        pred = step_output['prediction']
+        trg = step_output['target']
         average_loss = self._loss(pred, trg)
         self._sum += average_loss.item() * trg.shape[0]
         self.count += trg.shape[0]
@@ -25,15 +28,17 @@ class Loss(Metric):
 
 
 class TrainLoss(Metric):
-    def __init__(self, name):
+    name = 'train_loss'
+
+    def __init__(self, ):
         self.avg_meter = AverageMeter()
-        super().__init__(name)
+        super().__init__()
 
     def reset(self):
         self.avg_meter.reset()
 
-    def update(self, step_output):
-        loss = step_output
+    def update(self, step_output: dict):
+        loss = step_output['loss']
         self.avg_meter.update(loss)
 
     def compute(self):

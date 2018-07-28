@@ -35,7 +35,7 @@ class State(object):
 
 
 class Engine(object):
-    def __init__(self, model, step_function: Callable):
+    def __init__(self, step_function: Callable, model=None):
         self.event_handlers = {event: [] for event in Events.__members__.values()}
         self.step_function = step_function
         self.state = State(
@@ -51,8 +51,8 @@ class Engine(object):
         assert isinstance(event, Events)
 
         if event in self.event_handlers:
-            for func, args, kwargs in self.event_handlers[event]:
-                func(self.state, *args, **kwargs)
+            for handler, args, kwargs in self.event_handlers[event]:
+                handler(self.state, *args, **kwargs)
 
     def run(self, data_loader, max_epochs=1):
         self.state.update(iteration=0,
@@ -66,6 +66,7 @@ class Engine(object):
             while self.state.epoch < max_epochs and not self.state.stopped:
                 self.state.iteration = 0
                 self.state.epoch += 1
+                self.state.metrics = dict()
                 self.raise_event(Events.EPOCH_START)
 
                 for batch in data_loader:

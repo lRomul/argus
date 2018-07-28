@@ -9,7 +9,7 @@ from argus.utils import to_device, setup_logging
 from argus.metrics import Metric
 from argus.metrics.loss import Loss, TrainLoss
 from argus.callbacks import Callback
-from argus.callbacks.logging import train_loss_logging, val_metrics_logging
+from argus.callbacks.logging import metrics_logging
 
 
 def _attach_callbacks(engine, callbacks):
@@ -21,14 +21,14 @@ def _attach_callbacks(engine, callbacks):
                 raise TypeError
 
 
-def _attach_metrics(engine, metrics):
-    if metrics is not None:
-        for metric in metrics:
-            assert metric.name not in ['train_loss', 'val_loss']
-            if isinstance(metric, Metric):
-                metric.attach(engine)
-            else:
-                raise TypeError
+def _attach_metrics(engine, metrics, name_prefix=''):
+    for metric in metrics:
+        if isinstance(metric, Metric):
+            metric.attach(engine, {
+                'epoch_complete': {'name_prefix': name_prefix}
+            })
+        else:
+            raise TypeError
 
 
 class Model(BuildModel):
@@ -40,7 +40,7 @@ class Model(BuildModel):
         inp, trg = batch
         return to_device(inp, device), to_device(trg, device)
 
-    def train_step(self, batch):
+    def train_step(self, batch)-> dict:
         self.nn_module.train()
         self.optimizer.zero_grad()
         inp, trg = self.prepare_batch(batch, self.device)
@@ -48,39 +48,46 @@ class Model(BuildModel):
         loss = self.loss(pred, trg)
         loss.backward()
         self.optimizer.step()
-        return loss.item()
+        return {
+            'prediction': pred.detach(),
+            'target': trg.detach(),
+            'loss': loss.item()
+        }
 
-    def val_step(self, batch):
+    def val_step(self, batch) -> dict:
         self.nn_module.eval()
         with torch.no_grad():
             inp, trg = self.prepare_batch(batch, self.device)
             pred = self.nn_module(inp)
-            return pred, trg
+            return {
+                'prediction': pred,
+                'target': trg
+            }
 
     def fit(self,
             train_loader,
             val_loader=None,
             max_epochs=1,
             metrics=None,
+            metrics_on_train=False,
             callbacks=None,
             val_callbacks=None):
-
+        metrics = [] if metrics is None else metrics
         assert self.train_ready()
         setup_logging()
-        train_engine = Engine(self, self.train_step)
 
-        train_loss = TrainLoss('train_loss')
+        train_engine = Engine(self.train_step, model=self)
+        train_loss = TrainLoss()
         train_loss.attach(train_engine)
-        train_loss_logging.attach(train_engine)
+        if metrics_on_train:
+            _attach_metrics(train_engine, metrics, name_prefix='train_')
+        metrics_logging.attach(train_engine, train=True)
 
         if val_loader is not None:
             self.validate(val_loader, metrics, val_callbacks)
-
-            val_engine = Engine(self, self.val_step)
-
-            val_loss = Loss('val_loss', self.loss)
-            val_loss.attach(val_engine)
-            _attach_metrics(val_engine, metrics)
+            val_engine = Engine(self.val_step, model=self)
+            val_loss = Loss(self.loss)
+            _attach_metrics(val_engine, [val_loss] + metrics, name_prefix='val_')
 
             @argus.callbacks.on_epoch_complete
             def validation_epoch(train_state, val_engine, val_loader):
@@ -88,7 +95,7 @@ class Model(BuildModel):
                 train_state.metrics.update(val_state.metrics)
 
             validation_epoch.attach(train_engine, val_engine, val_loader)
-            val_metrics_logging.attach(train_engine)
+            metrics_logging.attach(train_engine, train=False)
             _attach_callbacks(val_engine, val_callbacks)
 
         _attach_callbacks(train_engine, callbacks)
@@ -111,12 +118,13 @@ class Model(BuildModel):
         self.logger.info(f"Model saved to {file_path}")
 
     def validate(self, val_loader, metrics=None, callbacks=None):
-        val_engine = Engine(self, self.val_step)
-        val_loss = Loss('val_loss', self.loss)
-        val_loss.attach(val_engine)
-        _attach_metrics(val_engine, metrics)
+        metrics = [] if metrics is None else metrics
+        assert self.train_ready()
+        val_engine = Engine(self.val_step, model=self)
+        val_loss = Loss(self.loss)
+        _attach_metrics(val_engine, [val_loss] + metrics, name_prefix='val_')
         _attach_callbacks(val_engine, callbacks)
-        val_metrics_logging.attach(val_engine, print_epoch=False)
+        metrics_logging.attach(val_engine, train=False, print_epoch=False)
         return val_engine.run(val_loader).metrics
 
     def predict(self, input):
