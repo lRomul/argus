@@ -1,5 +1,5 @@
 from argus.callbacks import Callback
-
+from argus.engine import State
 
 class Metric(Callback):
     def __init__(self, name):
@@ -15,11 +15,11 @@ class Metric(Callback):
     def compute(self):
         pass
 
-    def start(self, engine):
+    def start(self, state: State):
         self.reset()
 
-    def iteration_complete(self, engine):
-        self.update(engine.state.step_output)
+    def iteration_complete(self, state: State):
+        self.update(state.step_output)
 
-    def epoch_complete(self, engine):
-        engine.state.metrics[self.name] = self.compute()
+    def epoch_complete(self, state: State):
+        state.metrics[self.name] = self.compute()

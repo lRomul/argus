@@ -3,6 +3,7 @@ import math
 import shutil
 import warnings
 
+from argus.engine import State
 from argus.callbacks.callback import Callback
 
 
@@ -26,19 +27,19 @@ class Checkpoint(Callback):
         self.period = period
         self.epochs_since_last_save = 0
 
-    def get_file_path(self, engine):
-        format_state = {'epoch': engine.state.epoch, **engine.state.metrics}
+    def format_file_path(self, state: State):
+        format_state = {'epoch': state.epoch, **state.metrics}
         file_name = self.file_format.format(**format_state)
         file_path = os.path.join(self.dir_path, file_name)
         return file_path
 
-    def save_checkpoint(self, engine):
+    def save_checkpoint(self, state: State):
         self.epochs_since_last_save += 1
         if self.epochs_since_last_save >= self.period:
             self.epochs_since_last_save = 0
 
-            file_path = self.get_file_path(engine)
-            engine.model.save(file_path)
+            file_path = self.format_file_path(state)
+            state.model.save(file_path)
             last_model_path = os.path.join(os.path.dirname(file_path), 'model-last.pth')
             shutil.copy(file_path, last_model_path)
             self.saved_files_paths.append(file_path)
@@ -48,10 +49,10 @@ class Checkpoint(Callback):
                     old_file_path = self.saved_files_paths.pop(0)
                     if os.path.exists(old_file_path):
                         os.remove(old_file_path)
-                        engine.logger.info(f"Model removed '{old_file_path}'")
+                        state.logger.info(f"Model removed '{old_file_path}'")
 
-    def epoch_complete(self, engine):
-        self.save_checkpoint(engine)
+    def epoch_complete(self, state: State):
+        self.save_checkpoint(state)
 
 
 class MonitorCheckpoint(Checkpoint):
@@ -76,18 +77,18 @@ class MonitorCheckpoint(Checkpoint):
             self.better = lambda a, b: b > a
             self.best_value = -math.inf
 
-    def get_file_path(self, engine):
-        format_state = {'epoch': engine.state.epoch,
-                        'monitor': engine.state.metrics[self.monitor],
-                        **engine.state.metrics}
+    def format_file_path(self, state: State):
+        format_state = {'epoch': state.epoch,
+                        'monitor': state.metrics[self.monitor],
+                        **state.metrics}
         file_name = self.file_format.format(**format_state)
         file_path = os.path.join(self.dir_path, file_name)
         return file_path
 
-    def epoch_complete(self, engine):
-        assert self.monitor in engine.state.metrics,\
+    def epoch_complete(self, state: State):
+        assert self.monitor in state.metrics,\
             f"Monitor '{self.monitor}' metric not found in state"
-        current_value = engine.state.metrics[self.monitor]
+        current_value = state.metrics[self.monitor]
         if self.better(current_value, self.best_value):
             self.best_value = current_value
-            self.save_checkpoint(engine)
+            self.save_checkpoint(state)

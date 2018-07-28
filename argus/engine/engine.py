@@ -16,22 +16,33 @@ class State(object):
     def __init__(self, **kwargs):
         self.iteration = None
         self.epoch = None
-        self.step_output = None
-        self.metrics = dict()
+        self.model = None
+        self.data_loader = None
+        self.max_epochs = None
+        self.logger = None
 
+        self.batch = None
+        self.step_output = None
+
+        self.metrics = dict()
+        self.stopped = True
+
+        self.update(**kwargs)
+
+    def update(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
 
 class Engine(object):
-
     def __init__(self, model, step_function: Callable):
         self.event_handlers = {event: [] for event in Events.__members__.values()}
-        self.model = model
         self.step_function = step_function
-        self.state = State()
-        self.stopped = True
-        self.logger = logging.getLogger(__name__)
+        self.state = State(
+            model=model,
+            step_function=step_function,
+            logger=logging.getLogger(__name__)
+        )
 
     def add_event_handler(self, event: Events, handler: Callable, *args, **kwargs):
         self.event_handlers[event].append((handler, args, kwargs))
@@ -41,18 +52,18 @@ class Engine(object):
 
         if event in self.event_handlers:
             for func, args, kwargs in self.event_handlers[event]:
-                func(self, *args, **kwargs)
+                func(self.state, *args, **kwargs)
 
     def run(self, data_loader, max_epochs=1):
-        self.state = State(iteration=0,
-                           epoch=0,
-                           data_loader=data_loader,
-                           max_epochs=max_epochs)
-        self.stopped = False
+        self.state.update(iteration=0,
+                          epoch=0,
+                          data_loader=data_loader,
+                          max_epochs=max_epochs,
+                          stopped=False)
 
         try:
             self.raise_event(Events.START)
-            while self.state.epoch < max_epochs and not self.stopped:
+            while self.state.epoch < max_epochs and not self.state.stopped:
                 self.state.iteration = 0
                 self.state.epoch += 1
                 self.raise_event(Events.EPOCH_START)
@@ -63,7 +74,7 @@ class Engine(object):
                     self.raise_event(Events.ITERATION_START)
                     self.state.step_output = self.step_function(batch)
                     self.raise_event(Events.ITERATION_COMPLETE)
-                    if self.stopped:
+                    if self.state.stopped:
                         break
 
                 self.raise_event(Events.EPOCH_COMPLETE)
@@ -71,8 +82,8 @@ class Engine(object):
             self.raise_event(Events.COMPLETE)
 
         except Exception as e:
-            self.logger.exception(e)
+            self.state.logger.exception(e)
         finally:
-            self.stopped = True
+            self.state.stopped = True
 
         return self.state
