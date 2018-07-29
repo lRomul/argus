@@ -1,7 +1,7 @@
 Argus
 =====
 
-Argus is easy-to-use flexible library for training neural networks in PyTorch. Train engine of ``argus`` is very similar to `ignite <https://github.com/pytorch/ignite>`_ engine, but the model design has a higher level of abstraction.
+Argus is easy-to-use flexible library for training neural networks in PyTorch.
 
 
 Warning
@@ -11,9 +11,9 @@ The project is in development, so it is not yet suitable for use.
 
 Roadmap
 =======
-* Save and load models
-* Improve event handlers (attach callbacks)
-* ModelCheckpoint, EarlyStopping
+* Save and load models :heavy_check_mark:
+* Improve event handlers (attach callbacks) :heavy_check_mark:
+* ModelCheckpoint, EarlyStopping :heavy_check_mark:
 * More informative README
 * More examples (imagenet, pytorch-cnn-finetune)
 * More metrics
