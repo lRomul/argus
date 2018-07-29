@@ -5,12 +5,13 @@ import warnings
 
 from argus.engine import State
 from argus.callbacks.callback import Callback
+from argus.metrics.metric import METRIC_REGISTRY
 
 
 class Checkpoint(Callback):
     def __init__(self,
                  dir_path='',
-                 file_format='model-{epoch:03d}-{train_loss:.3f}.pth',
+                 file_format='model-{epoch:03d}-{train_loss:.6f}.pth',
                  max_saves=None,
                  period=1,
                  copy_last=True):
@@ -61,12 +62,14 @@ class Checkpoint(Callback):
 class MonitorCheckpoint(Checkpoint):
     def __init__(self,
                  dir_path='',
-                 file_format='model-{epoch:03d}-{monitor:.3f}.pth',
+                 file_format='model-{epoch:03d}-{monitor:.6f}.pth',
                  max_saves=None,
                  period=1,
                  copy_last=True,
                  monitor='val_loss',
-                 mode='min'):
+                 mode='auto'):
+        assert monitor.startswith('val_') or monitor.startswith('train_')
+        assert mode in ['min', 'max', 'auto']
         super().__init__(dir_path=dir_path,
                          file_format=file_format,
                          max_saves=max_saves,
@@ -75,11 +78,20 @@ class MonitorCheckpoint(Checkpoint):
         self.monitor = monitor
         self.mode = mode
 
+        if self.mode == 'auto':
+            if monitor.startswith('val_'):
+                metric_name = self.monitor[len('val_'):]
+            else:
+                metric_name = self.monitor[len('train_'):]
+            if metric_name not in METRIC_REGISTRY:
+                raise ImportError(f"Metric '{metric_name}' not found in scope")
+            self.mode = METRIC_REGISTRY[metric_name].mode
+
         if self.mode == 'min':
             self.better = lambda a, b: a < b
             self.best_value = math.inf
         elif self.mode == 'max':
-            self.better = lambda a, b: b > a
+            self.better = lambda a, b: a > b
             self.best_value = -math.inf
 
     def format_file_path(self, state: State):

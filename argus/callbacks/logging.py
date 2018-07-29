@@ -1,12 +1,11 @@
 import os
 import logging
 
-import argus
 from argus.engine import State
-from argus.callbacks.callback import Callback
+from argus.callbacks.callback import Callback, on_epoch_complete
 
 
-@argus.callbacks.on_epoch_complete
+@on_epoch_complete
 def metrics_logging(state: State, train=False, print_epoch=True):
     if train:
         epoch_name = 'Train'

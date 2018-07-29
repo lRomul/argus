@@ -1,11 +1,28 @@
+import warnings
+
 from argus.callbacks import Callback
 from argus.engine import State
 
 
-class Metric(Callback):
-    def __init__(self, name):
-        self.name = name
-        self.reset()
+METRIC_REGISTRY = {}
+
+
+class MetricMeta(type):
+    def __new__(mcs, name, bases, attrs, *args, **kwargs):
+        new_class = super().__new__(mcs, name, bases, attrs)
+        metric_name = attrs['name']
+        if metric_name:
+            if metric_name in METRIC_REGISTRY:
+                current_class = f"<class '{attrs['__module__']}.{attrs['__qualname__']}'>"
+                warnings.warn(f"{current_class} redefined '{metric_name}' "
+                              f"that was already registered by {METRIC_REGISTRY[name]}")
+            METRIC_REGISTRY[metric_name] = new_class
+        return new_class
+
+
+class Metric(Callback, metaclass=MetricMeta):
+    name = ''
+    mode = 'min'
 
     def reset(self):
         pass

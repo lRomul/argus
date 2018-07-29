@@ -11,7 +11,7 @@ class Callback:
             if hasattr(self, event.value):
                 handler = getattr(self, event.value)
                 if isinstance(handler, Callable):
-                    handler_kwargs = handler_kwargs_dict.get(event.value, dict())
+                    handler_kwargs = handler_kwargs_dict.get(event, dict())
                     engine.add_event_handler(event, handler, **handler_kwargs)
                 else:
                     raise TypeError

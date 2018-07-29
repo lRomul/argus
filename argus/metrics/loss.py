@@ -6,7 +6,7 @@ class Loss(Metric):
     name = 'loss'
 
     def __init__(self, loss):
-        super().__init__(self.name)
+        super().__init__()
         self._loss = loss
         self.reset()
 
@@ -23,25 +23,24 @@ class Loss(Metric):
 
     def compute(self):
         if self.count == 0:
-            raise ZeroDivisionError
+            raise Exception('Must be at least one example for computation')
         return self._sum / self.count
 
 
 class TrainLoss(Metric):
     name = 'train_loss'
 
-    def __init__(self, ):
+    def __init__(self):
         self.avg_meter = AverageMeter()
-        super().__init__(self.name)
+        super().__init__()
 
     def reset(self):
         self.avg_meter.reset()
 
     def update(self, step_output: dict):
-        loss = step_output['loss']
-        self.avg_meter.update(loss)
+        self.avg_meter.update(step_output['loss'])
 
     def compute(self):
         if self.avg_meter.count == 0:
-            raise ZeroDivisionError
+            raise Exception('Must be at least one example for computation')
         return self.avg_meter.average

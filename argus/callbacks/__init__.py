@@ -12,3 +12,5 @@ from argus.callbacks.callback import \
 from argus.callbacks.checkpoints import \
     Checkpoint,\
     MonitorCheckpoint
+
+from argus.callbacks.logging import LoggingToFile

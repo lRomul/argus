@@ -2,14 +2,13 @@ import torch
 import os
 import logging
 
-import argus
 from argus.model.build import BuildModel, MODEL_REGISTRY
-from argus.engine import Engine
+from argus.engine import Engine, Events
 from argus.utils import to_device, setup_logging
-from argus.metrics import Metric
-from argus.metrics.loss import Loss, TrainLoss
-from argus.callbacks import Callback
+from argus.callbacks import Callback, on_epoch_complete
 from argus.callbacks.logging import metrics_logging
+from argus.metrics.metric import Metric, METRIC_REGISTRY
+from argus.metrics.loss import Loss, TrainLoss
 
 
 def _attach_callbacks(engine, callbacks):
@@ -23,9 +22,14 @@ def _attach_callbacks(engine, callbacks):
 
 def _attach_metrics(engine, metrics, name_prefix=''):
     for metric in metrics:
+        if isinstance(metric, str):
+            if metric in METRIC_REGISTRY:
+                metric = METRIC_REGISTRY[metric]()
+            else:
+                raise ValueError
         if isinstance(metric, Metric):
             metric.attach(engine, {
-                'epoch_complete': {'name_prefix': name_prefix}
+                Events.EPOCH_COMPLETE: {'name_prefix': name_prefix}
             })
         else:
             raise TypeError
@@ -90,7 +94,7 @@ class Model(BuildModel):
             _attach_metrics(val_engine, [val_loss] + metrics, name_prefix='val_')
             _attach_callbacks(val_engine, val_callbacks)
 
-            @argus.callbacks.on_epoch_complete
+            @on_epoch_complete
             def validation_epoch(train_state, val_engine, val_loader):
                 val_state = val_engine.run(val_loader)
                 train_state.metrics.update(val_state.metrics)
