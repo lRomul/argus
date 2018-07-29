@@ -5,7 +5,7 @@ from argus.metrics.metric import Metric
 
 class CategoricalAccuracy(Metric):
     name = 'accuracy'
-    mode = 'max'
+    better = 'max'
 
     def reset(self):
         self.correct = 0

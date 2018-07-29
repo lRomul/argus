@@ -30,18 +30,22 @@ class Checkpoint(Callback):
         self.copy_last = copy_last
         self.epochs_since_last_save = 0
 
-    def format_file_path(self, state: State):
+    def _format_file_path(self, state: State):
         format_state = {'epoch': state.epoch, **state.metrics}
         file_name = self.file_format.format(**format_state)
         file_path = os.path.join(self.dir_path, file_name)
         return file_path
+
+    def start(self, state: State):
+        self.epochs_since_last_save = 0
+        self.saved_files_paths = []
 
     def save_checkpoint(self, state: State):
         self.epochs_since_last_save += 1
         if self.epochs_since_last_save >= self.period:
             self.epochs_since_last_save = 0
 
-            file_path = self.format_file_path(state)
+            file_path = self._format_file_path(state)
             state.model.save(file_path)
             if self.copy_last:
                 last_model_path = os.path.join(os.path.dirname(file_path), 'model-last.pth')
@@ -67,34 +71,37 @@ class MonitorCheckpoint(Checkpoint):
                  period=1,
                  copy_last=True,
                  monitor='val_loss',
-                 mode='auto'):
+                 better='auto'):
         assert monitor.startswith('val_') or monitor.startswith('train_')
-        assert mode in ['min', 'max', 'auto']
         super().__init__(dir_path=dir_path,
                          file_format=file_format,
                          max_saves=max_saves,
                          period=period,
                          copy_last=copy_last)
         self.monitor = monitor
-        self.mode = mode
+        self.better = better
 
-        if self.mode == 'auto':
+        if self.better == 'auto':
             if monitor.startswith('val_'):
                 metric_name = self.monitor[len('val_'):]
             else:
                 metric_name = self.monitor[len('train_'):]
             if metric_name not in METRIC_REGISTRY:
                 raise ImportError(f"Metric '{metric_name}' not found in scope")
-            self.mode = METRIC_REGISTRY[metric_name].mode
+            self.better = METRIC_REGISTRY[metric_name].better
+        assert self.better in ['min', 'max', 'auto'], \
+            f"Unknown better option '{self.better}'"
 
-        if self.mode == 'min':
-            self.better = lambda a, b: a < b
+        if self.better == 'min':
+            self.better_comp = lambda a, b: a < b
             self.best_value = math.inf
-        elif self.mode == 'max':
-            self.better = lambda a, b: a > b
+        elif self.better == 'max':
+            self.better_comp = lambda a, b: a > b
             self.best_value = -math.inf
+        else:
+            raise ValueError
 
-    def format_file_path(self, state: State):
+    def _format_file_path(self, state: State):
         format_state = {'epoch': state.epoch,
                         'monitor': state.metrics[self.monitor],
                         **state.metrics}
@@ -102,10 +109,13 @@ class MonitorCheckpoint(Checkpoint):
         file_path = os.path.join(self.dir_path, file_name)
         return file_path
 
+    def start(self, state: State):
+        self.best_value = math.inf if self.better == 'min' else -math.inf
+
     def epoch_complete(self, state: State):
         assert self.monitor in state.metrics,\
             f"Monitor '{self.monitor}' metric not found in state"
         current_value = state.metrics[self.monitor]
-        if self.better(current_value, self.best_value):
+        if self.better_comp(current_value, self.best_value):
             self.best_value = current_value
             self.save_checkpoint(state)

@@ -14,3 +14,4 @@ from argus.callbacks.checkpoints import \
     MonitorCheckpoint
 
 from argus.callbacks.logging import LoggingToFile
+from argus.callbacks.early_stopping import EarlyStopping

@@ -22,7 +22,7 @@ class MetricMeta(type):
 
 class Metric(Callback, metaclass=MetricMeta):
     name = ''
-    mode = 'min'
+    better = 'min'
 
     def reset(self):
         pass
