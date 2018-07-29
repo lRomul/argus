@@ -3,9 +3,8 @@ from argus.engine import State
 
 
 class Metric(Callback):
-    name = 'metric_name'
-
-    def __init__(self):
+    def __init__(self, name):
+        self.name = name
         self.reset()
 
     def reset(self):

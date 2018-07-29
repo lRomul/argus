@@ -6,7 +6,7 @@ class Loss(Metric):
     name = 'loss'
 
     def __init__(self, loss):
-        super().__init__()
+        super().__init__(self.name)
         self._loss = loss
         self.reset()
 
@@ -32,7 +32,7 @@ class TrainLoss(Metric):
 
     def __init__(self, ):
         self.avg_meter = AverageMeter()
-        super().__init__()
+        super().__init__(self.name)
 
     def reset(self):
         self.avg_meter.reset()
