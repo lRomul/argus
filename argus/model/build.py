@@ -179,6 +179,7 @@ class BuildModel(metaclass=ModelMeta):
 
     def set_device(self, device):
         self.device = torch.device(device)
+        self.params['device'] = self.device.type
         self.nn_module = self.nn_module.to(self.device)
         if self.loss is not default:
             self.loss = self.loss.to(self.device)
