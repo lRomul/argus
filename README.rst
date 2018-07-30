@@ -43,7 +43,7 @@ From source:
 Examples
 ========
 
-MNIST example.
+MNIST example. Full example you can see `here <https://github.com/lRomul/argus/blob/master/examples/mnist.py>`_.
 
 .. code-block:: python
 
@@ -53,6 +53,7 @@ MNIST example.
     from mnist_utils import get_data_loaders
 
     from argus import Model
+    from argus.callbacks import MonitorCheckpoint, EarlyStopping
 
 
     class Net(nn.Module):
@@ -90,7 +91,19 @@ MNIST example.
         }
 
         model = MnistModel(params)
-        model.fit(train_loader, val_loader=val_loader, max_epochs=10)
+
+        callbacks = [
+            MonitorCheckpoint(dir_path='./mnist/save', monitor='val_accuracy', max_saves=3),
+            EarlyStopping(monitor='val_accuracy', patience=3),
+        ]
+        metrics = ['accuracy']
+
+        model.fit(train_loader,
+                  val_loader=val_loader,
+                  max_epochs=args.epochs,
+                  metrics=metrics,
+                  callbacks=callbacks,
+                  metrics_on_train=True)
 
 
 You can use Argus with ``make_model`` from `pytorch-cnn-finetune <https://github.com/creafz/pytorch-cnn-finetune>`_.

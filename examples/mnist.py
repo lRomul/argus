@@ -7,6 +7,7 @@ from torchvision.datasets import MNIST
 import argparse
 
 from argus import Model
+from argus.callbacks import MonitorCheckpoint, EarlyStopping
 
 
 def parse_arguments():
@@ -15,12 +16,12 @@ def parse_arguments():
                         help='input batch size for training (default: 64)')
     parser.add_argument('--val_batch_size', type=int, default=64,
                         help='input batch size for validation (default: 64)')
-    parser.add_argument('--epochs', type=int, default=10,
-                        help='number of epochs to train (default: 10)')
+    parser.add_argument('--epochs', type=int, default=30,
+                        help='number of epochs to train (default: 30)')
     parser.add_argument('--lr', type=float, default=0.01,
                         help='learning rate (default: 0.01)')
-    parser.add_argument('--dropout', type=float, default=0.5,
-                        help='dropout probability (default: 0.5)')
+    parser.add_argument('--dropout', type=float, default=0.1,
+                        help='dropout probability (default: 0.1)')
     parser.add_argument('--device', type=str, default='cpu',
                         help='device (default: cpu)')
     return parser.parse_args()
@@ -28,11 +29,14 @@ def parse_arguments():
 
 def get_data_loaders(train_batch_size, val_batch_size):
     data_transform = Compose([ToTensor(), Normalize((0.1307,), (0.3081,))])
-    train_loader = DataLoader(MNIST(download=True, root="./mnist", transform=data_transform, train=True),
-                              batch_size=train_batch_size, shuffle=True)
-
-    val_loader = DataLoader(MNIST(download=False, root="./mnist", transform=data_transform, train=False),
-                            batch_size=val_batch_size, shuffle=False)
+    train_loader = DataLoader(
+        MNIST(download=True, root="./mnist", transform=data_transform, train=True),
+        batch_size=train_batch_size, shuffle=True
+    )
+    val_loader = DataLoader(
+        MNIST(download=False, root="./mnist", transform=data_transform, train=False),
+        batch_size=val_batch_size, shuffle=False
+    )
     return train_loader, val_loader
 
 
@@ -72,5 +76,16 @@ if __name__ == "__main__":
     }
 
     model = MnistModel(params)
-    print("Result model:", model)
-    model.fit(train_loader, val_loader=val_loader, max_epochs=args.epochs)
+
+    callbacks = [
+        MonitorCheckpoint(dir_path='./mnist/save', monitor='val_accuracy', max_saves=3),
+        EarlyStopping(monitor='val_accuracy', patience=3),
+    ]
+    metrics = ['accuracy']
+
+    model.fit(train_loader,
+              val_loader=val_loader,
+              max_epochs=args.epochs,
+              metrics=metrics,
+              callbacks=callbacks,
+              metrics_on_train=True)

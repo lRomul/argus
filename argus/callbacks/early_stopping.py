@@ -50,6 +50,6 @@ class EarlyStopping(Callback):
             if self.wait >= self.patience:
                 state.stopped = True
                 state.logger.info(
-                    f"Epoch {state.epoch}: Early stopping triggered "
+                    f"Epoch {state.epoch}: Early stopping triggered, "
                     f"'{self.monitor}' didn't improve score {self.wait} epochs"
                 )
