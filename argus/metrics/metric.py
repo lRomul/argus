@@ -1,38 +1,43 @@
-from abc import ABCMeta, abstractmethod
+import warnings
 
-from argus.engine import Events
+from argus.callbacks import Callback
+from argus.engine import State
 
 
-class Metric(object):
-    __metaclass__ = ABCMeta
+METRIC_REGISTRY = {}
 
-    def __init__(self, output_transform=lambda x: x):
-        self._output_transform = output_transform
-        self.reset()
 
-    @abstractmethod
+class MetricMeta(type):
+    def __new__(mcs, name, bases, attrs, *args, **kwargs):
+        new_class = super().__new__(mcs, name, bases, attrs)
+        metric_name = attrs['name']
+        if metric_name:
+            if metric_name in METRIC_REGISTRY:
+                current_class = f"<class '{attrs['__module__']}.{attrs['__qualname__']}'>"
+                warnings.warn(f"{current_class} redefined '{metric_name}' "
+                              f"that was already registered by {METRIC_REGISTRY[name]}")
+            METRIC_REGISTRY[metric_name] = new_class
+        return new_class
+
+
+class Metric(Callback, metaclass=MetricMeta):
+    name = ''
+    better = 'min'
+
     def reset(self):
         pass
 
-    @abstractmethod
-    def update(self, step_output):
+    def update(self, step_output: dict):
         pass
 
-    @abstractmethod
     def compute(self):
         pass
 
-    def start(self, engine):
+    def epoch_start(self, state: State):
         self.reset()
 
-    def iteration_complete(self, engine):
-        step_output = self._output_transform(engine.state.step_output)
-        self.update(step_output)
+    def iteration_complete(self, state: State):
+        self.update(state.step_output)
 
-    def epoch_complete(self, engine, name):
-        engine.state.metrics[name] = self.compute()
-
-    def attach(self, engine, name):
-        engine.add_event_handler(Events.EPOCH_START, self.start)
-        engine.add_event_handler(Events.ITERATION_COMPLETE, self.iteration_complete)
-        engine.add_event_handler(Events.EPOCH_COMPLETE, self.epoch_complete, name)
+    def epoch_complete(self, state: State, name_prefix=''):
+        state.metrics[name_prefix + self.name] = self.compute()
