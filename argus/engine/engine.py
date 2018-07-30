@@ -79,11 +79,10 @@ class Engine(object):
 
                 self.raise_event(Events.EPOCH_COMPLETE)
 
-            self.raise_event(Events.COMPLETE)
-
         except Exception as e:
             self.state.logger.exception(e)
         finally:
+            self.raise_event(Events.COMPLETE)
             self.state.stopped = True
 
         return self.state

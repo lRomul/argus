@@ -29,10 +29,13 @@ def metrics_logging(state: State, train=False, print_epoch=True):
 class LoggingToFile(Callback):
     def __init__(self, file_path,
                  create_dir=True,
-                 formatter='%(asctime)s %(levelname)s %(message)s'):
+                 formatter='%(asctime)s %(levelname)s %(message)s',
+                 append=True):
         self.file_path = file_path
         self.create_dir = create_dir
         self.formatter = logging.Formatter(formatter)
+        self.append = append
+        self.file_handler = None
 
     def start(self, state: State):
         if self.create_dir:
@@ -40,6 +43,11 @@ class LoggingToFile(Callback):
             if dir_path:
                 if not os.path.exists(dir_path):
                     os.mkdir(dir_path)
-        file_handler = logging.FileHandler(self.file_path)
-        file_handler.setFormatter(self.formatter)
-        state.logger.addHandler(file_handler)
+        if not self.append and os.path.exists(self.file_path):
+            os.remove(self.file_path)
+        self.file_handler = logging.FileHandler(self.file_path)
+        self.file_handler.setFormatter(self.formatter)
+        state.logger.addHandler(self.file_handler)
+
+    def complete(self, state: State):
+        state.logger.removeHandler(self.file_handler)
