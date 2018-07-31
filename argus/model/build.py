@@ -106,11 +106,11 @@ class ModelMeta(type):
 class BuildModel(metaclass=ModelMeta):
     def __init__(self, params):
         self.params = params.copy()
-        self.nn_module = self._build_nn_module(params.copy())
-        self.optimizer = self._build_optimizer(params.copy())
-        self.loss = self._build_loss(params.copy())
-        self.device = self._build_device(params.copy())
-        self.predict_transform = self._build_predict_transform(params.copy())
+        self.nn_module = self._build_nn_module(self.params)
+        self.optimizer = self._build_optimizer(self.params)
+        self.loss = self._build_loss(self.params)
+        self.device = self._build_device(self.params)
+        self.predict_transform = self._build_predict_transform(self.params)
         self.set_device(self.device)
 
     def _build_nn_module(self, params):
@@ -134,7 +134,6 @@ class BuildModel(metaclass=ModelMeta):
         return nn_module
 
     def _build_optimizer(self, params):
-        assert 'params' not in params
         optimizer_meta = self._meta['optimizer']
         if self.nn_module is not default:
             if isinstance(optimizer_meta, collections.Mapping):
@@ -147,12 +146,14 @@ class BuildModel(metaclass=ModelMeta):
                     optim_name, optim_params = optim_info, dict()
                 else:
                     raise TypeError
-                optim_params['params'] = self.nn_module.parameters()
-                optimizer = optimizer_meta[optim_name](**optim_params)
+                grad_params = (param for param in self.nn_module.parameters()
+                               if param.requires_grad)
+                optimizer = optimizer_meta[optim_name](params=grad_params, **optim_params)
             else:
-                optim_params = params.get('optimizer', dict()).copy()
-                optim_params['params'] = self.nn_module.parameters()
-                optimizer = optimizer_meta(**optim_params)
+                optim_params = params.get('optimizer', dict())
+                grad_params = (param for param in self.nn_module.parameters()
+                               if param.requires_grad)
+                optimizer = optimizer_meta(params=grad_params, **optim_params)
 
             return optimizer
         else:
