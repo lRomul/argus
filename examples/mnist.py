@@ -6,7 +6,7 @@ from torchvision.transforms import Compose, ToTensor, Normalize
 from torchvision.datasets import MNIST
 import argparse
 
-from argus import Model
+from argus import Model, load_model
 from argus.callbacks import MonitorCheckpoint, EarlyStopping
 
 
@@ -29,15 +29,16 @@ def parse_arguments():
 
 def get_data_loaders(train_batch_size, val_batch_size):
     data_transform = Compose([ToTensor(), Normalize((0.1307,), (0.3081,))])
-    train_loader = DataLoader(
-        MNIST(download=True, root="./mnist", transform=data_transform, train=True),
-        batch_size=train_batch_size, shuffle=True
-    )
-    val_loader = DataLoader(
-        MNIST(download=False, root="./mnist", transform=data_transform, train=False),
-        batch_size=val_batch_size, shuffle=False
-    )
+    train_mnist_dataset = MNIST(download=True, root="mnist_data",
+                                transform=data_transform, train=True)
+    val_mnist_dataset = MNIST(download=False, root="mnist_data",
+                              transform=data_transform, train=False)
+    train_loader = DataLoader(train_mnist_dataset,
+                              batch_size=train_batch_size, shuffle=True)
+    val_loader = DataLoader(val_mnist_dataset,
+                            batch_size=val_batch_size, shuffle=False)
     return train_loader, val_loader
+
 
 
 class Net(nn.Module):
@@ -74,18 +75,20 @@ if __name__ == "__main__":
         'optimizer': {'lr': args.lr},
         'device': args.device
     }
-
     model = MnistModel(params)
 
     callbacks = [
-        MonitorCheckpoint(dir_path='./mnist/save', monitor='val_accuracy', max_saves=3),
+        MonitorCheckpoint(dir_path='mnist', monitor='val_accuracy', max_saves=3),
         EarlyStopping(monitor='val_accuracy', patience=3),
     ]
-    metrics = ['accuracy']
 
     model.fit(train_loader,
               val_loader=val_loader,
               max_epochs=args.epochs,
-              metrics=metrics,
+              metrics=['accuracy'],
               callbacks=callbacks,
               metrics_on_train=True)
+
+    del model
+    model = load_model('mnist/model-last.pth')
+    print(model.__dict__)

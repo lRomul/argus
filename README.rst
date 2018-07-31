@@ -43,7 +43,8 @@ From source:
 Examples
 ========
 
-MNIST example. Full example you can see `here <https://github.com/lRomul/argus/blob/master/examples/mnist.py>`_.
+Full MNIST example you can see `here <https://github.com/lRomul/argus/blob/master/examples/mnist.py>`_.
+MNIST VAE `example <https://github.com/lRomul/argus/blob/master/examples/mnist_vae.py>`_.
 
 .. code-block:: python
 
@@ -52,7 +53,7 @@ MNIST example. Full example you can see `here <https://github.com/lRomul/argus/b
     import torch.nn.functional as F
     from mnist_utils import get_data_loaders
 
-    from argus import Model
+    from argus import Model, load_model
     from argus.callbacks import MonitorCheckpoint, EarlyStopping
 
 
@@ -93,17 +94,19 @@ MNIST example. Full example you can see `here <https://github.com/lRomul/argus/b
         model = MnistModel(params)
 
         callbacks = [
-            MonitorCheckpoint(dir_path='./mnist/save', monitor='val_accuracy', max_saves=3),
+            MonitorCheckpoint(dir_path='mnist', monitor='val_accuracy', max_saves=3),
             EarlyStopping(monitor='val_accuracy', patience=3),
         ]
-        metrics = ['accuracy']
 
         model.fit(train_loader,
                   val_loader=val_loader,
                   max_epochs=args.epochs,
-                  metrics=metrics,
+                  metrics=['accuracy'],
                   callbacks=callbacks,
                   metrics_on_train=True)
+
+        del model
+        model = load_model('mnist/model-last.pth')
 
 
 You can use Argus with ``make_model`` from `pytorch-cnn-finetune <https://github.com/creafz/pytorch-cnn-finetune>`_.
@@ -126,7 +129,7 @@ You can use Argus with ``make_model`` from `pytorch-cnn-finetune <https://github
         },
         'optimizer': ('Adam', {'lr': 0.01}),
         'loss': 'CrossEntropyLoss',
-        'device': 'cpu'
+        'device': 'cuda'
     }
 
     model = CnnFinetune(params)

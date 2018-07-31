@@ -4,7 +4,7 @@ import logging
 
 from argus.model.build import BuildModel, MODEL_REGISTRY
 from argus.engine import Engine, Events
-from argus.utils import to_device, setup_logging
+from argus.utils import to_device, detach_tensors, setup_logging
 from argus.callbacks import Callback, on_epoch_complete
 from argus.callbacks.logging import metrics_logging
 from argus.metrics.metric import Metric, METRIC_REGISTRY
@@ -47,25 +47,25 @@ class Model(BuildModel):
     def train_step(self, batch)-> dict:
         self.nn_module.train()
         self.optimizer.zero_grad()
-        inp, trg = self.prepare_batch(batch, self.device)
-        pred = self.nn_module(inp)
-        loss = self.loss(pred, trg)
+        input, target = self.prepare_batch(batch, self.device)
+        prediction = self.nn_module(input)
+        loss = self.loss(prediction, target)
         loss.backward()
         self.optimizer.step()
         return {
-            'prediction': pred.detach(),
-            'target': trg.detach(),
+            'prediction': detach_tensors(prediction),
+            'target': detach_tensors(target),
             'loss': loss.item()
         }
 
     def val_step(self, batch) -> dict:
         self.nn_module.eval()
         with torch.no_grad():
-            inp, trg = self.prepare_batch(batch, self.device)
-            pred = self.nn_module(inp)
+            input, target = self.prepare_batch(batch, self.device)
+            prediction = self.nn_module(input)
             return {
-                'prediction': pred,
-                'target': trg
+                'prediction': prediction,
+                'target': target
             }
 
     def fit(self,
@@ -96,14 +96,15 @@ class Model(BuildModel):
 
             @on_epoch_complete
             def validation_epoch(train_state, val_engine, val_loader):
-                val_state = val_engine.run(val_loader)
+                epoch = train_state.epoch
+                val_state = val_engine.run(val_loader, epoch, epoch)
                 train_state.metrics.update(val_state.metrics)
 
             validation_epoch.attach(train_engine, val_engine, val_loader)
             metrics_logging.attach(train_engine, train=False)
 
         _attach_callbacks(train_engine, callbacks)
-        train_engine.run(train_loader, max_epochs)
+        train_engine.run(train_loader, 1, max_epochs)
 
     def set_lr(self, lr):
         if self.train_ready():

@@ -30,6 +30,19 @@ def to_device(input, device):
         raise TypeError(f"Input must contain tensor, dict or list, found {type(input)}")
 
 
+def detach_tensors(input):
+    if torch.is_tensor(input):
+        return input.detach()
+    elif isinstance(input, str):
+        return input
+    elif isinstance(input, collections.Mapping):
+        return {k: detach_tensors(sample) for k, sample in input.items()}
+    elif isinstance(input, collections.Sequence):
+        return [detach_tensors(sample) for sample in input]
+    else:
+        raise TypeError(f"Input must contain tensor, dict or list, found {type(input)}")
+
+
 def inheritors(cls):
     subclasses = set()
     cls_list = [cls]

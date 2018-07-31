@@ -53,18 +53,17 @@ class Engine(object):
             for handler, args, kwargs in self.event_handlers[event]:
                 handler(self.state, *args, **kwargs)
 
-    def run(self, data_loader, max_epochs=1):
-        self.state.update(iteration=0,
-                          epoch=0,
-                          data_loader=data_loader,
+    def run(self, data_loader, epoch=0, max_epochs=0):
+        self.state.update(data_loader=data_loader,
+                          epoch=epoch,
+                          iteration=0,
                           max_epochs=max_epochs,
                           stopped=False)
 
         try:
             self.raise_event(Events.START)
-            while self.state.epoch < max_epochs and not self.state.stopped:
+            while self.state.epoch <= max_epochs and not self.state.stopped:
                 self.state.iteration = 0
-                self.state.epoch += 1
                 self.state.metrics = dict()
                 self.raise_event(Events.EPOCH_START)
 
@@ -78,11 +77,14 @@ class Engine(object):
                         break
 
                 self.raise_event(Events.EPOCH_COMPLETE)
+                self.state.epoch += 1
+
+            self.raise_event(Events.COMPLETE)
 
         except Exception as e:
             self.state.logger.exception(e)
+            raise e
         finally:
-            self.raise_event(Events.COMPLETE)
             self.state.stopped = True
 
         return self.state
