@@ -1,6 +1,5 @@
 import torch
 import os
-import logging
 
 from argus.model.build import BuildModel, MODEL_REGISTRY
 from argus.engine import Engine, Events
@@ -38,33 +37,36 @@ def _attach_metrics(engine, metrics, name_prefix=''):
 class Model(BuildModel):
     def __init__(self, params):
         super().__init__(params)
-        self.logger = logging.getLogger(__name__)
 
     def prepare_batch(self, batch, device):
         inp, trg = batch
         return to_device(inp, device), to_device(trg, device)
 
     def train_step(self, batch)-> dict:
-        self.nn_module.train()
+        if not self.nn_module.training:
+            self.nn_module.train()
         self.optimizer.zero_grad()
         input, target = self.prepare_batch(batch, self.device)
         prediction = self.nn_module(input)
         loss = self.loss(prediction, target)
         loss.backward()
         self.optimizer.step()
+
+        prediction = detach_tensors(prediction)
         return {
-            'prediction': detach_tensors(prediction),
+            'prediction': self.prediction_transform(prediction),
             'target': detach_tensors(target),
             'loss': loss.item()
         }
 
     def val_step(self, batch) -> dict:
-        self.nn_module.eval()
+        if self.nn_module.training:
+            self.nn_module.eval()
         with torch.no_grad():
             input, target = self.prepare_batch(batch, self.device)
             prediction = self.nn_module(input)
             return {
-                'prediction': prediction,
+                'prediction': self.prediction_transform(prediction),
                 'target': target
             }
 
@@ -120,7 +122,7 @@ class Model(BuildModel):
             'nn_state_dict': to_device(self.nn_module.state_dict(), 'cpu')
         }
         torch.save(state, file_path)
-        self.logger.info(f"Model saved to {file_path}")
+        self.logger.info(f"Model saved to '{file_path}'")
 
     def validate(self, val_loader, metrics=None, callbacks=None):
         metrics = [] if metrics is None else metrics
@@ -134,7 +136,12 @@ class Model(BuildModel):
 
     def predict(self, input):
         assert self.predict_ready()
-        raise NotImplemented
+        if self.nn_module.training:
+            self.nn_module.eval()
+        input = to_device(input, self.device)
+        prediction = self.nn_module(input)
+        prediction = self.prediction_transform(prediction)
+        return prediction
 
 
 def load_model(file_path, device=None):

@@ -3,6 +3,7 @@ from torch import nn
 from torch import optim
 import collections
 import warnings
+import logging
 import types
 
 from argus.utils import default
@@ -10,8 +11,8 @@ from argus.loss import pytorch_losses
 from argus.optimizer import pytorch_optimizers
 
 
-TRAIN_ATTRS = {'nn_module', 'optimizer', 'loss', 'device'}
-PREDICT_ATTRS = {'nn_module', 'predict_transform', 'device'}
+TRAIN_ATTRS = {'nn_module', 'optimizer', 'loss', 'device', 'prediction_transform'}
+PREDICT_ATTRS = {'nn_module', 'device', 'prediction_transform'}
 ALL_ATTRS = TRAIN_ATTRS | PREDICT_ATTRS
 MODEL_REGISTRY = {}
 
@@ -47,7 +48,7 @@ def cast_loss(loss):
     raise TypeError
 
 
-def cast_predict_transform(transform):
+def cast_prediction_transform(transform):
     if isinstance(transform, types.FunctionType):
         return transform
     elif isinstance(transform, type) and callable(transform):
@@ -64,7 +65,7 @@ ATTRIBUTE_CASTS = {
     'optimizer': cast_optimizer,
     'loss': cast_loss,
     'device': cast_device,
-    'predict_transform': cast_predict_transform
+    'prediction_transform': cast_prediction_transform
 }
 
 DEFAULT_ATTRIBUTE_VALUES = {
@@ -72,7 +73,7 @@ DEFAULT_ATTRIBUTE_VALUES = {
     'optimizer': pytorch_optimizers,
     'loss': pytorch_losses,
     'device': torch.device('cpu'),
-    'predict_transform': default
+    'prediction_transform': default
 }
 
 
@@ -110,8 +111,9 @@ class BuildModel(metaclass=ModelMeta):
         self.optimizer = self._build_optimizer(self.params)
         self.loss = self._build_loss(self.params)
         self.device = self._build_device(self.params)
-        self.predict_transform = self._build_predict_transform(self.params)
+        self.prediction_transform = self._build_prediction_transform(self.params)
         self.set_device(self.device)
+        self.logger = logging.getLogger(__name__)
 
     def _build_nn_module(self, params):
         nn_module_meta = self._meta['nn_module']
@@ -193,27 +195,27 @@ class BuildModel(metaclass=ModelMeta):
 
         return device
 
-    def _build_predict_transform(self, params):
-        transform_meta = self._meta['predict_transform']
+    def _build_prediction_transform(self, params):
+        transform_meta = self._meta['prediction_transform']
         if transform_meta is default:
             return lambda x: x
 
         if isinstance(transform_meta, collections.Mapping):
-            if 'predict_transform' not in params:
+            if 'prediction_transform' not in params:
                 return lambda x: x
-            trns_info = params['predict_transform']
+            trns_info = params['prediction_transform']
             if isinstance(trns_info, (list, tuple)) and len(trns_info) == 2:
                 trns_name, trns_params = trns_info
             elif isinstance(trns_info, str):
                 trns_name, trns_params = trns_info, dict()
             else:
                 raise TypeError
-            predict_transform = transform_meta[trns_name](**trns_params)
+            prediction_transform = transform_meta[trns_name](**trns_params)
         else:
-            trns_params = params.get('predict_transform', dict())
-            predict_transform = transform_meta(**trns_params)
+            trns_params = params.get('prediction_transform', dict())
+            prediction_transform = transform_meta(**trns_params)
 
-        return predict_transform
+        return prediction_transform
 
     def _check_attributes(self, attrs):
         for attr_name in attrs:
