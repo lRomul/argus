@@ -7,7 +7,7 @@ from argus.utils import to_device, detach_tensors, setup_logging
 from argus.callbacks import Callback, on_epoch_complete
 from argus.callbacks.logging import metrics_logging
 from argus.metrics.metric import Metric, METRIC_REGISTRY
-from argus.metrics.loss import Loss, TrainLoss
+from argus.metrics.loss import Loss
 
 
 def _attach_callbacks(engine, callbacks):
@@ -53,9 +53,10 @@ class Model(BuildModel):
         self.optimizer.step()
 
         prediction = detach_tensors(prediction)
+        target = detach_tensors(target)
         return {
             'prediction': self.prediction_transform(prediction),
-            'target': detach_tensors(target),
+            'target': target,
             'loss': loss.item()
         }
 
@@ -65,9 +66,11 @@ class Model(BuildModel):
         with torch.no_grad():
             input, target = self.prepare_batch(batch, self.device)
             prediction = self.nn_module(input)
+            loss = self.loss(prediction, target)
             return {
                 'prediction': self.prediction_transform(prediction),
-                'target': target
+                'target': target,
+                'loss': loss.item()
             }
 
     def fit(self,
@@ -83,17 +86,14 @@ class Model(BuildModel):
         setup_logging()
 
         train_engine = Engine(self.train_step, model=self, logger=self.logger)
-        train_loss = TrainLoss()
-        train_loss.attach(train_engine)
-        if metrics_on_train:
-            _attach_metrics(train_engine, metrics, name_prefix='train_')
+        train_metrics = [Loss()] + metrics if metrics_on_train else [Loss()]
+        _attach_metrics(train_engine, train_metrics, name_prefix='train_')
         metrics_logging.attach(train_engine, train=True)
 
         if val_loader is not None:
             self.validate(val_loader, metrics, val_callbacks)
             val_engine = Engine(self.val_step, model=self, logger=self.logger)
-            val_loss = Loss(self.loss)
-            _attach_metrics(val_engine, [val_loss] + metrics, name_prefix='val_')
+            _attach_metrics(val_engine, [Loss()] + metrics, name_prefix='val_')
             _attach_callbacks(val_engine, val_callbacks)
 
             @on_epoch_complete
@@ -128,8 +128,7 @@ class Model(BuildModel):
         metrics = [] if metrics is None else metrics
         assert self.train_ready()
         val_engine = Engine(self.val_step, model=self, logger=self.logger)
-        val_loss = Loss(self.loss)
-        _attach_metrics(val_engine, [val_loss] + metrics, name_prefix='val_')
+        _attach_metrics(val_engine, [Loss()] + metrics, name_prefix='val_')
         _attach_callbacks(val_engine, callbacks)
         metrics_logging.attach(val_engine, train=False, print_epoch=False)
         return val_engine.run(val_loader).metrics
