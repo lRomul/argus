@@ -135,12 +135,13 @@ class Model(BuildModel):
 
     def predict(self, input):
         assert self.predict_ready()
-        if self.nn_module.training:
-            self.nn_module.eval()
-        input = to_device(input, self.device)
-        prediction = self.nn_module(input)
-        prediction = self.prediction_transform(prediction)
-        return prediction
+        with torch.no_grad():
+            if self.nn_module.training:
+                self.nn_module.eval()
+            input = to_device(input, self.device)
+            prediction = self.nn_module(input)
+            prediction = self.prediction_transform(prediction)
+            return prediction
 
 
 def load_model(file_path, device=None):
@@ -157,6 +158,7 @@ def load_model(file_path, device=None):
             model = model_class(params)
             nn_state_dict = to_device(state['nn_state_dict'], model.device)
             model.nn_module.load_state_dict(nn_state_dict)
+            model.nn_module.eval()
             return model
         else:
             raise ImportError(f"Model '{state['model_name']}' not found in scope")
