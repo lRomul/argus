@@ -14,6 +14,7 @@ Roadmap
 * Save and load models :heavy_check_mark:
 * Improve event handlers (attach callbacks) :heavy_check_mark:
 * ModelCheckpoint, EarlyStopping :heavy_check_mark:
+* LR shedulers
 * More informative README
 * More examples (imagenet, pytorch-cnn-finetune)
 * More metrics
@@ -133,3 +134,5 @@ You can use Argus with ``make_model`` from `pytorch-cnn-finetune <https://github
     }
 
     model = CnnFinetune(params)
+    
+Full Argus pipeline of 14th place solution for Kaggle TGS Salt Identification Challenge. `link <https://github.com/lRomul/argus-tgs-salt>`_
