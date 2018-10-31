@@ -7,7 +7,7 @@ from torchvision.datasets import MNIST
 import argparse
 
 from argus import Model, load_model
-from argus.callbacks import MonitorCheckpoint, EarlyStopping
+from argus.callbacks import MonitorCheckpoint, EarlyStopping, ReduceLROnPlateau
 
 
 def parse_arguments():
@@ -16,7 +16,7 @@ def parse_arguments():
                         help='input batch size for training (default: 64)')
     parser.add_argument('--val_batch_size', type=int, default=64,
                         help='input batch size for validation (default: 64)')
-    parser.add_argument('--epochs', type=int, default=30,
+    parser.add_argument('--epochs', type=int, default=100,
                         help='number of epochs to train (default: 30)')
     parser.add_argument('--lr', type=float, default=0.01,
                         help='learning rate (default: 0.01)')
@@ -38,7 +38,6 @@ def get_data_loaders(train_batch_size, val_batch_size):
     val_loader = DataLoader(val_mnist_dataset,
                             batch_size=val_batch_size, shuffle=False)
     return train_loader, val_loader
-
 
 
 class Net(nn.Module):
@@ -79,7 +78,8 @@ if __name__ == "__main__":
 
     callbacks = [
         MonitorCheckpoint(dir_path='mnist', monitor='val_accuracy', max_saves=3),
-        EarlyStopping(monitor='val_accuracy', patience=3),
+        EarlyStopping(monitor='val_accuracy', patience=9),
+        ReduceLROnPlateau(monitor='val_accuracy', factor=0.5, patience=3)
     ]
 
     model.fit(train_loader,

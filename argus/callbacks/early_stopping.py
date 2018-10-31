@@ -2,7 +2,7 @@ import math
 
 from argus.engine import State
 from argus.callbacks.callback import Callback
-from argus.metrics.metric import METRIC_REGISTRY
+from argus.metrics.metric import init_better
 
 
 class EarlyStopping(Callback):
@@ -12,25 +12,7 @@ class EarlyStopping(Callback):
                  better='auto'):
         self.monitor = monitor
         self.patience = patience
-        self.better = better
-
-        if self.better == 'auto':
-            if monitor.startswith('val_'):
-                metric_name = self.monitor[len('val_'):]
-            else:
-                metric_name = self.monitor[len('train_'):]
-            if metric_name not in METRIC_REGISTRY:
-                raise ImportError(f"Metric '{metric_name}' not found in scope")
-            self.better = METRIC_REGISTRY[metric_name].better
-        assert self.better in ['min', 'max', 'auto'], \
-            f"Unknown better option '{self.better}'"
-
-        if self.better == 'min':
-            self.better_comp = lambda a, b: a < b
-            self.best_value = math.inf
-        elif self.better == 'max':
-            self.better_comp = lambda a, b: a > b
-            self.best_value = -math.inf
+        self.better, self.better_comp, self.best_value = init_better(better, monitor)
 
         self.wait = 0
 

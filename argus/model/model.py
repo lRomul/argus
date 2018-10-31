@@ -115,6 +115,14 @@ class Model(BuildModel):
         else:
             raise AttributeError
 
+    def get_lr(self):
+        lrs = []
+        for param_group in self.optimizer.param_groups:
+            lrs.append(param_group['lr'])
+        if len(lrs) == 1:
+            return lrs[0]
+        return lrs
+
     def save(self, file_path):
         state = {
             'model_name': self.__class__.__name__,
