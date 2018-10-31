@@ -21,41 +21,36 @@ class LRScheduler(Callback):
 
 
 class LambdaLR(LRScheduler):
-    def __init__(self, lr_lambda, last_epoch=-1):
+    def __init__(self, lr_lambda):
         super().__init__(lambda opt: _scheduler.LambdaLR(opt,
-                                                         lr_lambda,
-                                                         last_epoch=last_epoch))
+                                                         lr_lambda))
 
 
 class StepLR(LRScheduler):
-    def __init__(self, step_size, gamma=0.1, last_epoch=-1):
+    def __init__(self, step_size, gamma=0.1):
         super().__init__(lambda opt: _scheduler.StepLR(opt,
                                                        step_size,
-                                                       gamma=gamma,
-                                                       last_epoch=last_epoch))
+                                                       gamma=gamma))
 
 
 class MultiStepLR(LRScheduler):
-    def __init__(self, milestones, gamma=0.1, last_epoch=-1):
+    def __init__(self, milestones, gamma=0.1):
         super().__init__(lambda opt: _scheduler.MultiStepLR(opt,
                                                             milestones,
-                                                            gamma,
-                                                            last_epoch))
+                                                            gamma=gamma))
 
 
 class ExponentialLR(LRScheduler):
-    def __init__(self, gamma, last_epoch=-1):
+    def __init__(self, gamma):
         super().__init__(lambda opt: _scheduler.ExponentialLR(opt,
-                                                              gamma,
-                                                              last_epoch))
+                                                              gamma))
 
 
 class CosineAnnealingLR(LRScheduler):
-    def __init__(self, T_max, eta_min=0, last_epoch=-1):
+    def __init__(self, T_max, eta_min=0):
         super().__init__(lambda opt: _scheduler.CosineAnnealingLR(opt,
                                                                   T_max,
-                                                                  eta_min,
-                                                                  last_epoch))
+                                                                  eta_min=eta_min))
 
 
 class ReduceLROnPlateau(LRScheduler):
@@ -67,10 +62,16 @@ class ReduceLROnPlateau(LRScheduler):
         self.patience = patience
         self.better, self.better_comp, self.best_value = init_better(better, monitor)
 
-        super().__init__(lambda opt: _scheduler.ReduceLROnPlateau(opt, self.better, factor,
-                                                                  patience, verbose,
-                                                                  threshold, threshold_mode,
-                                                                  cooldown, min_lr, eps))
+        super().__init__(lambda opt: _scheduler.ReduceLROnPlateau(opt,
+                                                                  mode=self.better,
+                                                                  factor=factor,
+                                                                  patience=patience,
+                                                                  verbose=verbose,
+                                                                  threshold=threshold,
+                                                                  threshold_mode=threshold_mode,
+                                                                  cooldown=cooldown,
+                                                                  min_lr=min_lr,
+                                                                  eps=eps))
 
     def start(self, state: State):
         self._scheduler = self.scheduler_factory(state.model.optimizer)
