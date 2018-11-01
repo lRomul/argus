@@ -1,3 +1,4 @@
+import math
 import warnings
 
 from argus.callbacks import Callback
@@ -5,6 +6,29 @@ from argus.engine import State
 
 
 METRIC_REGISTRY = {}
+
+
+def init_better(better, monitor):
+    assert better in ['min', 'max', 'auto'], \
+        f"Unknown better option '{better}'"
+
+    if better == 'auto':
+        if monitor.startswith('val_'):
+            metric_name = monitor[len('val_'):]
+        else:
+            metric_name = monitor[len('train_'):]
+        if metric_name not in METRIC_REGISTRY:
+            raise ImportError(f"Metric '{metric_name}' not found in scope")
+        better = METRIC_REGISTRY[metric_name].better
+
+    if better == 'min':
+        better_comp = lambda a, b: a < b
+        best_value = math.inf
+    else:  # better == 'max':
+        better_comp = lambda a, b: a > b
+        best_value = -math.inf
+
+    return better, better_comp, best_value
 
 
 class MetricMeta(type):

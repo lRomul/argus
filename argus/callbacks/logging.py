@@ -19,6 +19,10 @@ def metrics_logging(state: State, train=False, print_epoch=True):
         message = [f"{epoch_name} - Epoch: {train_epoch}"]
     else:
         message = [epoch_name]
+
+    if train:
+        message.append(f'LR: {state.model.get_lr()}')
+
     for metric_name, metric_value in state.metrics.items():
         if not metric_name.startswith(prefix):
             continue

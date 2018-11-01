@@ -15,3 +15,10 @@ from argus.callbacks.checkpoints import \
 
 from argus.callbacks.logging import LoggingToFile
 from argus.callbacks.early_stopping import EarlyStopping
+
+from argus.callbacks.lr_schedulers import LambdaLR,\
+    StepLR,\
+    MultiStepLR,\
+    ExponentialLR,\
+    CosineAnnealingLR,\
+    ReduceLROnPlateau
