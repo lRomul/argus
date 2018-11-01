@@ -1,5 +1,6 @@
 import torch
 import os
+import numbers
 
 from argus.model.build import BuildModel, MODEL_REGISTRY
 from argus.engine import Engine, Events
@@ -110,7 +111,18 @@ class Model(BuildModel):
 
     def set_lr(self, lr):
         if self.train_ready():
-            for param_group in self.optimizer.param_groups:
+            param_groups = self.optimizer.param_groups
+            if isinstance(lr, (list, tuple)):
+                lrs = list(lr)
+                if len(lrs) != len(param_groups):
+                    raise ValueError(f"Expected lrs length {len(param_groups)}, "
+                                     f"got {len(lrs)}")
+            elif isinstance(lr, numbers.Number):
+                lrs = [lr] * len(param_groups)
+            else:
+                raise ValueError(f"Expected lr type 'list', 'tuple or number, "
+                                 f"got {type(lr)}")
+            for lr, param_group in zip(lrs, param_groups):
                 param_group['lr'] = lr
         else:
             raise AttributeError
