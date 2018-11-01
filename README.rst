@@ -14,7 +14,7 @@ Roadmap
 * Save and load models :heavy_check_mark:
 * Improve event handlers (attach callbacks) :heavy_check_mark:
 * ModelCheckpoint, EarlyStopping :heavy_check_mark:
-* LR schedulers
+* LR schedulers :heavy_check_mark:
 * More informative README
 * More examples (imagenet, pytorch-cnn-finetune)
 * More metrics
@@ -55,7 +55,7 @@ MNIST VAE `example <https://github.com/lRomul/argus/blob/master/examples/mnist_v
     from mnist_utils import get_data_loaders
 
     from argus import Model, load_model
-    from argus.callbacks import MonitorCheckpoint, EarlyStopping
+    from argus.callbacks import MonitorCheckpoint, EarlyStopping, ReduceLROnPlateau
 
 
     class Net(nn.Module):
@@ -96,12 +96,13 @@ MNIST VAE `example <https://github.com/lRomul/argus/blob/master/examples/mnist_v
 
         callbacks = [
             MonitorCheckpoint(dir_path='mnist', monitor='val_accuracy', max_saves=3),
-            EarlyStopping(monitor='val_accuracy', patience=3),
+            EarlyStopping(monitor='val_accuracy', patience=9),
+            ReduceLROnPlateau(monitor='val_accuracy', factor=0.5, patience=3)
         ]
 
         model.fit(train_loader,
                   val_loader=val_loader,
-                  max_epochs=args.epochs,
+                  max_epochs=50,
                   metrics=['accuracy'],
                   callbacks=callbacks,
                   metrics_on_train=True)
