@@ -14,7 +14,8 @@ class Checkpoint(Callback):
                  file_format='model-{epoch:03d}-{train_loss:.6f}.pth',
                  max_saves=None,
                  period=1,
-                 copy_last=True):
+                 copy_last=False,
+                 save_after_exception=False):
         assert max_saves is None or max_saves > 0
 
         self.dir_path = dir_path
@@ -28,6 +29,7 @@ class Checkpoint(Callback):
                 warnings.warn(f"Directory '{dir_path}' already exists")
         self.period = period
         self.copy_last = copy_last
+        self.save_after_exception = save_after_exception
         self.epochs_since_last_save = 0
 
     def _format_file_path(self, state: State):
@@ -48,7 +50,7 @@ class Checkpoint(Callback):
             file_path = self._format_file_path(state)
             state.model.save(file_path)
             if self.copy_last:
-                last_model_path = os.path.join(os.path.dirname(file_path), 'model-last.pth')
+                last_model_path = os.path.join(self.dir_path, 'model-last.pth')
                 shutil.copy(file_path, last_model_path)
             self.saved_files_paths.append(file_path)
 
@@ -62,6 +64,12 @@ class Checkpoint(Callback):
     def epoch_complete(self, state: State):
         self.save_checkpoint(state)
 
+    def catch_exception(self, state: State):
+        if self.save_after_exception:
+            exception_model_path = os.path.join(self.dir_path,
+                                                'model-after-exception.pth')
+            state.model.save(exception_model_path)
+
 
 class MonitorCheckpoint(Checkpoint):
     def __init__(self,
@@ -69,7 +77,8 @@ class MonitorCheckpoint(Checkpoint):
                  file_format='model-{epoch:03d}-{monitor:.6f}.pth',
                  max_saves=None,
                  period=1,
-                 copy_last=True,
+                 copy_last=False,
+                 save_after_exception=False,
                  monitor='val_loss',
                  better='auto'):
         assert monitor.startswith('val_') or monitor.startswith('train_')
@@ -77,7 +86,8 @@ class MonitorCheckpoint(Checkpoint):
                          file_format=file_format,
                          max_saves=max_saves,
                          period=period,
-                         copy_last=copy_last)
+                         copy_last=copy_last,
+                         save_after_exception=save_after_exception)
         self.monitor = monitor
         self.better, self.better_comp, self.best_value = init_better(better, monitor)
 

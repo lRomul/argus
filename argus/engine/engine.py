@@ -9,6 +9,7 @@ class Events(Enum):
     EPOCH_COMPLETE = "epoch_complete"
     ITERATION_START = "iteration_start"
     ITERATION_COMPLETE = "iteration_complete"
+    CATCH_EXCEPTION = "catch_exception"
 
 
 class State(object):
@@ -19,6 +20,7 @@ class State(object):
         self.data_loader = None
         self.max_epochs = None
         self.logger = None
+        self.exception = None
 
         self.batch = None
         self.step_output = None
@@ -80,9 +82,12 @@ class Engine(object):
 
             self.raise_event(Events.COMPLETE)
 
-        except Exception as e:
+        except BaseException as e:
             if self.state.logger is not None:
                 self.state.logger.exception(e)
+
+            self.state.exception = e
+            self.raise_event(Events.CATCH_EXCEPTION)
             raise e
         finally:
             self.state.stopped = True

@@ -21,12 +21,12 @@ def metrics_logging(state: State, train=False, print_epoch=True):
         message = [epoch_name]
 
     if train:
-        message.append(f'LR: {state.model.get_lr()}')
+        message.append(f'LR: {state.model.get_lr():.5g}')
 
     for metric_name, metric_value in state.metrics.items():
         if not metric_name.startswith(prefix):
             continue
-        message.append(f"{metric_name}: {metric_value:.8f}")
+        message.append(f"{metric_name}: {metric_value:.7g}")
     state.logger.info(", ".join(message))
 
 
@@ -55,3 +55,6 @@ class LoggingToFile(Callback):
 
     def complete(self, state: State):
         state.logger.removeHandler(self.file_handler)
+
+    def catch_exception(self, state: State):
+        self.complete(state)
