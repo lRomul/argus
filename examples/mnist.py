@@ -67,7 +67,8 @@ class MnistModel(Model):
 
 if __name__ == "__main__":
     args = parse_arguments()
-    train_loader, val_loader = get_data_loaders(args.train_batch_size, args.val_batch_size)
+    train_loader, val_loader = get_data_loaders(args.train_batch_size,
+                                                args.val_batch_size)
 
     params = {
         'nn_module': {'n_classes': 10, 'p_dropout': args.dropout},
@@ -77,7 +78,8 @@ if __name__ == "__main__":
     model = MnistModel(params)
 
     callbacks = [
-        MonitorCheckpoint(dir_path='mnist', monitor='val_accuracy', max_saves=3),
+        MonitorCheckpoint(dir_path='mnist', monitor='val_accuracy',
+                          max_saves=3, copy_last=True),
         EarlyStopping(monitor='val_accuracy', patience=9),
         ReduceLROnPlateau(monitor='val_accuracy', factor=0.5, patience=3)
     ]
