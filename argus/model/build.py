@@ -1,10 +1,12 @@
-import torch
-from torch import nn
-from torch import optim
 import collections
 import warnings
 import logging
 import types
+
+import torch
+from torch import nn
+from torch import optim
+from torch.nn.parallel.data_parallel import DataParallel
 
 from argus.utils import default
 from argus.loss import pytorch_losses
@@ -57,7 +59,17 @@ def cast_prediction_transform(transform):
 
 
 def cast_device(device):
-    return torch.device(device)
+    if isinstance(device, torch.device):
+        return device
+    elif isinstance(device, (list, tuple)):
+        if len(device) == 1:
+            return torch.device(device[0])
+        elif len(device) == 0:
+            raise ValueError
+        else:
+            return [torch.device(d) for d in device]
+    else:
+        return torch.device(device)
 
 
 ATTRIBUTE_CASTS = {
@@ -189,9 +201,20 @@ class BuildModel(metaclass=ModelMeta):
 
     def _build_device(self, params):
         if 'device' in params:
-            device = torch.device(params['device'])
+            device = cast_device(params['device'])
         else:
             device = self._meta['device']
+
+        if isinstance(device, (list, tuple)):
+            device_ids = []
+            for dev in device:
+                if dev.type != 'cuda':
+                    raise ValueError
+                if dev.index is None:
+                    raise ValueError
+                device_ids.append(dev.index)
+            self.nn_module = DataParallel(self.nn_module, device_ids=device_ids)
+            device = torch.device('cuda')
 
         return device
 
