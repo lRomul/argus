@@ -2,7 +2,6 @@ import os
 import numbers
 
 import torch
-from torch.nn.parallel.data_parallel import DataParallel
 
 from argus.model.build import BuildModel, MODEL_REGISTRY
 from argus.engine import Engine, Events
@@ -140,11 +139,7 @@ class Model(BuildModel):
         return lrs
 
     def save(self, file_path):
-        if isinstance(self.nn_module, DataParallel):
-            nn_module = self.nn_module.module
-        else:
-            nn_module = self.nn_module
-
+        nn_module = self.get_nn_module()
         state = {
             'model_name': self.__class__.__name__,
             'params': self.params,
@@ -187,11 +182,7 @@ def load_model(file_path, device=None):
             model = model_class(params)
             nn_state_dict = deep_to(state['nn_state_dict'], model.device)
 
-            if isinstance(model.nn_module, DataParallel):
-                model.nn_module.module.load_state_dict(nn_state_dict)
-            else:
-                model.nn_module.load_state_dict(nn_state_dict)
-
+            model.get_nn_module().load_state_dict(nn_state_dict)
             model.nn_module.eval()
             return model
         else:

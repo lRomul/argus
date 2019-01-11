@@ -122,8 +122,8 @@ class BuildModel(metaclass=ModelMeta):
         self.nn_module = self._build_nn_module(self.params)
         self.optimizer = self._build_optimizer(self.params)
         self.loss = self._build_loss(self.params)
-        self.device = self._build_device(self.params)
         self.prediction_transform = self._build_prediction_transform(self.params)
+        self.device = self._build_device(self.params)
         self.set_device(self.device)
         self.logger = logging.getLogger(__name__)
 
@@ -192,18 +192,15 @@ class BuildModel(metaclass=ModelMeta):
 
         return loss
 
-    def set_device(self, device):
-        self.device = torch.device(device)
-        self.params['device'] = self.device.type
-        self.nn_module = self.nn_module.to(self.device)
-        if self.loss is not default:
-            self.loss = self.loss.to(self.device)
-
-    def _build_device(self, params):
-        if 'device' in params:
-            device = cast_device(params['device'])
+    def get_nn_module(self):
+        if isinstance(self.nn_module, DataParallel):
+            return self.nn_module.module
         else:
-            device = self._meta['device']
+            return self.nn_module
+
+    def set_device(self, device):
+        device = cast_device(device)
+        nn_module = self.get_nn_module()
 
         if isinstance(device, (list, tuple)):
             device_ids = []
@@ -213,10 +210,23 @@ class BuildModel(metaclass=ModelMeta):
                 if dev.index is None:
                     raise ValueError
                 device_ids.append(dev.index)
-            self.nn_module = DataParallel(self.nn_module, device_ids=device_ids)
-            device = torch.device('cuda')
+            nn_module = DataParallel(nn_module, device_ids=device_ids)
+            self.params['device'] = [str(d) for d in device]
+            device = device[0]
+        else:
+            self.params['device'] = str(self.device)
 
-        return device
+        self.device = device
+        self.nn_module = nn_module.to(self.device)
+        if self.loss is not default:
+            self.loss = self.loss.to(self.device)
+
+    def _build_device(self, params):
+        if 'device' in params:
+            device = params['device']
+        else:
+            device = self._meta['device']
+        return cast_device(device)
 
     def _build_prediction_transform(self, params):
         transform_meta = self._meta['prediction_transform']
