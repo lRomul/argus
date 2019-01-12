@@ -211,6 +211,8 @@ class BuildModel(metaclass=ModelMeta):
                 if dev.index is None:
                     raise ValueError
                 device_ids.append(dev.index)
+            if len(device_ids) != len(set(device_ids)):
+                raise ValueError("Cuda device indices must be unique")
             nn_module = DataParallel(nn_module, device_ids=device_ids)
             device = device[0]
 
