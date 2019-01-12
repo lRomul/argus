@@ -8,7 +8,7 @@ from torch import nn
 from torch import optim
 from torch.nn.parallel.data_parallel import DataParallel
 
-from argus.utils import default
+from argus.utils import default, device_to_str
 from argus.loss import pytorch_losses
 from argus.optimizer import pytorch_optimizers
 
@@ -200,6 +200,7 @@ class BuildModel(metaclass=ModelMeta):
 
     def set_device(self, device):
         device = cast_device(device)
+        str_device = device_to_str(device)
         nn_module = self.get_nn_module()
 
         if isinstance(device, (list, tuple)):
@@ -211,11 +212,9 @@ class BuildModel(metaclass=ModelMeta):
                     raise ValueError
                 device_ids.append(dev.index)
             nn_module = DataParallel(nn_module, device_ids=device_ids)
-            self.params['device'] = [str(d) for d in device]
             device = device[0]
-        else:
-            self.params['device'] = str(self.device)
 
+        self.params['device'] = str_device
         self.device = device
         self.nn_module = nn_module.to(self.device)
         if self.loss is not default:

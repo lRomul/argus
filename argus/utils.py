@@ -77,6 +77,13 @@ def deep_detach(input):
         return input
 
 
+def device_to_str(device):
+    if isinstance(device, (list, tuple)):
+        return [str(d) for d in device]
+    else:
+        return str(device)
+
+
 def inheritors(cls):
     subclasses = set()
     cls_list = [cls]

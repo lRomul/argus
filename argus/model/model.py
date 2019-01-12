@@ -3,9 +3,9 @@ import numbers
 
 import torch
 
-from argus.model.build import BuildModel, MODEL_REGISTRY
+from argus.model.build import BuildModel, MODEL_REGISTRY, cast_device
 from argus.engine import Engine, Events
-from argus.utils import deep_to, deep_detach, setup_logging
+from argus.utils import deep_to, deep_detach, setup_logging, device_to_str
 from argus.callbacks import Callback, on_epoch_complete
 from argus.callbacks.logging import metrics_logging
 from argus.metrics.metric import Metric, METRIC_REGISTRY
@@ -175,7 +175,8 @@ def load_model(file_path, device=None):
         if state['model_name'] in MODEL_REGISTRY:
             params = state['params']
             if device is not None:
-                device = torch.device(device).type
+                device = cast_device(device)
+                device = device_to_str(device)
                 params['device'] = device
 
             model_class = MODEL_REGISTRY[state['model_name']]
