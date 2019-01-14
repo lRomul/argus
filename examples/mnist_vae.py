@@ -62,6 +62,7 @@ class VAE(nn.Module):
         self.fc22 = nn.Linear(400, 20)
         self.fc3 = nn.Linear(20, 400)
         self.fc4 = nn.Linear(400, 784)
+        self.sigmoid = nn.Sigmoid()
 
     def encode(self, x):
         h1 = F.relu(self.fc1(x))
@@ -77,7 +78,7 @@ class VAE(nn.Module):
 
     def decode(self, z):
         h3 = F.relu(self.fc3(z))
-        return F.sigmoid(self.fc4(h3))
+        return self.sigmoid(self.fc4(h3))
 
     def forward(self, x):
         mu, logvar = self.encode(x.view(-1, 784))
@@ -89,7 +90,7 @@ class VAE(nn.Module):
 class VaeLoss(nn.modules.Module):
     def forward(self, inp, trg):
         recon, mu, logvar = inp
-        bce = F.binary_cross_entropy(recon, trg.view(-1, 784), size_average=False)
+        bce = F.binary_cross_entropy(recon, trg.view(-1, 784), reduction='sum')
 
         # see Appendix B from VAE paper:
         # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014

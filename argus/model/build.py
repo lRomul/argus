@@ -1,12 +1,14 @@
-import torch
-from torch import nn
-from torch import optim
 import collections
 import warnings
 import logging
 import types
 
-from argus.utils import default
+import torch
+from torch import nn
+from torch import optim
+from torch.nn.parallel.data_parallel import DataParallel
+
+from argus.utils import default, device_to_str
 from argus.loss import pytorch_losses
 from argus.optimizer import pytorch_optimizers
 
@@ -57,7 +59,17 @@ def cast_prediction_transform(transform):
 
 
 def cast_device(device):
-    return torch.device(device)
+    if isinstance(device, torch.device):
+        return device
+    elif isinstance(device, (list, tuple)):
+        if len(device) == 1:
+            return torch.device(device[0])
+        elif len(device) == 0:
+            raise ValueError
+        else:
+            return [torch.device(d) for d in device]
+    else:
+        return torch.device(device)
 
 
 ATTRIBUTE_CASTS = {
@@ -110,8 +122,8 @@ class BuildModel(metaclass=ModelMeta):
         self.nn_module = self._build_nn_module(self.params)
         self.optimizer = self._build_optimizer(self.params)
         self.loss = self._build_loss(self.params)
-        self.device = self._build_device(self.params)
         self.prediction_transform = self._build_prediction_transform(self.params)
+        self.device = self._build_device(self.params)
         self.set_device(self.device)
         self.logger = logging.getLogger(__name__)
 
@@ -180,20 +192,42 @@ class BuildModel(metaclass=ModelMeta):
 
         return loss
 
+    def get_nn_module(self):
+        if isinstance(self.nn_module, DataParallel):
+            return self.nn_module.module
+        else:
+            return self.nn_module
+
     def set_device(self, device):
-        self.device = torch.device(device)
-        self.params['device'] = self.device.type
-        self.nn_module = self.nn_module.to(self.device)
+        device = cast_device(device)
+        str_device = device_to_str(device)
+        nn_module = self.get_nn_module()
+
+        if isinstance(device, (list, tuple)):
+            device_ids = []
+            for dev in device:
+                if dev.type != 'cuda':
+                    raise ValueError
+                if dev.index is None:
+                    raise ValueError
+                device_ids.append(dev.index)
+            if len(device_ids) != len(set(device_ids)):
+                raise ValueError("Cuda device indices must be unique")
+            nn_module = DataParallel(nn_module, device_ids=device_ids)
+            device = device[0]
+
+        self.params['device'] = str_device
+        self.device = device
+        self.nn_module = nn_module.to(self.device)
         if self.loss is not default:
             self.loss = self.loss.to(self.device)
 
     def _build_device(self, params):
         if 'device' in params:
-            device = torch.device(params['device'])
+            device = params['device']
         else:
             device = self._meta['device']
-
-        return device
+        return cast_device(device)
 
     def _build_prediction_transform(self, params):
         transform_meta = self._meta['prediction_transform']

@@ -1,10 +1,11 @@
-import torch
 import os
 import numbers
 
-from argus.model.build import BuildModel, MODEL_REGISTRY
+import torch
+
+from argus.model.build import BuildModel, MODEL_REGISTRY, cast_device
 from argus.engine import Engine, Events
-from argus.utils import to_device, detach_tensors, setup_logging
+from argus.utils import deep_to, deep_detach, setup_logging, device_to_str
 from argus.callbacks import Callback, on_epoch_complete
 from argus.callbacks.logging import metrics_logging
 from argus.metrics.metric import Metric, METRIC_REGISTRY
@@ -40,8 +41,10 @@ class Model(BuildModel):
         super().__init__(params)
 
     def prepare_batch(self, batch, device):
-        inp, trg = batch
-        return to_device(inp, device), to_device(trg, device)
+        input, target = batch
+        input = deep_to(input, device, non_blocking=True)
+        target = deep_to(target, device, non_blocking=True)
+        return input, target
 
     def train_step(self, batch)-> dict:
         if not self.nn_module.training:
@@ -53,8 +56,8 @@ class Model(BuildModel):
         loss.backward()
         self.optimizer.step()
 
-        prediction = detach_tensors(prediction)
-        target = detach_tensors(target)
+        prediction = deep_detach(prediction)
+        target = deep_detach(target)
         return {
             'prediction': self.prediction_transform(prediction),
             'target': target,
@@ -136,10 +139,11 @@ class Model(BuildModel):
         return lrs
 
     def save(self, file_path):
+        nn_module = self.get_nn_module()
         state = {
             'model_name': self.__class__.__name__,
             'params': self.params,
-            'nn_state_dict': to_device(self.nn_module.state_dict(), 'cpu')
+            'nn_state_dict': deep_to(nn_module.state_dict(), 'cpu')
         }
         torch.save(state, file_path)
         self.logger.info(f"Model saved to '{file_path}'")
@@ -158,7 +162,7 @@ class Model(BuildModel):
         with torch.no_grad():
             if self.nn_module.training:
                 self.nn_module.eval()
-            input = to_device(input, self.device)
+            input = deep_to(input, self.device)
             prediction = self.nn_module(input)
             prediction = self.prediction_transform(prediction)
             return prediction
@@ -171,13 +175,15 @@ def load_model(file_path, device=None):
         if state['model_name'] in MODEL_REGISTRY:
             params = state['params']
             if device is not None:
-                device = torch.device(device).type
+                device = cast_device(device)
+                device = device_to_str(device)
                 params['device'] = device
 
             model_class = MODEL_REGISTRY[state['model_name']]
             model = model_class(params)
-            nn_state_dict = to_device(state['nn_state_dict'], model.device)
-            model.nn_module.load_state_dict(nn_state_dict)
+            nn_state_dict = deep_to(state['nn_state_dict'], model.device)
+
+            model.get_nn_module().load_state_dict(nn_state_dict)
             model.nn_module.eval()
             return model
         else:
