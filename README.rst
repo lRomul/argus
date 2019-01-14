@@ -15,6 +15,7 @@ Roadmap
 * Improve event handlers (attach callbacks) :heavy_check_mark:
 * ModelCheckpoint, EarlyStopping :heavy_check_mark:
 * LR schedulers :heavy_check_mark:
+* DataParallel for multi-gpu training :heavy_check_mark:
 * More informative README
 * More examples (imagenet, pytorch-cnn-finetune)
 * More metrics
