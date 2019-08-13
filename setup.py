@@ -18,7 +18,7 @@ def find_version(*file_paths):
     raise RuntimeError("Unable to find version string.")
 
 
-readme = read('README.rst')
+readme = read('README.md')
 
 VERSION = find_version('argus', '__init__.py')
 
