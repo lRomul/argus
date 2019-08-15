@@ -48,5 +48,5 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
     ],
-    install_requires=['torch>=0.4.0'],
+    install_requires=['torch>=0.4.1'],
 )

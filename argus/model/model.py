@@ -46,9 +46,16 @@ class Model(BuildModel):
         target = deep_to(target, device, non_blocking=True)
         return input, target
 
-    def train_step(self, batch)-> dict:
+    def train(self):
         if not self.nn_module.training:
             self.nn_module.train()
+
+    def eval(self):
+        if self.nn_module.training:
+            self.nn_module.eval()
+
+    def train_step(self, batch, state) -> dict:
+        self.train()
         self.optimizer.zero_grad()
         input, target = self.prepare_batch(batch, self.device)
         prediction = self.nn_module(input)
@@ -58,21 +65,22 @@ class Model(BuildModel):
 
         prediction = deep_detach(prediction)
         target = deep_detach(target)
+        prediction = self.prediction_transform(prediction)
         return {
-            'prediction': self.prediction_transform(prediction),
+            'prediction': prediction,
             'target': target,
             'loss': loss.item()
         }
 
-    def val_step(self, batch) -> dict:
-        if self.nn_module.training:
-            self.nn_module.eval()
+    def val_step(self, batch, state) -> dict:
+        self.eval()
         with torch.no_grad():
             input, target = self.prepare_batch(batch, self.device)
             prediction = self.nn_module(input)
             loss = self.loss(prediction, target)
+            prediction = self.prediction_transform(prediction)
             return {
-                'prediction': self.prediction_transform(prediction),
+                'prediction': prediction,
                 'target': target,
                 'loss': loss.item()
             }
@@ -160,8 +168,7 @@ class Model(BuildModel):
     def predict(self, input):
         assert self.predict_ready()
         with torch.no_grad():
-            if self.nn_module.training:
-                self.nn_module.eval()
+            self.eval()
             input = deep_to(input, self.device)
             prediction = self.nn_module(input)
             prediction = self.prediction_transform(prediction)
@@ -184,7 +191,7 @@ def load_model(file_path, device=None):
             nn_state_dict = deep_to(state['nn_state_dict'], model.device)
 
             model.get_nn_module().load_state_dict(nn_state_dict)
-            model.nn_module.eval()
+            model.eval()
             return model
         else:
             raise ImportError(f"Model '{state['model_name']}' not found in scope")

@@ -72,7 +72,7 @@ class Engine(object):
                     self.state.batch = batch
                     self.state.iteration += 1
                     self.raise_event(Events.ITERATION_START)
-                    self.state.step_output = self.step_function(batch)
+                    self.state.step_output = self.step_function(batch, self.state)
                     self.raise_event(Events.ITERATION_COMPLETE)
                     self.state.step_output = None
                     if self.state.stopped:
