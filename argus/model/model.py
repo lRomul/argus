@@ -111,14 +111,23 @@ class Model(BuildModel):
             @on_epoch_complete
             def validation_epoch(train_state, val_engine, val_loader):
                 epoch = train_state.epoch
-                val_state = val_engine.run(val_loader, epoch, epoch)
+                val_state = val_engine.run(val_loader, epoch, epoch + 1)
                 train_state.metrics.update(val_state.metrics)
 
             validation_epoch.attach(train_engine, val_engine, val_loader)
             metrics_logging.attach(train_engine, train=False)
 
         _attach_callbacks(train_engine, callbacks)
-        train_engine.run(train_loader, 1, max_epochs)
+        train_engine.run(train_loader, 0, max_epochs)
+
+    def validate(self, val_loader, metrics=None, callbacks=None):
+        metrics = [] if metrics is None else metrics
+        assert self.train_ready()
+        val_engine = Engine(self.val_step, model=self, logger=self.logger)
+        _attach_metrics(val_engine, [Loss()] + metrics, name_prefix='val_')
+        _attach_callbacks(val_engine, callbacks)
+        metrics_logging.attach(val_engine, train=False, print_epoch=False)
+        return val_engine.run(val_loader).metrics
 
     def set_lr(self, lr):
         if self.train_ready():
@@ -155,15 +164,6 @@ class Model(BuildModel):
         }
         torch.save(state, file_path)
         self.logger.info(f"Model saved to '{file_path}'")
-
-    def validate(self, val_loader, metrics=None, callbacks=None):
-        metrics = [] if metrics is None else metrics
-        assert self.train_ready()
-        val_engine = Engine(self.val_step, model=self, logger=self.logger)
-        _attach_metrics(val_engine, [Loss()] + metrics, name_prefix='val_')
-        _attach_callbacks(val_engine, callbacks)
-        metrics_logging.attach(val_engine, train=False, print_epoch=False)
-        return val_engine.run(val_loader).metrics
 
     def predict(self, input):
         assert self.predict_ready()

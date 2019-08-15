@@ -16,7 +16,7 @@ class LRScheduler(Callback):
     def start(self, state: State):
         self._scheduler = self.scheduler_factory(state.model.optimizer)
 
-    def epoch_complete(self, state: State):
+    def epoch_start(self, state: State):
         self._scheduler.step(epoch=state.epoch)
 
 
