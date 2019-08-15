@@ -74,6 +74,7 @@ class Engine(object):
                     self.raise_event(Events.ITERATION_START)
                     self.state.step_output = self.step_function(batch)
                     self.raise_event(Events.ITERATION_COMPLETE)
+                    self.state.step_output = None
                     if self.state.stopped:
                         break
 
