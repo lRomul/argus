@@ -1,10 +1,19 @@
 import math
+import warnings
 
 from torch.optim import lr_scheduler as _scheduler
 
 from argus.engine import State
 from argus.callbacks.callback import Callback
 from argus.metrics.metric import init_better
+
+
+# Filter warning https://github.com/pytorch/pytorch/issues/20124
+# The callback uses the epoch param of a schedulers step function, so it's not a problem
+warnings.filterwarnings('ignore',
+                        r'.*`lr_scheduler.step\(\)` before `optimizer.step\(\)`.*',
+                        UserWarning,
+                        'torch.optim.lr_scheduler')
 
 
 class LRScheduler(Callback):
