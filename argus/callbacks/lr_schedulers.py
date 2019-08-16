@@ -88,6 +88,9 @@ class ReduceLROnPlateau(LRScheduler):
         self._scheduler = self.scheduler_factory(state.model.optimizer)
         self.best_value = math.inf if self.better == 'min' else -math.inf
 
+    def epoch_start(self, state: State):
+        pass
+
     def epoch_complete(self, state: State):
         self._scheduler.step(metrics=state.metrics[self.monitor], epoch=state.epoch)
 
