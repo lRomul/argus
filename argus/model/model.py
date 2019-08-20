@@ -18,7 +18,9 @@ def _attach_callbacks(engine, callbacks):
             if isinstance(callback, Callback):
                 callback.attach(engine)
             else:
-                raise TypeError
+                raise TypeError(
+                    f"Expected callback type {Callback}, got {type(callback)}"
+                )
 
 
 def _attach_metrics(engine, metrics, name_prefix=''):
@@ -27,13 +29,15 @@ def _attach_metrics(engine, metrics, name_prefix=''):
             if metric in METRIC_REGISTRY:
                 metric = METRIC_REGISTRY[metric]()
             else:
-                raise ValueError
+                raise ValueError(f"Metric '{metric}' not found in scope")
         if isinstance(metric, Metric):
             metric.attach(engine, {
                 Events.EPOCH_COMPLETE: {'name_prefix': name_prefix}
             })
         else:
-            raise TypeError
+            raise TypeError(
+                f"Expected metric type {Metric} or str, got {type(metric)}"
+            )
 
 
 class Model(BuildModel):
@@ -140,7 +144,7 @@ class Model(BuildModel):
             elif isinstance(lr, numbers.Number):
                 lrs = [lr] * len(param_groups)
             else:
-                raise ValueError(f"Expected lr type 'list', 'tuple or number, "
+                raise ValueError(f"Expected lr type list, tuple or number, "
                                  f"got {type(lr)}")
             for lr, param_group in zip(lrs, param_groups):
                 param_group['lr'] = lr

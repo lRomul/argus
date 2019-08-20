@@ -27,7 +27,7 @@ def cast_optimizer(optimizer):
     elif isinstance(optimizer, str) and optimizer in pytorch_optimizers:
         optimizer = getattr(optim, optimizer)
         return optimizer
-    raise TypeError
+    raise TypeError(f"Incorrect type for optimizer {type(optimizer)}")
 
 
 def cast_nn_module(nn_module):
@@ -36,7 +36,7 @@ def cast_nn_module(nn_module):
     elif isinstance(nn_module, type):
         if issubclass(nn_module, nn.Module):
             return nn_module
-    raise TypeError
+    raise TypeError(f"Incorrect type for nn_module {type(nn_module)}")
 
 
 def cast_loss(loss):
@@ -47,7 +47,7 @@ def cast_loss(loss):
     elif isinstance(loss, str) and loss in pytorch_losses:
         loss = getattr(nn.modules.loss, loss)
         return loss
-    raise TypeError
+    raise TypeError(f"Incorrect type for loss {type(loss)}")
 
 
 def cast_prediction_transform(transform):
@@ -55,7 +55,7 @@ def cast_prediction_transform(transform):
         return transform
     elif isinstance(transform, type) and callable(transform):
         return transform
-    raise TypeError
+    raise TypeError(f"Incorrect type for prediction_transform: {type(transform)}")
 
 
 def cast_device(device):
@@ -65,7 +65,7 @@ def cast_device(device):
         if len(device) == 1:
             return torch.device(device[0])
         elif len(device) == 0:
-            raise ValueError
+            raise ValueError("Empty list of devices")
         else:
             return [torch.device(d) for d in device]
     else:
@@ -130,7 +130,7 @@ class BuildModel(metaclass=ModelMeta):
     def _build_nn_module(self, params):
         nn_module_meta = self._meta['nn_module']
         if nn_module_meta is default:
-            raise ValueError
+            raise ValueError("nn_module is required attribute for argus.Model")
 
         if isinstance(nn_module_meta, collections.Mapping):
             nn_module_info = params['nn_module']
@@ -139,7 +139,9 @@ class BuildModel(metaclass=ModelMeta):
             elif isinstance(nn_module_info, str):
                 nn_name, nn_params = nn_module_info, dict()
             else:
-                raise TypeError
+                raise TypeError(
+                    f"Incorrect type for nn_module params {type(nn_module_info)}"
+                )
             nn_module = nn_module_meta[nn_name](**nn_params)
         else:
             nn_params = params.get('nn_module', dict())
@@ -159,7 +161,9 @@ class BuildModel(metaclass=ModelMeta):
                 elif isinstance(optim_info, str):
                     optim_name, optim_params = optim_info, dict()
                 else:
-                    raise TypeError
+                    raise TypeError(
+                        f"Incorrect type for optimizer params {type(optim_info)}"
+                    )
                 grad_params = (param for param in self.nn_module.parameters()
                                if param.requires_grad)
                 optimizer = optimizer_meta[optim_name](params=grad_params, **optim_params)
@@ -184,7 +188,9 @@ class BuildModel(metaclass=ModelMeta):
             elif isinstance(loss_info, str):
                 loss_name, loss_params = loss_info, dict()
             else:
-                raise TypeError
+                raise TypeError(
+                    f"Incorrect type for loss params {type(loss_info)}"
+                )
             loss = loss_meta[loss_name](**loss_params)
         else:
             loss_params = params.get('loss', dict())
@@ -207,9 +213,9 @@ class BuildModel(metaclass=ModelMeta):
             device_ids = []
             for dev in device:
                 if dev.type != 'cuda':
-                    raise ValueError
+                    raise ValueError("Non cuda device in list of devices")
                 if dev.index is None:
-                    raise ValueError
+                    raise ValueError("Cuda device without index in list of devices")
                 device_ids.append(dev.index)
             if len(device_ids) != len(set(device_ids)):
                 raise ValueError("Cuda device indices must be unique")
@@ -243,7 +249,9 @@ class BuildModel(metaclass=ModelMeta):
             elif isinstance(trns_info, str):
                 trns_name, trns_params = trns_info, dict()
             else:
-                raise TypeError
+                raise TypeError(
+                    f"Incorrect type for prediction_transform params {type(trns_info)}"
+                )
             prediction_transform = transform_meta[trns_name](**trns_params)
         else:
             trns_params = params.get('prediction_transform', dict())
