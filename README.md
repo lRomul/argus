@@ -120,7 +120,7 @@ You can find other examples [here](examples).
 [https://github.com/lRomul/argus-tgs-salt](https://github.com/lRomul/argus-tgs-salt/blob/master/src/argus_models.py)
 3. 50th place solution for Quick, Draw! Doodle Recognition Challenge (gradient accumulation, training on 50M images)   
 [https://github.com/lRomul/argus-quick-draw](https://github.com/lRomul/argus-quick-draw/blob/master/src/argus_models.py)
-4. 66th place solution for Kaggle Airbus Ship Detection Challenge (segmentation)  
+4. 66th place solution for Kaggle Airbus Ship Detection Challenge (instance segmentation)  
 [https://github.com/OniroAI/Universal-segmentation-baseline-Kaggle-Airbus-Ship-Detection](https://github.com/OniroAI/Universal-segmentation-baseline-Kaggle-Airbus-Ship-Detection)
 5. Solution for Humpback Whale Identification (metric learning: arcface, center loss)  
 [https://github.com/lRomul/argus-humpback-whale](https://github.com/lRomul/argus-humpback-whale/blob/master/src/argus_models.py)

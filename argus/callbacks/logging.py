@@ -61,7 +61,7 @@ class LoggingToFile(Callback):
         self.complete(state)
 
 
-class CSVLogger(Callback):
+class LoggingToCSV(Callback):
     def __init__(self, file_path,
                  separator=',',
                  write_header=True,

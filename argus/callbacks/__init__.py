@@ -13,7 +13,7 @@ from argus.callbacks.checkpoints import \
     Checkpoint,\
     MonitorCheckpoint
 
-from argus.callbacks.logging import LoggingToFile, CSVLogger
+from argus.callbacks.logging import LoggingToFile, LoggingToCSV
 from argus.callbacks.early_stopping import EarlyStopping
 
 from argus.callbacks.lr_schedulers import \
