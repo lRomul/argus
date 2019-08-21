@@ -31,6 +31,7 @@ setup(
     url='https://github.com/lRomul/argus',
     description='Easy high-level library for training neural networks in PyTorch.',
     long_description=readme,
+    long_description_content_type='text/markdown',
     license='MIT',
 
     # Package info
