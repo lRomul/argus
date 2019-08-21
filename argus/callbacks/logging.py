@@ -1,4 +1,5 @@
 import os
+import csv
 import logging
 
 from argus.engine import State
@@ -55,6 +56,49 @@ class LoggingToFile(Callback):
 
     def complete(self, state: State):
         state.logger.removeHandler(self.file_handler)
+
+    def catch_exception(self, state: State):
+        self.complete(state)
+
+
+class LoggingToCSV(Callback):
+    def __init__(self, file_path,
+                 separator=',',
+                 write_header=True,
+                 append=False):
+        self.file_path = file_path
+        self.separator = separator
+        self.write_header = write_header
+        self.append = append
+        self.csv_file = None
+
+    def start(self, state: State):
+        if self.append:
+            file_mode = 'a'
+        else:
+            file_mode = 'w'
+
+        self.csv_file = open(self.file_path, file_mode, newline='')
+
+    def epoch_complete(self, state: State):
+        fields = {
+            'epoch': state.epoch,
+            **state.metrics
+        }
+        writer = csv.DictWriter(self.csv_file,
+                                fieldnames=fields,
+                                delimiter=self.separator)
+
+        if self.write_header:
+            writer.writeheader()
+            self.write_header = False
+
+        writer.writerow(fields)
+        self.csv_file.flush()
+
+    def complete(self, state: State):
+        if self.csv_file is not None:
+            self.csv_file.close()
 
     def catch_exception(self, state: State):
         self.complete(state)

@@ -18,7 +18,9 @@ def _attach_callbacks(engine, callbacks):
             if isinstance(callback, Callback):
                 callback.attach(engine)
             else:
-                raise TypeError
+                raise TypeError(
+                    f"Expected callback type {Callback}, got {type(callback)}"
+                )
 
 
 def _attach_metrics(engine, metrics, name_prefix=''):
@@ -27,13 +29,15 @@ def _attach_metrics(engine, metrics, name_prefix=''):
             if metric in METRIC_REGISTRY:
                 metric = METRIC_REGISTRY[metric]()
             else:
-                raise ValueError
+                raise ValueError(f"Metric '{metric}' not found in scope")
         if isinstance(metric, Metric):
             metric.attach(engine, {
                 Events.EPOCH_COMPLETE: {'name_prefix': name_prefix}
             })
         else:
-            raise TypeError
+            raise TypeError(
+                f"Expected metric type {Metric} or str, got {type(metric)}"
+            )
 
 
 class Model(BuildModel):
@@ -46,9 +50,16 @@ class Model(BuildModel):
         target = deep_to(target, device, non_blocking=True)
         return input, target
 
-    def train_step(self, batch)-> dict:
+    def train(self):
         if not self.nn_module.training:
             self.nn_module.train()
+
+    def eval(self):
+        if self.nn_module.training:
+            self.nn_module.eval()
+
+    def train_step(self, batch, state) -> dict:
+        self.train()
         self.optimizer.zero_grad()
         input, target = self.prepare_batch(batch, self.device)
         prediction = self.nn_module(input)
@@ -58,21 +69,22 @@ class Model(BuildModel):
 
         prediction = deep_detach(prediction)
         target = deep_detach(target)
+        prediction = self.prediction_transform(prediction)
         return {
-            'prediction': self.prediction_transform(prediction),
+            'prediction': prediction,
             'target': target,
             'loss': loss.item()
         }
 
-    def val_step(self, batch) -> dict:
-        if self.nn_module.training:
-            self.nn_module.eval()
+    def val_step(self, batch, state) -> dict:
+        self.eval()
         with torch.no_grad():
             input, target = self.prepare_batch(batch, self.device)
             prediction = self.nn_module(input)
             loss = self.loss(prediction, target)
+            prediction = self.prediction_transform(prediction)
             return {
-                'prediction': self.prediction_transform(prediction),
+                'prediction': prediction,
                 'target': target,
                 'loss': loss.item()
             }
@@ -103,14 +115,23 @@ class Model(BuildModel):
             @on_epoch_complete
             def validation_epoch(train_state, val_engine, val_loader):
                 epoch = train_state.epoch
-                val_state = val_engine.run(val_loader, epoch, epoch)
+                val_state = val_engine.run(val_loader, epoch, epoch + 1)
                 train_state.metrics.update(val_state.metrics)
 
             validation_epoch.attach(train_engine, val_engine, val_loader)
             metrics_logging.attach(train_engine, train=False)
 
         _attach_callbacks(train_engine, callbacks)
-        train_engine.run(train_loader, 1, max_epochs)
+        train_engine.run(train_loader, 0, max_epochs)
+
+    def validate(self, val_loader, metrics=None, callbacks=None):
+        metrics = [] if metrics is None else metrics
+        assert self.train_ready()
+        val_engine = Engine(self.val_step, model=self, logger=self.logger)
+        _attach_metrics(val_engine, [Loss()] + metrics, name_prefix='val_')
+        _attach_callbacks(val_engine, callbacks)
+        metrics_logging.attach(val_engine, train=False, print_epoch=False)
+        return val_engine.run(val_loader).metrics
 
     def set_lr(self, lr):
         if self.train_ready():
@@ -123,7 +144,7 @@ class Model(BuildModel):
             elif isinstance(lr, numbers.Number):
                 lrs = [lr] * len(param_groups)
             else:
-                raise ValueError(f"Expected lr type 'list', 'tuple or number, "
+                raise ValueError(f"Expected lr type list, tuple or number, "
                                  f"got {type(lr)}")
             for lr, param_group in zip(lrs, param_groups):
                 param_group['lr'] = lr
@@ -148,20 +169,10 @@ class Model(BuildModel):
         torch.save(state, file_path)
         self.logger.info(f"Model saved to '{file_path}'")
 
-    def validate(self, val_loader, metrics=None, callbacks=None):
-        metrics = [] if metrics is None else metrics
-        assert self.train_ready()
-        val_engine = Engine(self.val_step, model=self, logger=self.logger)
-        _attach_metrics(val_engine, [Loss()] + metrics, name_prefix='val_')
-        _attach_callbacks(val_engine, callbacks)
-        metrics_logging.attach(val_engine, train=False, print_epoch=False)
-        return val_engine.run(val_loader).metrics
-
     def predict(self, input):
         assert self.predict_ready()
         with torch.no_grad():
-            if self.nn_module.training:
-                self.nn_module.eval()
+            self.eval()
             input = deep_to(input, self.device)
             prediction = self.nn_module(input)
             prediction = self.prediction_transform(prediction)
@@ -184,7 +195,7 @@ def load_model(file_path, device=None):
             nn_state_dict = deep_to(state['nn_state_dict'], model.device)
 
             model.get_nn_module().load_state_dict(nn_state_dict)
-            model.nn_module.eval()
+            model.eval()
             return model
         else:
             raise ImportError(f"Model '{state['model_name']}' not found in scope")

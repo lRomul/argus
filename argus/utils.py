@@ -2,8 +2,6 @@ import torch
 import collections
 import logging
 
-import warnings
-
 
 default = object()
 
@@ -17,36 +15,6 @@ def setup_logging(file_path=None):
         level=logging.getLevelName(logging.INFO),
         handlers=handlers,
     )
-
-
-def to_device(input, device):
-    warnings.warn("'to_device' has been deprecated in favor of 'deep_to'",
-                  category=DeprecationWarning)
-    if torch.is_tensor(input):
-        return input.to(device=device)
-    elif isinstance(input, str):
-        return input
-    elif isinstance(input, collections.Mapping):
-        return {k: to_device(sample, device=device) for k, sample in input.items()}
-    elif isinstance(input, collections.Sequence):
-        return [to_device(sample, device=device) for sample in input]
-    else:
-        raise TypeError(f"Input must contain tensor, dict or list, found {type(input)}")
-
-
-def detach_tensors(input):
-    warnings.warn("'detach_tensors' has been deprecated in favor of 'deep_detach'",
-                  category=DeprecationWarning)
-    if torch.is_tensor(input):
-        return input.detach()
-    elif isinstance(input, str):
-        return input
-    elif isinstance(input, collections.Mapping):
-        return {k: detach_tensors(sample) for k, sample in input.items()}
-    elif isinstance(input, collections.Sequence):
-        return [detach_tensors(sample) for sample in input]
-    else:
-        raise TypeError(f"Input must contain tensor, dict or list, found {type(input)}")
 
 
 def deep_to(input, *args, **kwarg):

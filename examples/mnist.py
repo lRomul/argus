@@ -7,7 +7,8 @@ from torchvision.datasets import MNIST
 import argparse
 
 from argus import Model, load_model
-from argus.callbacks import MonitorCheckpoint, EarlyStopping, ReduceLROnPlateau
+from argus.callbacks import MonitorCheckpoint, EarlyStopping, \
+    ReduceLROnPlateau, LoggingToCSV
 
 
 def parse_arguments():
@@ -78,10 +79,11 @@ if __name__ == "__main__":
     model = MnistModel(params)
 
     callbacks = [
-        MonitorCheckpoint(dir_path='mnist', monitor='val_accuracy',
+        MonitorCheckpoint(dir_path='mnist/', monitor='val_accuracy',
                           max_saves=3, copy_last=True),
         EarlyStopping(monitor='val_accuracy', patience=9),
-        ReduceLROnPlateau(monitor='val_accuracy', factor=0.5, patience=3)
+        ReduceLROnPlateau(monitor='val_accuracy', factor=0.5, patience=3),
+        LoggingToCSV('mnist/log.csv')
     ]
 
     model.fit(train_loader,

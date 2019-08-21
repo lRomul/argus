@@ -7,10 +7,9 @@ from torchvision.datasets import MNIST
 from torchvision.utils import save_image
 import argparse
 
-import argus
 from argus import Model
 from argus.engine import State
-from argus.callbacks import Checkpoint
+from argus.callbacks import Checkpoint, Callback
 
 
 def parse_arguments():
@@ -105,16 +104,19 @@ class VaeMnistModel(Model):
     loss = VaeLoss
 
 
-@argus.callbacks.on_epoch_complete
-def save_reconstructions(state: State):
-    data = state.step_output['target']
-    recon, _, _ = state.step_output['prediction']
-    batch_size = data.size(0)
-    num_images = min(batch_size, 8)
-    comparison = torch.cat([data[:num_images],
-                           recon.view(batch_size, 1, 28, 28)[:num_images]])
-    save_image(comparison.to('cpu'),
-               f'mnist_vae/recon_epoch_{state.epoch}.png', nrow=num_images)
+class Reconstruction(Callback):
+    def iteration_complete(self, state: State):
+        state.saved_step_output = state.step_output
+
+    def epoch_complete(self, state: State):
+        data = state.saved_step_output['target']
+        recon, _, _ = state.saved_step_output['prediction']
+        batch_size = data.size(0)
+        num_images = min(batch_size, 8)
+        comparison = torch.cat([data[:num_images],
+                                recon.view(batch_size, 1, 28, 28)[:num_images]])
+        save_image(comparison.to('cpu'),
+                   f'mnist_vae/recon_epoch_{state.epoch}.png', nrow=num_images)
 
 
 if __name__ == "__main__":
@@ -135,4 +137,4 @@ if __name__ == "__main__":
               val_loader=val_loader,
               max_epochs=args.epochs,
               callbacks=callbacks,
-              val_callbacks=[save_reconstructions])
+              val_callbacks=[Reconstruction()])

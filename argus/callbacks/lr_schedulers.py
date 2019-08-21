@@ -1,10 +1,19 @@
 import math
+import warnings
 
 from torch.optim import lr_scheduler as _scheduler
 
 from argus.engine import State
 from argus.callbacks.callback import Callback
 from argus.metrics.metric import init_better
+
+
+# Filter warning https://github.com/pytorch/pytorch/issues/20124
+# The callback uses the epoch param of a schedulers step function, so it's not a problem
+warnings.filterwarnings('ignore',
+                        r'.*`lr_scheduler.step\(\)` before `optimizer.step\(\)`.*',
+                        UserWarning,
+                        'torch.optim.lr_scheduler')
 
 
 class LRScheduler(Callback):
@@ -16,7 +25,7 @@ class LRScheduler(Callback):
     def start(self, state: State):
         self._scheduler = self.scheduler_factory(state.model.optimizer)
 
-    def epoch_complete(self, state: State):
+    def epoch_start(self, state: State):
         self._scheduler.step(epoch=state.epoch)
 
 
@@ -62,20 +71,75 @@ class ReduceLROnPlateau(LRScheduler):
         self.patience = patience
         self.better, self.better_comp, self.best_value = init_better(better, monitor)
 
-        super().__init__(lambda opt: _scheduler.ReduceLROnPlateau(opt,
-                                                                  mode=self.better,
-                                                                  factor=factor,
-                                                                  patience=patience,
-                                                                  verbose=verbose,
-                                                                  threshold=threshold,
-                                                                  threshold_mode=threshold_mode,
-                                                                  cooldown=cooldown,
-                                                                  min_lr=min_lr,
-                                                                  eps=eps))
+        super().__init__(
+            lambda opt: _scheduler.ReduceLROnPlateau(opt,
+                                                     mode=self.better,
+                                                     factor=factor,
+                                                     patience=patience,
+                                                     verbose=verbose,
+                                                     threshold=threshold,
+                                                     threshold_mode=threshold_mode,
+                                                     cooldown=cooldown,
+                                                     min_lr=min_lr,
+                                                     eps=eps)
+        )
 
     def start(self, state: State):
         self._scheduler = self.scheduler_factory(state.model.optimizer)
         self.best_value = math.inf if self.better == 'min' else -math.inf
 
+    def epoch_start(self, state: State):
+        pass
+
     def epoch_complete(self, state: State):
         self._scheduler.step(metrics=state.metrics[self.monitor], epoch=state.epoch)
+
+
+class CyclicLR(LRScheduler):
+    def __init__(self,
+                 base_lr,
+                 max_lr,
+                 step_size_up=2000,
+                 step_size_down=None,
+                 mode='triangular',
+                 gamma=1.,
+                 scale_fn=None,
+                 scale_mode='cycle',
+                 cycle_momentum=True,
+                 base_momentum=0.8,
+                 max_momentum=0.9):
+        try:
+            from torch.optim.lr_scheduler import CyclicLR
+        except ImportError:
+            raise ImportError("Update torch>=1.1.0 to use 'CyclicLR'")
+        super().__init__(
+            lambda opt: _scheduler.CyclicLR(opt,
+                                            base_lr,
+                                            max_lr,
+                                            step_size_up=step_size_up,
+                                            step_size_down=step_size_down,
+                                            mode=mode,
+                                            gamma=gamma,
+                                            scale_fn=scale_fn,
+                                            scale_mode=scale_mode,
+                                            cycle_momentum=cycle_momentum,
+                                            base_momentum=base_momentum,
+                                            max_momentum=max_momentum)
+        )
+
+
+class CosineAnnealingWarmRestarts(LRScheduler):
+    def __init__(self,
+                 T_0,
+                 T_mult=1,
+                 eta_min=0):
+        try:
+            from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
+        except ImportError:
+            raise ImportError("Update torch>=1.1.0 to use 'CosineAnnealingWarmRestart'")
+        super().__init__(
+            lambda opt: _scheduler.CosineAnnealingWarmRestarts(opt,
+                                                               T_0,
+                                                               T_mult=T_mult,
+                                                               eta_min=eta_min)
+        )
