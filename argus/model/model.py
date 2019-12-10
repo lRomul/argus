@@ -41,10 +41,22 @@ def _attach_metrics(engine, metrics, name_prefix=''):
 
 
 class Model(BuildModel):
+    """Model
+    """
+    
     def __init__(self, params):
         super().__init__(params)
 
     def prepare_batch(self, batch, device):
+        """
+
+        Args:
+            batch:
+            device:
+
+        Returns:
+
+        """
         input, target = batch
         input = deep_to(input, device, non_blocking=True)
         target = deep_to(target, device, non_blocking=True)
@@ -59,6 +71,15 @@ class Model(BuildModel):
             self.nn_module.eval()
 
     def train_step(self, batch, state) -> dict:
+        """
+
+        Args:
+            batch:
+            state:
+
+        Returns:
+
+        """
         self.train()
         self.optimizer.zero_grad()
         input, target = self.prepare_batch(batch, self.device)
@@ -77,6 +98,15 @@ class Model(BuildModel):
         }
 
     def val_step(self, batch, state) -> dict:
+        """
+
+        Args:
+            batch:
+            state:
+
+        Returns:
+
+        """
         self.eval()
         with torch.no_grad():
             input, target = self.prepare_batch(batch, self.device)
@@ -97,6 +127,20 @@ class Model(BuildModel):
             metrics_on_train=False,
             callbacks=None,
             val_callbacks=None):
+        """
+
+        Args:
+            train_loader:
+            val_loader:
+            max_epochs:
+            metrics:
+            metrics_on_train:
+            callbacks:
+            val_callbacks:
+
+        Returns:
+
+        """
         metrics = [] if metrics is None else metrics
         assert self.train_ready()
         setup_logging()
@@ -125,6 +169,16 @@ class Model(BuildModel):
         train_engine.run(train_loader, 0, max_epochs)
 
     def validate(self, val_loader, metrics=None, callbacks=None):
+        """
+
+        Args:
+            val_loader:
+            metrics:
+            callbacks:
+
+        Returns:
+
+        """
         metrics = [] if metrics is None else metrics
         assert self.train_ready()
         val_engine = Engine(self.val_step, model=self, logger=self.logger)
@@ -134,6 +188,14 @@ class Model(BuildModel):
         return val_engine.run(val_loader).metrics
 
     def set_lr(self, lr):
+        """
+
+        Args:
+            lr:
+
+        Returns:
+
+        """
         if self.train_ready():
             param_groups = self.optimizer.param_groups
             if isinstance(lr, (list, tuple)):
@@ -152,6 +214,11 @@ class Model(BuildModel):
             raise AttributeError
 
     def get_lr(self):
+        """
+
+        Returns:
+
+        """
         lrs = []
         for param_group in self.optimizer.param_groups:
             lrs.append(param_group['lr'])
@@ -160,6 +227,14 @@ class Model(BuildModel):
         return lrs
 
     def save(self, file_path):
+        """
+
+        Args:
+            file_path:
+
+        Returns:
+
+        """
         nn_module = self.get_nn_module()
         state = {
             'model_name': self.__class__.__name__,
@@ -170,6 +245,14 @@ class Model(BuildModel):
         self.logger.info(f"Model saved to '{file_path}'")
 
     def predict(self, input):
+        """
+
+        Args:
+            input:
+
+        Returns:
+
+        """
         assert self.predict_ready()
         with torch.no_grad():
             self.eval()
@@ -180,6 +263,15 @@ class Model(BuildModel):
 
 
 def load_model(file_path, device=None):
+    """
+
+    Args:
+        file_path:
+        device:
+
+    Returns:
+
+    """
     if os.path.isfile(file_path):
         state = torch.load(file_path)
 
