@@ -1,3 +1,10 @@
+"""Wrappers to use learning rate schedulers from PyTorch with argus models.
+
+It enables the PyTorch lr_schedulers to be used as normal argus Callbacks.
+
+Note: PyTorch >=1.1.0 is required to use CyclicLR and
+CosineAnnealingWarmRestarts schedulers.
+"""
 import math
 import warnings
 
@@ -69,7 +76,8 @@ class ReduceLROnPlateau(LRScheduler):
 
         self.monitor = monitor
         self.patience = patience
-        self.better, self.better_comp, self.best_value = init_better(better, monitor)
+        self.better, self.better_comp, self.best_value = init_better(
+            better, monitor)
 
         super().__init__(
             lambda opt: _scheduler.ReduceLROnPlateau(opt,

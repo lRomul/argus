@@ -1,3 +1,5 @@
+"""Callbacks for argus model saving.
+"""
 import os
 import math
 import shutil
@@ -9,6 +11,30 @@ from argus.metrics.metric import init_better
 
 
 class Checkpoint(Callback):
+    """Save the model with a given period.
+
+    In the simplest case, the callback can be used to save the model after
+    each epoch.
+
+    Args:
+        dir_path (str, optional): Directory to save checkpoints. The
+            desired directory will be created if it does not exist.
+            Defaults to ''.
+        file_format (str, optional): Model saving filename format. Any
+            valid value names from the model State may be used. Defaults to
+            'model-{epoch:03d}-{train_loss:.6f}.pth'.
+        max_saves (int, optional): Number of last saved models to keep.
+            Should be positive. If None - save all models. Defaults to
+            None.
+        period (int, optional): Interval (number of epochs) between
+            checkpoint saves. Defaults to 1.
+        copy_last (bool, optional): Always save the last checkpoint.
+            Defaults to False.
+        save_after_exception (bool, optional): Save the model checkpoint
+            after an exception occurs. Defaults to False.
+
+    """
+
     def __init__(self,
                  dir_path='',
                  file_format='model-{epoch:03d}-{train_loss:.6f}.pth',
@@ -72,6 +98,42 @@ class Checkpoint(Callback):
 
 
 class MonitorCheckpoint(Checkpoint):
+    """Save the model checkpoints after a metric is improved.
+
+    The MonitorCheckpoint augments the simple Checkpoint with a metric
+    monitoring. It saves the model after the defined metric is improved. It
+    is possible to monitor loss values during training as well as any
+    metric available in the model State.
+
+    Args:
+        dir_path (str, optional): Directory to save checkpoints. The
+            desired directory will be created if it does not exist.
+            Defaults to ''.
+        file_format (str, optional): Model saving filename format. Any
+            valid value names from the model State may be used. Defaults to
+            'model-{epoch:03d}-{monitor:.6f}.pth'.
+        max_saves ([type], optional): Number of last saved models to keep.
+            Should be positive. If None - save all models. Defaults to
+            None.
+        period (int, optional): Interval (number of epochs) between
+            checkpoint saves. Defaults to 1.
+        copy_last (bool, optional): Always save the last checkpoint.
+            Defaults to False.
+        save_after_exception (bool, optional): Save the model checkpoint
+            after an exception occurs. Defaults to False.
+        monitor (str, optional): Metric name to monitor. It should be
+            prepended with *val_* for the metric value on validation data
+            and *train_* for the metric value on the date from the train
+            loader. A val_loader should be provided during the model fit to
+            make it posiible to monitor metrics start with *val_*.
+            Defaults to *val_loss*.
+        better (str, optional): The metric improvement criterion. Should be
+            'min', 'max' or 'auto'. 'auto' means the criterion should be
+            taken from the metric itself, which is appropriate behavior in
+            most cases. Defaults to 'auto'.
+
+    """
+
     def __init__(self,
                  dir_path='',
                  file_format='model-{epoch:03d}-{monitor:.6f}.pth',
@@ -81,6 +143,7 @@ class MonitorCheckpoint(Checkpoint):
                  save_after_exception=False,
                  monitor='val_loss',
                  better='auto'):
+
         assert monitor.startswith('val_') or monitor.startswith('train_')
         super().__init__(dir_path=dir_path,
                          file_format=file_format,
@@ -89,7 +152,8 @@ class MonitorCheckpoint(Checkpoint):
                          copy_last=copy_last,
                          save_after_exception=save_after_exception)
         self.monitor = monitor
-        self.better, self.better_comp, self.best_value = init_better(better, monitor)
+        self.better, self.better_comp, self.best_value = init_better(
+            better, monitor)
 
     def _format_file_path(self, state: State):
         format_state = {'epoch': state.epoch,

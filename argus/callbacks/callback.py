@@ -1,8 +1,18 @@
+"""Base class for Callbacks.
+"""
+
 from argus.engine import Events
 from typing import Callable
 
 
 class Callback:
+    """Base callback class.
+
+    Raises:
+        TypeError:
+
+    """
+
     def attach(self, engine, handler_kwargs_dict=None):
         if handler_kwargs_dict is None:
             handler_kwargs_dict = dict()

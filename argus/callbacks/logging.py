@@ -1,3 +1,5 @@
+"""Callbacks for logging argus model training process.
+"""
 import os
 import csv
 import logging
@@ -32,6 +34,24 @@ def metrics_logging(state: State, train=False, print_epoch=True):
 
 
 class LoggingToFile(Callback):
+    """Write the argus model training progress into a file.
+
+    It adds a standard Python logger to log all losses and metrics values
+    during training. The logger is used to output other messages, like info
+    from callbacks and errors.
+
+    Args:
+        file_path (str): Path to the logging file.
+        create_dir (bool, optional): Create the directory for the logging
+            file if it does not exist. Defaults to True.
+        formatter (str, optional): Standard Python logging formatter to
+            format the log messages. Defaults to
+            '%(asctime)s %(levelname)s %(message)s'.
+        append (bool, optional): Append the log file if it already exists
+            or rewrite it. Defaults to True.
+
+    """
+
     def __init__(self, file_path,
                  create_dir=True,
                  formatter='%(asctime)s %(levelname)s %(message)s',
@@ -62,6 +82,22 @@ class LoggingToFile(Callback):
 
 
 class LoggingToCSV(Callback):
+    """Write the argus model training progress into a CSV file.
+
+    It logs all losses and metrics values during training into a .csv file
+    for for further analysis or visualization.
+
+    Args:
+        file_path (str): Path to the .csv logging file.
+        separator (str, optional): Values separator character to use.
+            Defaults to ','.
+        write_header (bool, optional): Write the column headers.
+            Defaults to True.
+        append (bool, optional):Append the log file if it already exists
+            or rewrite it. Defaults to False.
+
+    """
+
     def __init__(self, file_path,
                  separator=',',
                  write_header=True,
