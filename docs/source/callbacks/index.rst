@@ -23,11 +23,11 @@ A simple custom callback which stops training after the specified time:
         def __init__(self, time_limit: int):
             self.time_limit = time_limit
             self.start_time = 0
-        
+
         def epoch_start(self, state: State):
             if state.epoch == 0:
                  self.start_time = time()
-        
+
         def iteration_complete(self, state: State):
             if time() - self.start_time > self.time_limit:
                 state.stopped = True
@@ -38,3 +38,12 @@ A simple custom callback which stops training after the specified time:
 
 .. autoclass:: Callback
    :members:
+
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Сallbacks
+
+   ./checkpoints
+   ./early_stopping
+   ./logging

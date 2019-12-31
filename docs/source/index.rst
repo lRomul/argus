@@ -42,7 +42,4 @@ If you want to get the latest version of the code before it is released on PyPI 
    :caption: Package Reference
 
    model
-   callbacks
-   callbacks/checkpoints
-   callbacks/early_stopping
-   callbacks/logging
+   callbacks/index
