@@ -46,4 +46,5 @@ A simple custom callback which stops training after the specified time:
 
    ./checkpoints
    ./early_stopping
+   ./lr_schedulers
    ./logging
