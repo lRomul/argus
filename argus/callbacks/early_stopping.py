@@ -18,7 +18,7 @@ class EarlyStopping(Callback):
             prepended with *val_* for the metric value on validation data
             and *train_* for the metric value on the date from the train
             loader. A val_loader should be provided during the model fit to
-            make it posiible to monitor metrics start with *val_*.
+            make it possible to monitor metrics start with *val_*.
             Defaults to *val_loss*.
         patience (int, optional): Number of training epochs without the
             metric improvement to stop training. Defaults to 1.
