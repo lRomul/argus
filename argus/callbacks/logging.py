@@ -24,7 +24,13 @@ def metrics_logging(state: State, train=False, print_epoch=True):
         message = [epoch_name]
 
     if train:
-        message.append(f'LR: {state.model.get_lr():.5g}')
+        lr = state.model.get_lr()
+        if isinstance(lr, list):
+            lr = [f'{l:.5g}' for l in lr]
+            lr = "[" + ", ".join(lr) + "]"
+        else:
+            lr = f'{lr:.5g}'
+        message.append(f'LR: {lr}')
 
     for metric_name, metric_value in state.metrics.items():
         if not metric_name.startswith(prefix):
