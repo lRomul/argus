@@ -39,7 +39,7 @@ class MetricMeta(type):
             if metric_name in METRIC_REGISTRY:
                 current_class = f"<class '{attrs['__module__']}.{attrs['__qualname__']}'>"
                 warnings.warn(f"{current_class} redefined '{metric_name}' "
-                              f"that was already registered by {METRIC_REGISTRY[name]}")
+                              f"that was already registered by {METRIC_REGISTRY[metric_name]}")
             METRIC_REGISTRY[metric_name] = new_class
         return new_class
 
