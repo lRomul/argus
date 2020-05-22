@@ -1,9 +1,6 @@
 """Wrappers to use learning rate schedulers from PyTorch with argus models.
 
 It enables the PyTorch lr_schedulers to be used as normal argus Callbacks.
-
-Note: PyTorch >=1.1.0 is required to use CyclicLR and
-CosineAnnealingWarmRestarts schedulers.
 """
 import math
 import warnings
@@ -30,7 +27,8 @@ class LRScheduler(Callback):
         self._scheduler = None
 
     def start(self, state: State):
-        self._scheduler = self.scheduler_factory(state.model.optimizer)
+        if self._scheduler is None:
+            self._scheduler = self.scheduler_factory(state.model.optimizer)
 
     def epoch_start(self, state: State):
         self._scheduler.step(epoch=state.epoch)
@@ -208,10 +206,6 @@ class CyclicLR(LRScheduler):
         max_momentum (float or list of floats, optional): [description].
             Defaults to 0.9.
 
-    Raises:
-        ImportError: torch version should be >= 1.1.0 to use the
-            'CyclicLR' scheduler.
-
     """
 
     def __init__(self,
@@ -226,10 +220,6 @@ class CyclicLR(LRScheduler):
                  cycle_momentum=True,
                  base_momentum=0.8,
                  max_momentum=0.9):
-        try:
-            from torch.optim.lr_scheduler import CyclicLR
-        except ImportError:
-            raise ImportError("Update torch>=1.1.0 to use 'CyclicLR'")
         super().__init__(
             lambda opt: _scheduler.CyclicLR(opt,
                                             base_lr,
@@ -256,21 +246,12 @@ class CosineAnnealingWarmRestarts(LRScheduler):
         T_0 (int): Number of epochs for the first restart.
         T_mult (int): T increase factor after a restart.
         eta_min (float, optional): Min learning rate. Defaults to 0.
-
-    Raises:
-        ImportError: torch version should be >= 1.1.0 to use the
-            'CosineAnnealingWarmRestart' scheduler.
-
     """
 
     def __init__(self,
                  T_0,
                  T_mult=1,
                  eta_min=0):
-        try:
-            from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
-        except ImportError:
-            raise ImportError("Update torch>=1.1.0 to use 'CosineAnnealingWarmRestart'")
         super().__init__(
             lambda opt: _scheduler.CosineAnnealingWarmRestarts(opt,
                                                                T_0,
