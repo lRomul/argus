@@ -1,4 +1,5 @@
 import math
+import torch
 import warnings
 
 from argus.callbacks import Callback
@@ -64,4 +65,6 @@ class Metric(Callback, metaclass=MetricMeta):
         self.update(state.step_output)
 
     def epoch_complete(self, state: State, name_prefix=''):
-        state.metrics[name_prefix + self.name] = self.compute()
+        with torch.no_grad():
+            score = self.compute()
+        state.metrics[name_prefix + self.name] = score
