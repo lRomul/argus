@@ -12,9 +12,9 @@ from argus.metrics.metric import init_better
 
 
 class LRScheduler(Callback):
-    def __init__(self, scheduler_factory, monitor=None):
+    def __init__(self, scheduler_factory, step_on_iteration=False):
         self.scheduler_factory = scheduler_factory
-        self._monitor = monitor
+        self.step_on_iteration = step_on_iteration
         self._scheduler = None
 
     def start(self, state: State):
@@ -22,7 +22,12 @@ class LRScheduler(Callback):
             self._scheduler = self.scheduler_factory(state.model.optimizer)
 
     def epoch_complete(self, state: State):
-        self._scheduler.step()
+        if not self.step_on_iteration:
+            self._scheduler.step()
+
+    def iteration_complete(self, state: State):
+        if self.step_on_iteration:
+            self._scheduler.step()
 
 
 class LambdaLR(LRScheduler):
@@ -34,12 +39,17 @@ class LambdaLR(LRScheduler):
     Args:
         lr_lambda (function or list of functions): Lambda function for the
             learning rate factor computation.
+        step_on_iteration (bool): Step on each training iteration rather than each epoch.
+            Defaults to False.
 
     """
 
-    def __init__(self, lr_lambda):
-        super().__init__(lambda opt: _scheduler.LambdaLR(opt,
-                                                         lr_lambda))
+    def __init__(self, lr_lambda, step_on_iteration=False):
+        super().__init__(
+            lambda opt: _scheduler.LambdaLR(opt,
+                                            lr_lambda),
+            step_on_iteration=step_on_iteration
+        )
 
 
 class StepLR(LRScheduler):
@@ -50,13 +60,18 @@ class StepLR(LRScheduler):
     Args:
         step_size (int): Period of learning rate update in epochs.
         gamma (float, optional): Multiplicative factor. Defaults to 0.1.
+        step_on_iteration (bool): Step on each training iteration rather than each epoch.
+            Defaults to False.
 
     """
 
-    def __init__(self, step_size, gamma=0.1):
-        super().__init__(lambda opt: _scheduler.StepLR(opt,
-                                                       step_size,
-                                                       gamma=gamma))
+    def __init__(self, step_size, gamma=0.1, step_on_iteration=False):
+        super().__init__(
+            lambda opt: _scheduler.StepLR(opt,
+                                          step_size,
+                                          gamma=gamma),
+            step_on_iteration=step_on_iteration
+        )
 
 
 class MultiStepLR(LRScheduler):
@@ -67,13 +82,18 @@ class MultiStepLR(LRScheduler):
     Args:
         milestones (list of ints): List of epochs number to perform lr step.
         gamma (float, optional): Multiplicative factor. Defaults to 0.1.
+        step_on_iteration (bool): Step on each training iteration rather than each epoch.
+            Defaults to False.
 
     """
 
-    def __init__(self, milestones, gamma=0.1):
-        super().__init__(lambda opt: _scheduler.MultiStepLR(opt,
-                                                            milestones,
-                                                            gamma=gamma))
+    def __init__(self, milestones, gamma=0.1, step_on_iteration=False):
+        super().__init__(
+            lambda opt: _scheduler.MultiStepLR(opt,
+                                               milestones,
+                                               gamma=gamma),
+            step_on_iteration=step_on_iteration
+        )
 
 
 class ExponentialLR(LRScheduler):
@@ -83,12 +103,17 @@ class ExponentialLR(LRScheduler):
 
     Args:
         gamma (float, optional): Multiplicative factor. Defaults to 0.1.
+        step_on_iteration (bool): Step on each training iteration rather than each epoch.
+            Defaults to False.
 
     """
 
-    def __init__(self, gamma):
-        super().__init__(lambda opt: _scheduler.ExponentialLR(opt,
-                                                              gamma))
+    def __init__(self, gamma, step_on_iteration=False):
+        super().__init__(
+            lambda opt: _scheduler.ExponentialLR(opt,
+                                                 gamma),
+            step_on_iteration=step_on_iteration
+        )
 
 
 class CosineAnnealingLR(LRScheduler):
@@ -98,15 +123,20 @@ class CosineAnnealingLR(LRScheduler):
     schedule.
 
     Args:
-        T_max (int): Max number of epochs.
+        T_max (int): Max number of epochs or iterations.
         eta_min (float, optional): Min learning rate. Defaults to 0.
+        step_on_iteration (bool): Step on each training iteration rather than each epoch.
+            Defaults to False.
 
     """
 
-    def __init__(self, T_max, eta_min=0):
-        super().__init__(lambda opt: _scheduler.CosineAnnealingLR(opt,
-                                                                  T_max,
-                                                                  eta_min=eta_min))
+    def __init__(self, T_max, eta_min=0, step_on_iteration=False):
+        super().__init__(
+            lambda opt: _scheduler.CosineAnnealingLR(opt,
+                                                     T_max,
+                                                     eta_min=eta_min),
+            step_on_iteration=step_on_iteration
+        )
 
 
 class ReduceLROnPlateau(LRScheduler):
@@ -159,7 +189,8 @@ class ReduceLROnPlateau(LRScheduler):
                                                      threshold_mode=threshold_mode,
                                                      cooldown=cooldown,
                                                      min_lr=min_lr,
-                                                     eps=eps)
+                                                     eps=eps),
+            step_on_iteration=False
         )
 
     def start(self, state: State):
@@ -176,9 +207,9 @@ class CyclicLR(LRScheduler):
     Args:
         base_lr (float or list of floats): Initial learning rate.
         max_lr (float or list of floats): Max learning rate.
-        step_size_up (int, optional): Increase phase duration in epochs.
+        step_size_up (int, optional): Increase phase duration in epochs or iterations.
             Defaults to 2000.
-        step_size_down (int, optional): Decrease phase duration in epochs.
+        step_size_down (int, optional): Decrease phase duration in epochs or iterations.
             Defaults to None.
         mode (str, optional): Should be 'triangular', 'triangular2' or
             'exp_range'. Defaults to 'triangular'.
@@ -193,6 +224,8 @@ class CyclicLR(LRScheduler):
             Defaults to 0.8.
         max_momentum (float or list of floats, optional): [description].
             Defaults to 0.9.
+        step_on_iteration (bool): Step on each training iteration rather than each epoch.
+            Defaults to True.
 
     """
 
@@ -207,7 +240,8 @@ class CyclicLR(LRScheduler):
                  scale_mode='cycle',
                  cycle_momentum=True,
                  base_momentum=0.8,
-                 max_momentum=0.9):
+                 max_momentum=0.9,
+                 step_on_iteration=True):
         super().__init__(
             lambda opt: _scheduler.CyclicLR(opt,
                                             base_lr,
@@ -220,7 +254,8 @@ class CyclicLR(LRScheduler):
                                             scale_mode=scale_mode,
                                             cycle_momentum=cycle_momentum,
                                             base_momentum=base_momentum,
-                                            max_momentum=max_momentum)
+                                            max_momentum=max_momentum),
+            step_on_iteration=step_on_iteration
         )
 
 
@@ -231,18 +266,23 @@ class CosineAnnealingWarmRestarts(LRScheduler):
     schedule with a warm restart.
 
     Args:
-        T_0 (int): Number of epochs for the first restart.
+        T_0 (int): Number of epochs or iterations for the first restart.
         T_mult (int): T increase factor after a restart.
         eta_min (float, optional): Min learning rate. Defaults to 0.
+        step_on_iteration (bool): Step on each training iteration rather than each epoch.
+            Defaults to False.
+
     """
 
     def __init__(self,
                  T_0,
                  T_mult=1,
-                 eta_min=0):
+                 eta_min=0,
+                 step_on_iteration=False):
         super().__init__(
             lambda opt: _scheduler.CosineAnnealingWarmRestarts(opt,
                                                                T_0,
                                                                T_mult=T_mult,
-                                                               eta_min=eta_min)
+                                                               eta_min=eta_min),
+            step_on_iteration=step_on_iteration
         )
