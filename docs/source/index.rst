@@ -33,7 +33,6 @@ If you want to get the latest version of the code before it is released on PyPI 
    :maxdepth: 2
    :caption: Notes
 
-   concepts
    quickstart
    examples
 

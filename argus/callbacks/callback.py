@@ -9,7 +9,7 @@ class Callback:
     """Base callback class.
 
     Raises:
-        TypeError:
+        TypeError: Attribute is not callable.
 
     """
 
@@ -24,7 +24,7 @@ class Callback:
                     handler_kwargs = handler_kwargs_dict.get(event, dict())
                     engine.add_event_handler(event, handler, **handler_kwargs)
                 else:
-                    raise TypeError
+                    raise TypeError(f"Attribute {event.value} is not callable.")
 
 
 class FunctionCallback(Callback):

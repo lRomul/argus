@@ -4,10 +4,17 @@ argus.callbacks
 All callbacks classes should inherit the base :class:`~argus.callbacks.Callback` class.
 
 A callback may execute actions on the start and the end of the whole training
-process, each epoch or iteration, as well as any other custom events. The
-actions should be specified within corresponding functions:
-*event*, *start*, *complete*, *epoch_start*, *epoch_complete*,
-*iteration_start*, *iteration_complete*.
+process, each epoch or iteration, as well as any other custom events.
+
+The actions should be specified within corresponding methods:
+
+* ``start``
+* ``complete``
+* ``epoch_start``
+* ``epoch_complete``
+* ``iteration_start``
+* ``iteration_complete``
+* ``catch_exception``
 
 A simple custom callback which stops training after the specified time:
 
