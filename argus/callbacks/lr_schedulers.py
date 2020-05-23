@@ -143,6 +143,8 @@ class CosineAnnealingLR(LRScheduler):
 class ReduceLROnPlateau(LRScheduler):
     """ReduceLROnPlateau scheduler.
 
+    Reduce learning rate when a metric has stopped improving.
+
     Args:
         monitor (str, optional): Metric name to monitor. It should be
             prepended with *val_* for the metric value on validation data
@@ -204,6 +206,9 @@ class ReduceLROnPlateau(LRScheduler):
 
 class CyclicLR(LRScheduler):
     """CyclicLR scheduler.
+
+    Sets the learning rate of each parameter group according to cyclical
+    learning rate policy.
 
     Args:
         base_lr (float or list of floats): Initial learning rate.
@@ -313,3 +318,91 @@ class MultiplicativeLR(LRScheduler):
             )
         else:
             raise ImportError("Update torch>=1.4.0 to use 'MultiplicativeLR'")
+
+
+class OneCycleLR(LRScheduler):
+    """OneCycleLR scheduler.
+
+    Sets the learning rate of each parameter group according to the
+    1cycle learning rate policy. The 1cycle policy anneals the learning
+    rate from an initial learning rate to some maximum learning rate and then
+    from that maximum learning rate to some minimum learning rate much lower
+    than the initial learning rate.
+
+    Args:
+        max_lr (float or list): Upper learning rate boundaries in the cycle
+            for each parameter group.
+        total_steps (int): The total number of steps in the cycle. Note that
+            if a value is not provided here, then it must be inferred by providing
+            a value for epochs and steps_per_epoch.
+            Defaults to None.
+        epochs (int): The number of epochs to train for. This is used along
+            with steps_per_epoch in order to infer the total number of steps in the cycle
+            if a value for total_steps is not provided.
+            Defaults to None.
+        steps_per_epoch (int): The number of steps per epoch to train for. This is
+            used along with epochs in order to infer the total number of steps in the
+            cycle if a value for total_steps is not provided.
+            Defaults to None.
+        pct_start (float): The percentage of the cycle (in number of steps) spent
+            increasing the learning rate.
+            Defaults to 0.3.
+        anneal_strategy (str): {'cos', 'linear'}
+            Specifies the annealing strategy: "cos" for cosine annealing, "linear" for
+            linear annealing.
+            Defaults to 'cos'.
+        cycle_momentum (bool): If ``True``, momentum is cycled inversely
+            to learning rate between 'base_momentum' and 'max_momentum'.
+            Defaults to True.
+        base_momentum (float or list): Lower momentum boundaries in the cycle
+            for each parameter group. Note that momentum is cycled inversely
+            to learning rate; at the peak of a cycle, momentum is
+            'base_momentum' and learning rate is 'max_lr'.
+            Defaults to 0.85.
+        max_momentum (float or list): Upper momentum boundaries in the cycle
+            for each parameter group. Functionally,
+            it defines the cycle amplitude (max_momentum - base_momentum).
+            Note that momentum is cycled inversely
+            to learning rate; at the start of a cycle, momentum is 'max_momentum'
+            and learning rate is 'base_lr'
+            Defaults to 0.95.
+        div_factor (float): Determines the initial learning rate via
+            initial_lr = max_lr/div_factor
+            Defaults to 25.
+        final_div_factor (float): Determines the minimum learning rate via
+            min_lr = initial_lr/final_div_factor
+            Defaults to 1e4.
+
+    """
+
+    def __init__(self,
+                 max_lr,
+                 total_steps=None,
+                 epochs=None,
+                 steps_per_epoch=None,
+                 pct_start=0.3,
+                 anneal_strategy='cos',
+                 cycle_momentum=True,
+                 base_momentum=0.85,
+                 max_momentum=0.95,
+                 div_factor=25.,
+                 final_div_factor=1e4):
+        from distutils.version import LooseVersion
+        if LooseVersion(torch.__version__) >= LooseVersion("1.3.0"):
+            super().__init__(
+                lambda opt: _scheduler.OneCycleLR(opt,
+                                                  max_lr,
+                                                  total_steps=total_steps,
+                                                  epochs=epochs,
+                                                  steps_per_epoch=steps_per_epoch,
+                                                  pct_start=pct_start,
+                                                  anneal_strategy=anneal_strategy,
+                                                  cycle_momentum=cycle_momentum,
+                                                  base_momentum=base_momentum,
+                                                  max_momentum=max_momentum,
+                                                  div_factor=div_factor,
+                                                  final_div_factor=final_div_factor),
+                step_on_iteration=True
+            )
+        else:
+            raise ImportError("Update torch>=1.3.0 to use 'OneCycleLR'")
