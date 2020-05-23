@@ -26,5 +26,6 @@ from argus.callbacks.lr_schedulers import (
     CosineAnnealingLR,
     ReduceLROnPlateau,
     CyclicLR,
-    CosineAnnealingWarmRestarts
+    CosineAnnealingWarmRestarts,
+    MultiplicativeLR
 )

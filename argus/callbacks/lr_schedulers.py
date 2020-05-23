@@ -4,6 +4,7 @@ It enables the PyTorch lr_schedulers to be used as normal argus Callbacks.
 """
 import math
 
+import torch
 from torch.optim import lr_scheduler as _scheduler
 
 from argus.engine import State
@@ -286,3 +287,29 @@ class CosineAnnealingWarmRestarts(LRScheduler):
                                                                eta_min=eta_min),
             step_on_iteration=step_on_iteration
         )
+
+
+class MultiplicativeLR(LRScheduler):
+    """MultiplicativeLR scheduler.
+
+    Multiply the learning rate of each parameter group by the factor given
+    in the specified function.
+
+    Args:
+        lr_lambda (function or list): A function which computes a multiplicative
+            factor given an integer parameter epoch, or a list of such
+            functions, one for each group in optimizer.param_groups.
+        step_on_iteration (bool): Step on each training iteration rather than each epoch.
+            Defaults to False.
+    """
+
+    def __init__(self, lr_lambda, step_on_iteration=False):
+        from distutils.version import LooseVersion
+        if LooseVersion(torch.__version__) >= LooseVersion("1.4.0"):
+            super().__init__(
+                lambda opt: _scheduler.MultiplicativeLR(opt,
+                                                        lr_lambda),
+                step_on_iteration=step_on_iteration
+            )
+        else:
+            raise ImportError("Update torch>=1.4.0 to use 'MultiplicativeLR'")
