@@ -67,3 +67,16 @@ CosineAnnealingWarmRestarts
 
 * `PyTorch docs on CosineAnnealingWarmRestarts <https://pytorch.org/docs/stable/optim.html#torch.optim.lr_scheduler.CosineAnnealingWarmRestarts>`_
 
+MultiplicativeLR
+----------------
+.. autoclass:: MultiplicativeLR
+   :members:
+
+* `PyTorch docs on MultiplicativeLR <https://pytorch.org/docs/stable/optim.html#torch.optim.lr_scheduler.MultiplicativeLR>`_
+
+OneCycleLR
+----------
+.. autoclass:: OneCycleLR
+   :members:
+
+* `PyTorch docs on OneCycleLR <https://pytorch.org/docs/stable/optim.html#torch.optim.lr_scheduler.OneCycleLR>`_
