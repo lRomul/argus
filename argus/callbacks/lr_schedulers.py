@@ -201,7 +201,7 @@ class ReduceLROnPlateau(LRScheduler):
         self.best_value = math.inf if self.better == 'min' else -math.inf
 
     def epoch_complete(self, state: State):
-        self._scheduler.step(metrics=state.metrics[self.monitor], epoch=state.epoch)
+        self._scheduler.step(metrics=state.metrics[self.monitor])
 
 
 class CyclicLR(LRScheduler):
