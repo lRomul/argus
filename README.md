@@ -1,6 +1,14 @@
 # Argus 
 
+[![PyPI version](https://badge.fury.io/py/pytorch-argus.svg)](https://badge.fury.io/py/pytorch-argus)
+[![Downloads](https://pepy.tech/badge/pytorch-argus)](https://pepy.tech/project/pytorch-argus)
+[![Documentation Status](https://readthedocs.org/projects/pytorch-argus/badge/?version=latest)](https://pytorch-argus.readthedocs.io/en/latest/?badge=latest)
+
 Argus is easy-to-use flexible library for training neural networks in PyTorch.
+
+## Documentation
+
+https://pytorch-argus.readthedocs.io
 
 ## Installation
 
@@ -110,19 +118,4 @@ params = {
 model = CnnFinetune(params)
 ```
 
-You can find other examples [here](examples). 
-
-## Kaggle solutions  
-
-1. 1st place solution for Freesound Audio Tagging 2019 (mel-spectrograms, mixed precision training with Apex)  
-[https://github.com/lRomul/argus-freesound](https://github.com/lRomul/argus-freesound/blob/master/src/argus_models.py)
-2. 14th place solution for TGS Salt Identification Challenge (segmentation, MeanTeacher)  
-[https://github.com/lRomul/argus-tgs-salt](https://github.com/lRomul/argus-tgs-salt/blob/master/src/argus_models.py)
-3. 50th place solution for Quick, Draw! Doodle Recognition Challenge (gradient accumulation, training on 50M images)   
-[https://github.com/lRomul/argus-quick-draw](https://github.com/lRomul/argus-quick-draw/blob/master/src/argus_models.py)
-4. 66th place solution for Kaggle Airbus Ship Detection Challenge (instance segmentation)  
-[https://github.com/OniroAI/Universal-segmentation-baseline-Kaggle-Airbus-Ship-Detection](https://github.com/OniroAI/Universal-segmentation-baseline-Kaggle-Airbus-Ship-Detection)
-5. Solution for Humpback Whale Identification (metric learning: arcface, center loss)  
-[https://github.com/lRomul/argus-humpback-whale](https://github.com/lRomul/argus-humpback-whale/blob/master/src/argus_models.py)
-6. Solution for VSB Power Line Fault Detection (1d conv)  
-[https://github.com/lRomul/argus-vsb-power](https://github.com/lRomul/argus-vsb-power/blob/master/src/argus_models.py)
+More examples you can find [here](https://pytorch-argus.readthedocs.io/en/latest/examples.html).
