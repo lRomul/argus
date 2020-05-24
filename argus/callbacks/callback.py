@@ -1,8 +1,18 @@
+"""Base class for Callbacks.
+"""
+
 from argus.engine import Events
 from typing import Callable
 
 
 class Callback:
+    """Base callback class.
+
+    Raises:
+        TypeError: Attribute is not callable.
+
+    """
+
     def attach(self, engine, handler_kwargs_dict=None):
         if handler_kwargs_dict is None:
             handler_kwargs_dict = dict()
@@ -14,7 +24,7 @@ class Callback:
                     handler_kwargs = handler_kwargs_dict.get(event, dict())
                     engine.add_event_handler(event, handler, **handler_kwargs)
                 else:
-                    raise TypeError
+                    raise TypeError(f"Attribute {event.value} is not callable.")
 
 
 class FunctionCallback(Callback):
