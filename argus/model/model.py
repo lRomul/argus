@@ -272,8 +272,8 @@ class Model(BuildModel):
             else:
                 raise ValueError(f"Expected lr type list, tuple or number, "
                                  f"got {type(lr)}")
-            for lr, param_group in zip(lrs, param_groups):
-                param_group['lr'] = lr
+            for group_lr, param_group in zip(lrs, param_groups):
+                param_group['lr'] = group_lr
         else:
             raise AttributeError
 

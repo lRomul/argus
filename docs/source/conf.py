@@ -37,7 +37,7 @@ def find_version(*file_paths):
 # -- Project information -----------------------------------------------------
 
 project = 'argus'
-copyright = '2019, Ruslan Baikulov'
+copyright = '2020, Ruslan Baikulov'
 author = 'Ruslan Baikulov'
 
 # The full version, including alpha/beta/rc tags

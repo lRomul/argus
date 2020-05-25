@@ -1,8 +1,10 @@
 # Argus 
 
 [![PyPI version](https://badge.fury.io/py/pytorch-argus.svg)](https://badge.fury.io/py/pytorch-argus)
-[![Downloads](https://pepy.tech/badge/pytorch-argus)](https://pepy.tech/project/pytorch-argus)
 [![Documentation Status](https://readthedocs.org/projects/pytorch-argus/badge/?version=latest)](https://pytorch-argus.readthedocs.io/en/latest/?badge=latest)
+[![CodeFactor](https://www.codefactor.io/repository/github/lromul/argus/badge)](https://www.codefactor.io/repository/github/lromul/argus)
+[![Downloads](https://pepy.tech/badge/pytorch-argus)](https://pepy.tech/project/pytorch-argus)
+
 
 Argus is easy-to-use flexible library for training neural networks in PyTorch.
 
