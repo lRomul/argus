@@ -1,20 +1,8 @@
 import torch
 import collections
-import logging
 
 
 default = object()
-
-
-def setup_logging(file_path=None):
-    handlers = [logging.StreamHandler()]
-    if file_path is not None:
-        handlers.append(logging.FileHandler(file_path))
-    logging.basicConfig(
-        format='%(asctime)s %(levelname)s %(message)s',
-        level=logging.getLevelName(logging.INFO),
-        handlers=handlers,
-    )
 
 
 def deep_to(input, *args, **kwarg):

@@ -5,7 +5,7 @@ import torch
 
 from argus.model.build import BuildModel, MODEL_REGISTRY, cast_device
 from argus.engine import Engine, Events
-from argus.utils import deep_to, deep_detach, setup_logging, device_to_str
+from argus.utils import deep_to, deep_detach, device_to_str
 from argus.callbacks import Callback, on_epoch_complete
 from argus.callbacks.logging import metrics_logging
 from argus.metrics.metric import Metric, METRIC_REGISTRY
@@ -189,7 +189,6 @@ class Model(BuildModel):
         """
         metrics = [] if metrics is None else metrics
         assert self.train_ready()
-        setup_logging()
 
         train_engine = Engine(self.train_step, model=self, logger=self.logger)
         train_metrics = [Loss()] + metrics if metrics_on_train else [Loss()]

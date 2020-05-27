@@ -125,7 +125,7 @@ class BuildModel(metaclass=ModelMeta):
         self.prediction_transform = self._build_prediction_transform(self.params)
         self.device = self._build_device(self.params)
         self.set_device(self.device)
-        self.logger = logging.getLogger(__name__)
+        self.logger = self._build_logger(params)
 
     def _build_nn_module(self, params):
         nn_module_meta = self._meta['nn_module']
@@ -258,6 +258,15 @@ class BuildModel(metaclass=ModelMeta):
             prediction_transform = transform_meta(**trns_params)
 
         return prediction_transform
+
+    def _build_logger(self, params):
+        logging.basicConfig(
+            format='%(asctime)s %(levelname)s %(message)s',
+            level=logging.getLevelName(logging.INFO),
+            handlers=[logging.StreamHandler()],
+        )
+        logger = logging.getLogger(__name__)
+        return logger
 
     def _check_attributes(self, attrs):
         for attr_name in attrs:
