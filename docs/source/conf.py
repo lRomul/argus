@@ -52,8 +52,14 @@ release = find_version('../../argus/__init__.py')
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
+    'sphinx.ext.intersphinx',
 ]
+
+intersphinx_mapping = {
+    'torch': ('https://pytorch.org/docs/stable/', None),
+    'python': ('https://docs.python.org/3', None),
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

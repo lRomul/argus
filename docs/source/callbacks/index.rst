@@ -1,7 +1,7 @@
 argus.callbacks
 ===============
 
-All callbacks classes should inherit the base :class:`~argus.callbacks.Callback` class.
+All callbacks classes should inherit the base :class:`argus.callbacks.Callback` class.
 
 A callback may execute actions on the start and the end of the whole training
 process, each epoch or iteration, as well as any other custom events.

@@ -123,7 +123,7 @@ class Model(BuildModel):
         model device, forward pass, loss evaluation, and the train batch
         prediction preparation with a *prediction_transform*.
 
-        Gradient calculations and the model weights update are ommitted, which
+        Gradient calculations and the model weights update are omitted, which
         is the main difference with the :meth:`train_step`
         method.
 

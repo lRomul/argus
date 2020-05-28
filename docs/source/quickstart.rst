@@ -33,8 +33,8 @@ Define a PyTorch model.
             return x
 
 
-Define a :class:`~argus.model.Model` with ``nn_module``, ``optimizer``, ``loss`` attributes. Each value must be a class
-or function that returns object (``torch.nn.Module`` for loss and nn_module, ``torch.optim.Optimizer`` for optimizer).
+Define a :class:`argus.model.Model` with ``nn_module``, ``optimizer``, ``loss`` attributes. Each value must be a class
+or function that returns object (:class:`torch.nn.Module` for loss and nn_module, :class:`torch.optim.Optimizer` for optimizer).
 
 .. code-block:: python
 
@@ -103,7 +103,7 @@ More flexibility
 ----------------
 
 Argus can help you simplify the experiments with different architectures, losses, and optimizers. Let's define a
-:class:`~argus.model.Model` with two models via a dictionary. If you want to use PyTorch losses and optimizers it's not
+:class:`argus.model.Model` with two models via a dictionary. If you want to use PyTorch losses and optimizers it's not
 necessary to define them in argus model.
 
 .. code-block:: python
@@ -139,7 +139,7 @@ Argus allows managing different combinations of your pipeline.
 
 If you need for more flexibility you can:
 
-* Override methods of :class:`~argus.model.Model`. For example :meth:`~argus.model.Model.train_step` and :meth:`~argus.model.Model.val_step`.
-* Create custom :class:`~argus.callbacks.Callback`.
-* Use custom :class:`~argus.metrics.Metric`.
+* Override methods of :class:`argus.model.Model`. For example :meth:`argus.model.Model.train_step` and :meth:`argus.model.Model.val_step`.
+* Create custom :class:`argus.callbacks.Callback`.
+* Use custom :class:`argus.metrics.Metric`.
 

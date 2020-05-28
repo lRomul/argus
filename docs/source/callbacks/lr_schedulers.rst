@@ -4,9 +4,10 @@ Learning rate schedulers
 Callbacks for auto adjust the learning rate based on the number of epochs or other metrics measurements.
 
 The learning rates schedulers allow implementing dynamic learning rate changing policy.
-These callbacks are wrappers of native PyTorch `torch.optim.lr_scheduler`.
+These callbacks are wrappers of native PyTorch :mod:`torch.optim.lr_scheduler`.
 
-Currently, the following schedulers are available (see PyTorch documentation by the links provided for details on the schedulers algorithms themself):
+Currently, the following schedulers are available (see PyTorch documentation by the links provided for details on the
+schedulers algorithms themself):
 
 .. currentmodule:: argus.callbacks
 
