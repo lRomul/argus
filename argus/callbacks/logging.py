@@ -3,9 +3,19 @@
 import os
 import csv
 import logging
+from datetime import datetime
 
 from argus.engine import State
 from argus.callbacks.callback import Callback, on_epoch_complete
+
+
+def _format_lr_to_str(lr, precision=5):
+    if isinstance(lr, (list, tuple)):
+        lr = [f'{l:.{precision}g}' for l in lr]
+        lr = "[" + ", ".join(lr) + "]"
+    else:
+        lr = f'{lr:.{precision}g}'
+    return lr
 
 
 @on_epoch_complete
@@ -25,11 +35,7 @@ def metrics_logging(state: State, train=False, print_epoch=True):
 
     if train:
         lr = state.model.get_lr()
-        if isinstance(lr, list):
-            lr = [f'{l:.5g}' for l in lr]
-            lr = "[" + ", ".join(lr) + "]"
-        else:
-            lr = f'{lr:.5g}'
+        lr = _format_lr_to_str(lr)
         message.append(f'LR: {lr}')
 
     for metric_name, metric_value in state.metrics.items():
@@ -123,8 +129,11 @@ class LoggingToCSV(Callback):
         self.csv_file = open(self.file_path, file_mode, newline='')
 
     def epoch_complete(self, state: State):
+        lr = state.model.get_lr()
         fields = {
+            'time': str(datetime.now()),
             'epoch': state.epoch,
+            'lr': _format_lr_to_str(lr),
             **state.metrics
         }
         writer = csv.DictWriter(self.csv_file,
