@@ -16,14 +16,14 @@ LambdaLR
 .. autoclass:: LambdaLR
    :members:
 
-`PyTorch docs on LambdaLR <https://pytorch.org/docs/stable/optim.html#torch.optim.lr_scheduler.LambdaLR>`_
+PyTorch docs on :class:`torch.optim.lr_scheduler.LambdaLR`.
 
 StepLR
 ------
 .. autoclass:: StepLR
    :members:
 
-`PyTorch docs on StepLR <https://pytorch.org/docs/stable/optim.html#torch.optim.lr_scheduler.StepLR>`_
+PyTorch docs on :class:`torch.optim.lr_scheduler.StepLR`.
 
 
 MultiStepLR
@@ -31,53 +31,53 @@ MultiStepLR
 .. autoclass:: MultiStepLR
    :members:
 
-* `PyTorch docs on MultiStepLR <https://pytorch.org/docs/stable/optim.html#torch.optim.lr_scheduler.MultiStepLR>`_
+PyTorch docs on :class:`torch.optim.lr_scheduler.MultiStepLR`.
 
 ExponentialLR
 -------------
 .. autoclass:: ExponentialLR
    :members:
 
-* `PyTorch docs on ExponentialLR <https://pytorch.org/docs/stable/optim.html#torch.optim.lr_scheduler.ExponentialLR>`_
+PyTorch docs on :class:`torch.optim.lr_scheduler.ExponentialLR`.
 
 CosineAnnealingLR
 -----------------
 .. autoclass:: CosineAnnealingLR
    :members:
 
-* `PyTorch docs on CosineAnnealingLR <https://pytorch.org/docs/stable/optim.html#torch.optim.lr_scheduler.CosineAnnealingLR>`_
+PyTorch docs on :class:`torch.optim.lr_scheduler.CosineAnnealingLR`.
 
 ReduceLROnPlateau
 -----------------
 .. autoclass:: ReduceLROnPlateau
    :members:
 
-* `PyTorch docs on ReduceLROnPlateau <https://pytorch.org/docs/stable/optim.html#torch.optim.lr_scheduler.ReduceLROnPlateau>`_
+PyTorch docs on :class:`torch.optim.lr_scheduler.ReduceLROnPlateau`.
 
 CyclicLR
 --------
 .. autoclass:: CyclicLR
    :members:
 
-* `PyTorch docs on CyclicLR <https://pytorch.org/docs/stable/optim.html#torch.optim.lr_scheduler.CyclicLR>`_
+PyTorch docs on :class:`torch.optim.lr_scheduler.CyclicLR`.
 
 CosineAnnealingWarmRestarts
 ---------------------------
 .. autoclass:: CosineAnnealingWarmRestarts
    :members:
 
-* `PyTorch docs on CosineAnnealingWarmRestarts <https://pytorch.org/docs/stable/optim.html#torch.optim.lr_scheduler.CosineAnnealingWarmRestarts>`_
+PyTorch docs on :class:`torch.optim.lr_scheduler.CosineAnnealingWarmRestarts`.
 
 MultiplicativeLR
 ----------------
 .. autoclass:: MultiplicativeLR
    :members:
 
-* `PyTorch docs on MultiplicativeLR <https://pytorch.org/docs/stable/optim.html#torch.optim.lr_scheduler.MultiplicativeLR>`_
+PyTorch docs on :class:`torch.optim.lr_scheduler.MultiplicativeLR`.
 
 OneCycleLR
 ----------
 .. autoclass:: OneCycleLR
    :members:
 
-* `PyTorch docs on OneCycleLR <https://pytorch.org/docs/stable/optim.html#torch.optim.lr_scheduler.OneCycleLR>`_
+PyTorch docs on :class:`torch.optim.lr_scheduler.OneCycleLR`.

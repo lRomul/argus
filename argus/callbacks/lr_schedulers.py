@@ -225,10 +225,14 @@ class CyclicLR(LRScheduler):
             Defaults to None.
         scale_mode (str, optional): Should be 'cycle' or 'iterations'.
             Defaults to 'cycle'.
-        cycle_momentum (bool, optional): [description]. Defaults to True.
-        base_momentum (float or list of floats, optional): [description].
+        cycle_momentum (bool, optional): Momentum is cycled inversely
+            to learning rate between 'base_momentum' and 'max_momentum'.
+            Defaults to True.
+        base_momentum (float or list of floats, optional): Lower momentum
+            boundaries in the cycle for each parameter group.
             Defaults to 0.8.
-        max_momentum (float or list of floats, optional): [description].
+        max_momentum (float or list of floats, optional): Upper momentum
+            boundaries in the cycle for each parameter group.
             Defaults to 0.9.
         step_on_iteration (bool): Step on each training iteration rather than each epoch.
             Defaults to True.
