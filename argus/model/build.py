@@ -13,6 +13,7 @@ from argus.loss import pytorch_losses
 from argus.optimizer import pytorch_optimizers
 
 
+ATTRS_BUILD_ORDER = ['nn_module', 'optimizer', 'loss', 'device', 'prediction_transform']
 TRAIN_ATTRS = {'nn_module', 'optimizer', 'loss', 'device', 'prediction_transform'}
 PREDICT_ATTRS = {'nn_module', 'device', 'prediction_transform'}
 ALL_ATTRS = TRAIN_ATTRS | PREDICT_ATTRS
@@ -72,6 +73,11 @@ def cast_device(device):
         return torch.device(device)
 
 
+class Identity:
+    def __call__(self, x):
+        return x
+
+
 ATTRIBUTE_CASTS = {
     'nn_module': cast_nn_module,
     'optimizer': cast_optimizer,
@@ -85,7 +91,7 @@ DEFAULT_ATTRIBUTE_VALUES = {
     'optimizer': pytorch_optimizers,
     'loss': pytorch_losses,
     'device': torch.device('cpu'),
-    'prediction_transform': default
+    'prediction_transform': Identity
 }
 
 
@@ -137,17 +143,12 @@ class BuildModel(metaclass=ModelMeta):
         self.params = params.copy()
         self.logger = self.build_logger()
 
-        meta = self._meta
-        params = self.params
-
-        self.nn_module = self.build_nn_module(meta['nn_module'], params.get('nn_module', dict()))
-        self.optimizer = self.build_optimizer(meta['optimizer'], params.get('optimizer', dict()))
-        self.loss = self.build_loss(meta['loss'], params.get('loss', dict()))
-        self.prediction_transform = self.build_prediction_transform(
-            meta['prediction_transform'],
-            params.get('prediction_transform', dict())
-        )
-        self.device = self.build_device(meta['device'], params.get('device', dict()))
+        for attr_name in ATTRS_BUILD_ORDER:
+            attribute_meta = self._meta[attr_name]
+            attribute_params = self.params.get(attr_name, dict())
+            attr_build_func = getattr(self, f"build_{attr_name}")
+            attribute = attr_build_func(attribute_meta, attribute_params)
+            setattr(self, attr_name, attribute)
 
         self.set_device(self.device)
 
@@ -175,11 +176,6 @@ class BuildModel(metaclass=ModelMeta):
         return loss
 
     def build_prediction_transform(self, transform_meta, transform_params):
-        if transform_meta is default:
-            def identity(x):
-                return x
-            return identity
-
         transform, transform_params = fetch_attribute_with_params(transform_meta,
                                                                   transform_params)
         prediction_transform = transform(**transform_params)
