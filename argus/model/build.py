@@ -116,87 +116,90 @@ class ModelMeta(type):
         return new_class
 
 
+def fetch_attribute_with_params(attribute_meta, attribute_params):
+    if isinstance(attribute_meta, collections.Mapping):
+        if isinstance(attribute_params, (list, tuple)) and len(attribute_params) == 2:
+            name, params = attribute_params
+        elif isinstance(attribute_params, str):
+            name, params = attribute_params, dict()
+        else:
+            raise TypeError(f"Incorrect attribute params {attribute_params}")
+        attribute = attribute_meta[name]
+    else:
+        attribute = attribute_meta
+        params = attribute_params
+
+    return attribute, params
+
+
 class BuildModel(metaclass=ModelMeta):
     def __init__(self, params):
         self.params = params.copy()
-        self.nn_module = self._build_nn_module(self.params)
-        self.optimizer = self._build_optimizer(self.params)
-        self.loss = self._build_loss(self.params)
-        self.prediction_transform = self._build_prediction_transform(self.params)
-        self.device = self._build_device(self.params)
-        self.set_device(self.device)
-        self.logger = self._build_logger(params)
+        self.logger = self.build_logger()
 
-    def _build_nn_module(self, params):
-        nn_module_meta = self._meta['nn_module']
+        meta = self._meta
+        params = self.params
+
+        self.nn_module = self.build_nn_module(meta['nn_module'], params.get('nn_module', dict()))
+        self.optimizer = self.build_optimizer(meta['optimizer'], params.get('optimizer', dict()))
+        self.loss = self.build_loss(meta['loss'], params.get('loss', dict()))
+        self.prediction_transform = self.build_prediction_transform(
+            meta['prediction_transform'],
+            params.get('prediction_transform', dict())
+        )
+        self.device = self.build_device(meta['device'], params.get('device', dict()))
+
+        self.set_device(self.device)
+
+    def build_nn_module(self, nn_module_meta, nn_module_params):
         if nn_module_meta is default:
             raise ValueError("nn_module is required attribute for argus.Model")
 
-        if isinstance(nn_module_meta, collections.Mapping):
-            nn_module_info = params['nn_module']
-            if isinstance(nn_module_info, (list, tuple)):
-                nn_name, nn_params = nn_module_info
-            elif isinstance(nn_module_info, str):
-                nn_name, nn_params = nn_module_info, dict()
-            else:
-                raise TypeError(
-                    f"Incorrect type for nn_module params {type(nn_module_info)}"
-                )
-            nn_module = nn_module_meta[nn_name](**nn_params)
-        else:
-            nn_params = params.get('nn_module', dict())
-            nn_module = nn_module_meta(**nn_params)
-
+        nn_module, nn_params = fetch_attribute_with_params(nn_module_meta,
+                                                           nn_module_params)
+        nn_module = nn_module_meta(**nn_params)
         return nn_module
 
-    def _build_optimizer(self, params):
-        optimizer_meta = self._meta['optimizer']
-        if self.nn_module is not default:
-            if isinstance(optimizer_meta, collections.Mapping):
-                if 'optimizer' not in params:
-                    return default
-                optim_info = params['optimizer']
-                if isinstance(optim_info, (list, tuple)) and len(optim_info) == 2:
-                    optim_name, optim_params = optim_info
-                elif isinstance(optim_info, str):
-                    optim_name, optim_params = optim_info, dict()
-                else:
-                    raise TypeError(
-                        f"Incorrect type for optimizer params {type(optim_info)}"
-                    )
-                grad_params = (param for param in self.nn_module.parameters()
-                               if param.requires_grad)
-                optimizer = optimizer_meta[optim_name](params=grad_params, **optim_params)
-            else:
-                optim_params = params.get('optimizer', dict())
-                grad_params = (param for param in self.nn_module.parameters()
-                               if param.requires_grad)
-                optimizer = optimizer_meta(params=grad_params, **optim_params)
+    def build_optimizer(self, optimizer_meta, optim_params):
+        optimizer, optim_params = fetch_attribute_with_params(optimizer_meta,
+                                                              optim_params)
+        grad_params = (param for param in self.nn_module.parameters()
+                       if param.requires_grad)
+        optimizer = optimizer(params=grad_params, **optim_params)
+        return optimizer
 
-            return optimizer
-        else:
-            raise ValueError("Can't assign optimizer without nn_module")
-
-    def _build_loss(self, params):
-        loss_meta = self._meta['loss']
-        if isinstance(loss_meta, collections.Mapping):
-            if 'loss' not in params:
-                return default
-            loss_info = params['loss']
-            if isinstance(loss_info, (list, tuple)) and len(loss_info) == 2:
-                loss_name, loss_params = loss_info
-            elif isinstance(loss_info, str):
-                loss_name, loss_params = loss_info, dict()
-            else:
-                raise TypeError(
-                    f"Incorrect type for loss params {type(loss_info)}"
-                )
-            loss = loss_meta[loss_name](**loss_params)
-        else:
-            loss_params = params.get('loss', dict())
-            loss = loss_meta(**loss_params)
-
+    def build_loss(self, loss_meta, loss_params):
+        loss, loss_params = fetch_attribute_with_params(loss_meta,
+                                                        loss_params)
+        loss = loss_meta(**loss_params)
         return loss
+
+    def build_prediction_transform(self, transform_meta, transform_params):
+        if transform_meta is default:
+            def identity(x):
+                return x
+            return identity
+
+        transform, transform_params = fetch_attribute_with_params(transform_meta,
+                                                                  transform_params)
+        prediction_transform = transform(**transform_params)
+        return prediction_transform
+
+    def build_device(self, device_meta, device_param):
+        if device_param:
+            device = device_param
+        else:
+            device = device_meta
+        return cast_device(device)
+
+    def build_logger(self):
+        logging.basicConfig(
+            format='%(asctime)s %(levelname)s %(message)s',
+            level=logging.getLevelName(logging.INFO),
+            handlers=[logging.StreamHandler()],
+        )
+        logger = logging.getLogger(__name__)
+        return logger
 
     def get_nn_module(self):
         if isinstance(self.nn_module, DataParallel):
@@ -227,46 +230,6 @@ class BuildModel(metaclass=ModelMeta):
         self.nn_module = nn_module.to(self.device)
         if self.loss is not default:
             self.loss = self.loss.to(self.device)
-
-    def _build_device(self, params):
-        if 'device' in params:
-            device = params['device']
-        else:
-            device = self._meta['device']
-        return cast_device(device)
-
-    def _build_prediction_transform(self, params):
-        transform_meta = self._meta['prediction_transform']
-        if transform_meta is default:
-            return lambda x: x
-
-        if isinstance(transform_meta, collections.Mapping):
-            if 'prediction_transform' not in params:
-                return lambda x: x
-            trns_info = params['prediction_transform']
-            if isinstance(trns_info, (list, tuple)) and len(trns_info) == 2:
-                trns_name, trns_params = trns_info
-            elif isinstance(trns_info, str):
-                trns_name, trns_params = trns_info, dict()
-            else:
-                raise TypeError(
-                    f"Incorrect type for prediction_transform params {type(trns_info)}"
-                )
-            prediction_transform = transform_meta[trns_name](**trns_params)
-        else:
-            trns_params = params.get('prediction_transform', dict())
-            prediction_transform = transform_meta(**trns_params)
-
-        return prediction_transform
-
-    def _build_logger(self, params):
-        logging.basicConfig(
-            format='%(asctime)s %(levelname)s %(message)s',
-            level=logging.getLevelName(logging.INFO),
-            handlers=[logging.StreamHandler()],
-        )
-        logger = logging.getLogger(__name__)
-        return logger
 
     def _check_attributes(self, attrs):
         for attr_name in attrs:
