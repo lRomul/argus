@@ -155,9 +155,9 @@ class BuildModel(metaclass=ModelMeta):
         if nn_module_meta is default:
             raise ValueError("nn_module is required attribute for argus.Model")
 
-        nn_module, nn_params = fetch_attribute_with_params(nn_module_meta,
-                                                           nn_module_params)
-        nn_module = nn_module_meta(**nn_params)
+        nn_module, nn_module_params = fetch_attribute_with_params(nn_module_meta,
+                                                                  nn_module_params)
+        nn_module = nn_module(**nn_module_params)
         return nn_module
 
     def build_optimizer(self, optimizer_meta, optim_params):
@@ -171,7 +171,7 @@ class BuildModel(metaclass=ModelMeta):
     def build_loss(self, loss_meta, loss_params):
         loss, loss_params = fetch_attribute_with_params(loss_meta,
                                                         loss_params)
-        loss = loss_meta(**loss_params)
+        loss = loss(**loss_params)
         return loss
 
     def build_prediction_transform(self, transform_meta, transform_params):
