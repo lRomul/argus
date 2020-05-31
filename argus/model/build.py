@@ -77,6 +77,9 @@ class Identity:
     def __call__(self, x):
         return x
 
+    def __repr__(self):
+        return "Identity()"
+
 
 ATTRIBUTE_CASTS = {
     'nn_module': cast_nn_module,
@@ -122,10 +125,16 @@ class ModelMeta(type):
         return new_class
 
 
-def fetch_attribute_with_params(attribute_meta, attribute_params):
+def choose_attribute_from_dict(attribute_meta, attribute_params):
     if isinstance(attribute_meta, collections.Mapping):
         if isinstance(attribute_params, (list, tuple)) and len(attribute_params) == 2:
             name, params = attribute_params
+            if name not in attribute_meta:
+                raise ValueError(f"Attribute '{name}' there is not in "
+                                 f"attribute params {attribute_meta}.")
+            if not isinstance(params, collections.Mapping):
+                raise TypeError(f"Attribute params should be a dictionary, "
+                                f"not {type(params)}.")
         elif isinstance(attribute_params, str):
             name, params = attribute_params, dict()
         else:
@@ -156,28 +165,28 @@ class BuildModel(metaclass=ModelMeta):
         if nn_module_meta is default:
             raise ValueError("nn_module is required attribute for argus.Model")
 
-        nn_module, nn_module_params = fetch_attribute_with_params(nn_module_meta,
-                                                                  nn_module_params)
+        nn_module, nn_module_params = choose_attribute_from_dict(nn_module_meta,
+                                                                 nn_module_params)
         nn_module = nn_module(**nn_module_params)
         return nn_module
 
     def build_optimizer(self, optimizer_meta, optim_params):
-        optimizer, optim_params = fetch_attribute_with_params(optimizer_meta,
-                                                              optim_params)
+        optimizer, optim_params = choose_attribute_from_dict(optimizer_meta,
+                                                             optim_params)
         grad_params = (param for param in self.nn_module.parameters()
                        if param.requires_grad)
         optimizer = optimizer(params=grad_params, **optim_params)
         return optimizer
 
     def build_loss(self, loss_meta, loss_params):
-        loss, loss_params = fetch_attribute_with_params(loss_meta,
-                                                        loss_params)
+        loss, loss_params = choose_attribute_from_dict(loss_meta,
+                                                       loss_params)
         loss = loss(**loss_params)
         return loss
 
     def build_prediction_transform(self, transform_meta, transform_params):
-        transform, transform_params = fetch_attribute_with_params(transform_meta,
-                                                                  transform_params)
+        transform, transform_params = choose_attribute_from_dict(transform_meta,
+                                                                 transform_params)
         prediction_transform = transform(**transform_params)
         return prediction_transform
 
