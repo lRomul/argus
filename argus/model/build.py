@@ -2,7 +2,6 @@ import collections
 import warnings
 import logging
 import typing
-import types
 
 import torch
 from torch import nn
@@ -22,7 +21,7 @@ MODEL_REGISTRY = {}
 
 
 def cast_optimizer(optimizer):
-    if isinstance(optimizer, types.FunctionType):
+    if callable(optimizer):
         return optimizer
     elif isinstance(optimizer, type) and hasattr(optimizer, 'step'):
         return optimizer
@@ -33,18 +32,13 @@ def cast_optimizer(optimizer):
 
 
 def cast_nn_module(nn_module):
-    if isinstance(nn_module, types.FunctionType):
+    if callable(nn_module):
         return nn_module
-    elif isinstance(nn_module, type):
-        if issubclass(nn_module, nn.Module):
-            return nn_module
     raise TypeError(f"Incorrect type for nn_module {type(nn_module)}")
 
 
 def cast_loss(loss):
-    if isinstance(loss, types.FunctionType):
-        return loss
-    elif isinstance(loss, type) and callable(loss):
+    if callable(loss):
         return loss
     elif isinstance(loss, str) and loss in pytorch_losses:
         loss = getattr(nn.modules.loss, loss)
@@ -53,9 +47,7 @@ def cast_loss(loss):
 
 
 def cast_prediction_transform(transform):
-    if isinstance(transform, types.FunctionType):
-        return transform
-    elif isinstance(transform, type) and callable(transform):
+    if callable(transform):
         return transform
     raise TypeError(f"Incorrect type for prediction_transform: {type(transform)}")
 
@@ -82,14 +74,6 @@ class Identity:
         return "Identity()"
 
 
-ATTRIBUTE_CASTS = {
-    'nn_module': cast_nn_module,
-    'optimizer': cast_optimizer,
-    'loss': cast_loss,
-    'device': cast_device,
-    'prediction_transform': cast_prediction_transform
-}
-
 DEFAULT_ATTRIBUTE_VALUES = {
     'nn_module': default,
     'optimizer': pytorch_optimizers,
@@ -101,23 +85,19 @@ DEFAULT_ATTRIBUTE_VALUES = {
 
 class ModelMeta(type):
     def __new__(mcs, name, bases, attrs, *args, **kwargs):
-        cast_attrs = {"_meta": dict()}
+        meta_attrs = {"_meta": dict()}
         for key, value in attrs.items():
-            if key in ATTRIBUTE_CASTS:
-                if isinstance(value, collections.Mapping):
-                    value = {k: ATTRIBUTE_CASTS[key](v) for k, v in value.items()}
-                else:
-                    value = ATTRIBUTE_CASTS[key](value)
-                cast_attrs['_meta'][key] = value
+            if key in ALL_ATTRS:
+                meta_attrs['_meta'][key] = value
             else:
-                cast_attrs[key] = value
+                meta_attrs[key] = value
 
         for attr_name in ALL_ATTRS:
-            if attr_name not in cast_attrs['_meta']:
-                cast_attrs['_meta'][attr_name] = DEFAULT_ATTRIBUTE_VALUES[attr_name]
-            cast_attrs[attr_name] = default
+            if attr_name not in meta_attrs['_meta']:
+                meta_attrs['_meta'][attr_name] = DEFAULT_ATTRIBUTE_VALUES[attr_name]
+            meta_attrs[attr_name] = default
 
-        new_class = super().__new__(mcs, name, bases, cast_attrs)
+        new_class = super().__new__(mcs, name, bases, meta_attrs)
         if name in MODEL_REGISTRY:
             current_class = f"<class '{attrs['__module__']}.{attrs['__qualname__']}'>"
             warnings.warn(f"{current_class} redefined '{name}' "
@@ -149,9 +129,9 @@ def choose_attribute_from_dict(attribute_meta, attribute_params):
 
 
 class BuildModel(metaclass=ModelMeta):
-    nn_module: torch.nn.Module
-    optimizer: torch.optim.optimizer.Optimizer
-    loss: torch.nn.Module
+    nn_module: nn.Module
+    optimizer: optim.Optimizer
+    loss: nn.Module
     device: torch.device
     prediction_transform: typing.Callable
 
@@ -175,12 +155,14 @@ class BuildModel(metaclass=ModelMeta):
 
         nn_module, nn_module_params = choose_attribute_from_dict(nn_module_meta,
                                                                  nn_module_params)
+        nn_module = cast_nn_module(nn_module)
         nn_module = nn_module(**nn_module_params)
         return nn_module
 
     def build_optimizer(self, optimizer_meta, optim_params):
         optimizer, optim_params = choose_attribute_from_dict(optimizer_meta,
                                                              optim_params)
+        optimizer = cast_optimizer(optimizer)
         grad_params = (param for param in self.nn_module.parameters()
                        if param.requires_grad)
         optimizer = optimizer(params=grad_params, **optim_params)
@@ -189,12 +171,14 @@ class BuildModel(metaclass=ModelMeta):
     def build_loss(self, loss_meta, loss_params):
         loss, loss_params = choose_attribute_from_dict(loss_meta,
                                                        loss_params)
+        loss = cast_loss(loss)
         loss = loss(**loss_params)
         return loss
 
     def build_prediction_transform(self, transform_meta, transform_params):
         transform, transform_params = choose_attribute_from_dict(transform_meta,
                                                                  transform_params)
+        transform = cast_prediction_transform(transform)
         prediction_transform = transform(**transform_params)
         return prediction_transform
 
