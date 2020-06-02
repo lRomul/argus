@@ -1,6 +1,7 @@
 import collections
 import warnings
 import logging
+import typing
 import types
 
 import torch
@@ -148,11 +149,18 @@ def choose_attribute_from_dict(attribute_meta, attribute_params):
 
 
 class BuildModel(metaclass=ModelMeta):
-    def __init__(self, params):
+    nn_module: torch.nn.Module
+    optimizer: torch.optim.optimizer.Optimizer
+    loss: torch.nn.Module
+    device: torch.device
+    prediction_transform: typing.Callable
+
+    def __init__(self, params: dict):
         self.params = params.copy()
         self.logger = self.build_logger()
 
         for attr_name in ATTRS_BUILD_ORDER:
+            # Use _meta that was constructed in ModelMeta
             attribute_meta = self._meta[attr_name]
             attribute_params = self.params.get(attr_name, dict())
             attr_build_func = getattr(self, f"build_{attr_name}")

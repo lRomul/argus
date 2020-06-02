@@ -44,7 +44,7 @@ class Model(BuildModel):
     """Model
     """
 
-    def __init__(self, params):
+    def __init__(self, params: dict):
         super().__init__(params)
 
     def prepare_batch(self, batch, device):
