@@ -5,7 +5,7 @@ import typing
 
 import torch
 from torch import nn
-from torch import optim
+from torch.optim.optimizer import Optimizer
 from torch.nn.parallel.data_parallel import DataParallel
 
 from argus.utils import default, device_to_str
@@ -26,7 +26,7 @@ def cast_optimizer(optimizer):
     elif isinstance(optimizer, type) and hasattr(optimizer, 'step'):
         return optimizer
     elif isinstance(optimizer, str) and optimizer in pytorch_optimizers:
-        optimizer = getattr(optim, optimizer)
+        optimizer = getattr(torch.optim, optimizer)
         return optimizer
     raise TypeError(f"Incorrect type for optimizer {type(optimizer)}")
 
@@ -130,7 +130,7 @@ def choose_attribute_from_dict(attribute_meta, attribute_params):
 
 class BuildModel(metaclass=ModelMeta):
     nn_module: nn.Module
-    optimizer: optim.Optimizer
+    optimizer: Optimizer
     loss: nn.Module
     device: torch.device
     prediction_transform: typing.Callable
