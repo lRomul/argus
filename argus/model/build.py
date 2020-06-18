@@ -13,7 +13,7 @@ from argus.loss import pytorch_losses
 from argus.optimizer import pytorch_optimizers
 
 
-ATTRS_BUILD_ORDER = ['nn_module', 'optimizer', 'loss', 'device', 'prediction_transform']
+ATTRS_BUILD_ORDER = ('nn_module', 'optimizer', 'loss', 'device', 'prediction_transform')
 TRAIN_ATTRS = {'nn_module', 'optimizer', 'loss', 'device', 'prediction_transform'}
 PREDICT_ATTRS = {'nn_module', 'device', 'prediction_transform'}
 ALL_ATTRS = TRAIN_ATTRS | PREDICT_ATTRS
@@ -135,11 +135,11 @@ class BuildModel(metaclass=ModelMeta):
     device: torch.device
     prediction_transform: typing.Callable
 
-    def __init__(self, params: dict):
+    def __init__(self, params: dict, build_order: list = ATTRS_BUILD_ORDER):
         self.params = params.copy()
         self.logger = self.build_logger()
 
-        for attr_name in ATTRS_BUILD_ORDER:
+        for attr_name in build_order:
             # Use _meta that was constructed in ModelMeta
             attribute_meta = self._meta[attr_name]
             attribute_params = self.params.get(attr_name, dict())
