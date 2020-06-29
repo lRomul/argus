@@ -187,8 +187,8 @@ class Model(BuildModel):
                 Defaults to `None`.
 
         """
-        metrics = [] if metrics is None else metrics
         assert self.train_ready()
+        metrics = [] if metrics is None else metrics
 
         train_engine = Engine(self.train_step, model=self, logger=self.logger)
         train_metrics = [Loss()] + metrics if metrics_on_train else [Loss()]
@@ -229,8 +229,8 @@ class Model(BuildModel):
             dict: The metrics dictionary.
 
         """
-        metrics = [] if metrics is None else metrics
         assert self.train_ready()
+        metrics = [] if metrics is None else metrics
         val_engine = Engine(self.val_step, model=self, logger=self.logger)
         _attach_metrics(val_engine, [Loss()] + metrics, name_prefix='val_')
         _attach_callbacks(val_engine, callbacks)
@@ -259,22 +259,20 @@ class Model(BuildModel):
                 attributes are set).
 
         """
-        if self.train_ready():
-            param_groups = self.optimizer.param_groups
-            if isinstance(lr, (list, tuple)):
-                lrs = list(lr)
-                if len(lrs) != len(param_groups):
-                    raise ValueError(f"Expected lrs length {len(param_groups)}, "
-                                     f"got {len(lrs)}")
-            elif isinstance(lr, numbers.Number):
-                lrs = [lr] * len(param_groups)
-            else:
-                raise ValueError(f"Expected lr type list, tuple or number, "
-                                 f"got {type(lr)}")
-            for group_lr, param_group in zip(lrs, param_groups):
-                param_group['lr'] = group_lr
+        assert self.train_ready()
+        param_groups = self.optimizer.param_groups
+        if isinstance(lr, (list, tuple)):
+            lrs = list(lr)
+            if len(lrs) != len(param_groups):
+                raise ValueError(f"Expected lrs length {len(param_groups)}, "
+                                 f"got {len(lrs)}")
+        elif isinstance(lr, numbers.Number):
+            lrs = [lr] * len(param_groups)
         else:
-            raise AttributeError
+            raise ValueError(f"Expected lr type list, tuple or number, "
+                             f"got {type(lr)}")
+        for group_lr, param_group in zip(lrs, param_groups):
+            param_group['lr'] = group_lr
 
     def get_lr(self):
         """Get the learning rate from the optimizer.
@@ -287,6 +285,7 @@ class Model(BuildModel):
             individual parameter groups learning rate values.
 
         """
+        assert self.train_ready()
         lrs = []
         for param_group in self.optimizer.param_groups:
             lrs.append(param_group['lr'])
