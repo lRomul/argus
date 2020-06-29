@@ -305,7 +305,7 @@ class Model(BuildModel):
                 'nn_state_dict': torch nn_module.state_dict()
             }
 
-        The *state_dict* is always transrerred to cpu prior to saving.
+        The *state_dict* is always transferred to cpu prior to saving.
 
         Args:
             file_path (str): Path to the argus model file.

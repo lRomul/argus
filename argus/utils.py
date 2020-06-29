@@ -2,9 +2,6 @@ import torch
 import collections
 
 
-default = object()
-
-
 def deep_to(input, *args, **kwarg):
     if torch.is_tensor(input):
         return input.to(*args, **kwarg)

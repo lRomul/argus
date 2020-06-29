@@ -8,7 +8,7 @@ from torch import nn
 from torch.optim.optimizer import Optimizer
 from torch.nn.parallel.data_parallel import DataParallel
 
-from argus.utils import default, device_to_str
+from argus.utils import device_to_str
 from argus.loss import pytorch_losses
 from argus.optimizer import pytorch_optimizers
 
@@ -75,7 +75,7 @@ class Identity:
 
 
 DEFAULT_ATTRIBUTE_VALUES = {
-    'nn_module': default,
+    'nn_module': None,
     'optimizer': pytorch_optimizers,
     'loss': pytorch_losses,
     'device': torch.device('cpu'),
@@ -95,7 +95,7 @@ class ModelMeta(type):
         for attr_name in ALL_ATTRS:
             if attr_name not in meta_attrs['_meta']:
                 meta_attrs['_meta'][attr_name] = DEFAULT_ATTRIBUTE_VALUES[attr_name]
-            meta_attrs[attr_name] = default
+            meta_attrs[attr_name] = None
 
         new_class = super().__new__(mcs, name, bases, meta_attrs)
         if name in MODEL_REGISTRY:
@@ -150,7 +150,7 @@ class BuildModel(metaclass=ModelMeta):
         self.set_device(self.device)
 
     def build_nn_module(self, nn_module_meta, nn_module_params):
-        if nn_module_meta is default:
+        if nn_module_meta is None:
             raise ValueError("nn_module is required attribute for argus.Model")
 
         nn_module, nn_module_params = choose_attribute_from_dict(nn_module_meta,
@@ -225,13 +225,13 @@ class BuildModel(metaclass=ModelMeta):
         self.params['device'] = str_device
         self.device = device
         self.nn_module = nn_module.to(self.device)
-        if self.loss is not default:
+        if self.loss is not None:
             self.loss = self.loss.to(self.device)
 
     def _check_attributes(self, attrs):
         for attr_name in attrs:
-            attr_value = getattr(self, attr_name, default)
-            if attr_value is default:
+            attr_value = getattr(self, attr_name, None)
+            if attr_value is None:
                 return False
         return True
 
