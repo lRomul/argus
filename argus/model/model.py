@@ -47,34 +47,6 @@ class Model(BuildModel):
     def __init__(self, params: dict):
         super().__init__(params)
 
-    def prepare_batch(self, batch, device):
-        """Prepare batch data for training by performing device conversion.
-
-        Args:
-            batch (tuple of 2 torch.Tensors: (input, target)): The input and
-                target tensors to move on the required device.
-            device (str or torch.device): The target device for the tensors.
-
-        Returns:
-            tuple of 2 torch.Tensors: (input, target): The resulted tensors on
-            the required device.
-
-        """
-        input, target = batch
-        input = deep_to(input, device, non_blocking=True)
-        target = deep_to(target, device, non_blocking=True)
-        return input, target
-
-    def train(self):
-        """Set the nn_module into train mode."""
-        if not self.nn_module.training:
-            self.nn_module.train()
-
-    def eval(self):
-        """Set the nn_module into eval mode."""
-        if self.nn_module.training:
-            self.nn_module.eval()
-
     def train_step(self, batch, state) -> dict:
         """Perform a single train step.
 
@@ -100,7 +72,7 @@ class Model(BuildModel):
         """
         self.train()
         self.optimizer.zero_grad()
-        input, target = self.prepare_batch(batch, self.device)
+        input, target = deep_to(batch, device=self.device, non_blocking=True)
         prediction = self.nn_module(input)
         loss = self.loss(prediction, target)
         loss.backward()
@@ -144,7 +116,7 @@ class Model(BuildModel):
         """
         self.eval()
         with torch.no_grad():
-            input, target = self.prepare_batch(batch, self.device)
+            input, target = deep_to(batch, device=self.device, non_blocking=True)
             prediction = self.nn_module(input)
             loss = self.loss(prediction, target)
             prediction = self.prediction_transform(prediction)
@@ -343,6 +315,16 @@ class Model(BuildModel):
             prediction = self.nn_module(input)
             prediction = self.prediction_transform(prediction)
             return prediction
+
+    def train(self):
+        """Set the nn_module into train mode."""
+        if not self.nn_module.training:
+            self.nn_module.train()
+
+    def eval(self):
+        """Set the nn_module into eval mode."""
+        if self.nn_module.training:
+            self.nn_module.eval()
 
 
 def load_model(file_path, device=None):
