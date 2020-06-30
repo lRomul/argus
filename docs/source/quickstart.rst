@@ -94,7 +94,7 @@ Use callbacks and start train a model for 50 epochs.
 
     model.fit(train_loader,
               val_loader=val_loader,
-              max_epochs=50,
+              num_epochs=50,
               metrics=['accuracy'],
               callbacks=callbacks)
 

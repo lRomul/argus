@@ -86,7 +86,7 @@ if __name__ == "__main__":
 
     model.fit(train_loader,
               val_loader=val_loader,
-              max_epochs=50,
+              num_epochs=50,
               metrics=['accuracy'],
               callbacks=callbacks,
               metrics_on_train=True)

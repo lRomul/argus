@@ -129,7 +129,7 @@ class Model(BuildModel):
     def fit(self,
             train_loader,
             val_loader=None,
-            max_epochs=1,
+            num_epochs=1,
             metrics=None,
             metrics_on_train=False,
             callbacks=None,
@@ -143,7 +143,7 @@ class Model(BuildModel):
             train_loader (torch.utils.data.DataLoader): The train dataloader.
             val_loader (torch.utils.data.DataLoader or `None`, optional):
                 The validation dataloader. Defaults to `None`.
-            max_epochs (int, optional): Maximum number of training epochs to
+            num_epochs (int, optional): Number of training epochs to
                 run. Defaults to 1.
             metrics (list of :class:`argus.metrics.Metric` or `None`, optional):
                 List of metrics to evaluate. By default, the metrics are
@@ -183,7 +183,7 @@ class Model(BuildModel):
             metrics_logging.attach(train_engine, train=False)
 
         _attach_callbacks(train_engine, callbacks)
-        train_engine.run(train_loader, 0, max_epochs)
+        train_engine.run(train_loader, 0, num_epochs)
 
     def validate(self, val_loader, metrics=None, callbacks=None):
         """Perform a validation.

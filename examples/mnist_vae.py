@@ -135,6 +135,6 @@ if __name__ == "__main__":
 
     model.fit(train_loader,
               val_loader=val_loader,
-              max_epochs=args.epochs,
+              num_epochs=args.epochs,
               callbacks=callbacks,
               val_callbacks=[Reconstruction()])
