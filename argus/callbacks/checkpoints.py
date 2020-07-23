@@ -2,7 +2,6 @@
 """
 import os
 import math
-import shutil
 import warnings
 
 from argus.engine import State
@@ -28,8 +27,6 @@ class Checkpoint(Callback):
             None.
         period (int, optional): Interval (number of epochs) between
             checkpoint saves. Defaults to 1.
-        copy_last (bool, optional): Always save the last checkpoint.
-            Defaults to False.
         save_after_exception (bool, optional): Save the model checkpoint
             after an exception occurs. Defaults to False.
 
@@ -40,7 +37,6 @@ class Checkpoint(Callback):
                  file_format='model-{epoch:03d}-{train_loss:.6f}.pth',
                  max_saves=None,
                  period=1,
-                 copy_last=False,
                  save_after_exception=False):
         assert max_saves is None or max_saves > 0
 
@@ -54,9 +50,19 @@ class Checkpoint(Callback):
             else:
                 warnings.warn(f"Directory '{dir_path}' already exists")
         self.period = period
-        self.copy_last = copy_last
         self.save_after_exception = save_after_exception
         self.epochs_since_last_save = 0
+
+    def save_model(self, state: State, file_path):
+        """Save model to file.
+
+        Override the method if you need custom checkpoint saving.
+
+        Args:
+            state (:class:`argus.engine.State`): State.
+            file_path (str): Checkpoint file path.
+        """
+        state.model.save(file_path)
 
     def _format_file_path(self, state: State):
         format_state = {'epoch': state.epoch, **state.metrics}
@@ -74,10 +80,7 @@ class Checkpoint(Callback):
             self.epochs_since_last_save = 0
 
             file_path = self._format_file_path(state)
-            state.model.save(file_path)
-            if self.copy_last:
-                last_model_path = os.path.join(self.dir_path, 'model-last.pth')
-                shutil.copy(file_path, last_model_path)
+            self.save_model(state, file_path)
             self.saved_files_paths.append(file_path)
 
             if self.max_saves is not None:
@@ -94,7 +97,7 @@ class Checkpoint(Callback):
         if self.save_after_exception:
             exception_model_path = os.path.join(self.dir_path,
                                                 'model-after-exception.pth')
-            state.model.save(exception_model_path)
+            state.model.save_model(exception_model_path)
 
 
 class MonitorCheckpoint(Checkpoint):
@@ -138,8 +141,6 @@ class MonitorCheckpoint(Checkpoint):
                  dir_path='',
                  file_format='model-{epoch:03d}-{monitor:.6f}.pth',
                  max_saves=None,
-                 period=1,
-                 copy_last=False,
                  save_after_exception=False,
                  monitor='val_loss',
                  better='auto'):
@@ -148,8 +149,7 @@ class MonitorCheckpoint(Checkpoint):
         super().__init__(dir_path=dir_path,
                          file_format=file_format,
                          max_saves=max_saves,
-                         period=period,
-                         copy_last=copy_last,
+                         period=1,
                          save_after_exception=save_after_exception)
         self.monitor = monitor
         self.better, self.better_comp, self.best_value = init_better(

@@ -90,9 +90,6 @@ if __name__ == "__main__":
               metrics=['accuracy'],
               callbacks=callbacks,
               metrics_on_train=True)
-
-    del model
-    model = load_model('mnist/model-last.pth')
 ```
 
 Use Argus with `make_model` from [pytorch-cnn-finetune](https://github.com/creafz/pytorch-cnn-finetune).

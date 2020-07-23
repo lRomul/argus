@@ -99,6 +99,20 @@ Use callbacks and start train a model for 50 epochs.
               callbacks=callbacks)
 
 
+Load model from checkpoint.
+
+.. code-block:: python
+
+    from pathlib import Path
+    from argus import load_model
+
+    del model
+    model_path = Path("mnist/").glob("*.pth")
+    model_path = sorted(model_path)[-1]
+    print(f"Load model: {model_path}")
+    model = load_model(model_path)
+    print(model)
+
 More flexibility
 ----------------
 
@@ -142,4 +156,3 @@ If you need for more flexibility you can:
 * Override methods of :class:`argus.model.Model`. For example :meth:`argus.model.Model.train_step` and :meth:`argus.model.Model.val_step`.
 * Create custom :class:`argus.callbacks.Callback`.
 * Use custom :class:`argus.metrics.Metric`.
-

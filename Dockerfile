@@ -23,7 +23,12 @@ RUN pip3 install --no-cache-dir \
 # Install python ML packages
 RUN pip3 install --no-cache-dir \
     notebook==6.0.3 \
+    cnn-finetune==0.6.0 \
     timm==0.1.30
+
+# Docs requirements
+COPY ./docs/requirements.txt /docs_requirements.txt
+RUN pip3 install --no-cache-dir -r /docs_requirements.txt
 
 ENV PYTHONPATH $PYTHONPATH:/workdir
 ENV TORCH_HOME=/workdir/data/.torch

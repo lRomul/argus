@@ -1,10 +1,12 @@
+import argparse
+from pathlib import Path
+
 import torch
 from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, ToTensor, Normalize
 from torchvision.datasets import MNIST
-import argparse
 
 from argus import Model, load_model
 from argus.callbacks import MonitorCheckpoint, EarlyStopping, \
@@ -13,10 +15,8 @@ from argus.callbacks import MonitorCheckpoint, EarlyStopping, \
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--train_batch_size', type=int, default=64,
+    parser.add_argument('--batch_size', type=int, default=64,
                         help='input batch size for training (default: 64)')
-    parser.add_argument('--val_batch_size', type=int, default=64,
-                        help='input batch size for validation (default: 64)')
     parser.add_argument('--epochs', type=int, default=100,
                         help='number of epochs to train (default: 30)')
     parser.add_argument('--lr', type=float, default=0.01,
@@ -68,8 +68,8 @@ class MnistModel(Model):
 
 if __name__ == "__main__":
     args = parse_arguments()
-    train_loader, val_loader = get_data_loaders(args.train_batch_size,
-                                                args.val_batch_size)
+    train_loader, val_loader = get_data_loaders(args.batch_size,
+                                                args.batch_size * 2)
 
     params = {
         'nn_module': {'n_classes': 10, 'p_dropout': args.dropout},
@@ -79,8 +79,7 @@ if __name__ == "__main__":
     model = MnistModel(params)
 
     callbacks = [
-        MonitorCheckpoint(dir_path='mnist/', monitor='val_accuracy',
-                          max_saves=3, copy_last=True),
+        MonitorCheckpoint(dir_path='mnist/', monitor='val_accuracy', max_saves=3),
         EarlyStopping(monitor='val_accuracy', patience=9),
         ReduceLROnPlateau(monitor='val_accuracy', factor=0.5, patience=3),
         LoggingToCSV('mnist/log.csv')
@@ -94,5 +93,8 @@ if __name__ == "__main__":
               metrics_on_train=True)
 
     del model
-    model = load_model('mnist/model-last.pth')
+    model_path = Path("mnist/").glob("*.pth")
+    model_path = sorted(model_path)[-1]
+    print(f"Load model: {model_path}")
+    model = load_model(model_path)
     print(model.__dict__)
