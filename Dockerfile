@@ -31,6 +31,5 @@ COPY ./docs/requirements.txt /docs_requirements.txt
 RUN pip3 install --no-cache-dir -r /docs_requirements.txt
 
 ENV PYTHONPATH $PYTHONPATH:/workdir
-ENV TORCH_HOME=/workdir/data/.torch
 
 WORKDIR /workdir
