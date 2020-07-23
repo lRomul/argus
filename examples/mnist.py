@@ -9,8 +9,12 @@ from torchvision.transforms import Compose, ToTensor, Normalize
 from torchvision.datasets import MNIST
 
 from argus import Model, load_model
-from argus.callbacks import MonitorCheckpoint, EarlyStopping, \
-    ReduceLROnPlateau, LoggingToCSV
+from argus.callbacks import (
+    MonitorCheckpoint,
+    EarlyStopping,
+    ReduceLROnPlateau,
+    LoggingToCSV
+)
 
 
 def parse_arguments():
@@ -18,7 +22,7 @@ def parse_arguments():
     parser.add_argument('--batch_size', type=int, default=64,
                         help='input batch size for training (default: 64)')
     parser.add_argument('--epochs', type=int, default=100,
-                        help='number of epochs to train (default: 30)')
+                        help='number of epochs to train (default: 100)')
     parser.add_argument('--lr', type=float, default=0.01,
                         help='learning rate (default: 0.01)')
     parser.add_argument('--dropout', type=float, default=0.1,
