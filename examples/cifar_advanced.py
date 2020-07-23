@@ -13,6 +13,7 @@ from torchvision.datasets import CIFAR10
 import timm
 
 import argus
+from argus.metrics import Metric
 from argus.callbacks import (
     MonitorCheckpoint,
     EarlyStopping,
@@ -52,18 +53,61 @@ def get_data_loaders(batch_size, distributed, local_rank):
                           transform=test_transform, download=True)
 
     train_sampler = None
+    val_sampler = None
     if distributed:
         train_sampler = DistributedSampler(train_dataset,
                                            num_replicas=dist.get_world_size(),
                                            rank=local_rank,
                                            shuffle=True)
+        val_sampler = DistributedSampler(val_dataset,
+                                         num_replicas=dist.get_world_size(),
+                                         rank=local_rank,
+                                         shuffle=False)
 
     train_loader = DataLoader(train_dataset, num_workers=2, drop_last=True,
                               batch_size=batch_size, sampler=train_sampler,
                               shuffle=train_sampler is None)
-    val_loader = DataLoader(val_dataset, num_workers=2,
-                            batch_size=batch_size * 2, shuffle=False)
+    val_loader = DataLoader(val_dataset, num_workers=2, shuffle=False,
+                            batch_size=batch_size * 2, sampler=val_sampler)
     return train_loader, val_loader
+
+
+class CategoricalAccuracy(Metric):
+    """You don't need to write a distributed metric if you don't
+    want to validate in parallel. You can use regular metrics if you
+    are not using DistributedSampler for validation data loader.
+    """
+
+    name = 'accuracy'
+    better = 'max'
+
+    def __init__(self, distributed=False, world_size=1):
+        self.distributed = distributed
+        self.world_size = world_size
+
+    def reset(self):
+        self.correct = 0
+        self.count = 0
+
+    def update(self, step_output: dict):
+        pred = step_output['prediction']
+        trg = step_output['target']
+        indices = torch.max(pred, dim=1)[1]
+        correct = torch.eq(indices, trg).view(-1)
+        correct_sum = torch.sum(correct)
+        if self.distributed:
+            reduce_correct_sum = correct_sum.clone()
+            dist.all_reduce(reduce_correct_sum, op=dist.ReduceOp.SUM)
+            correct_sum = reduce_correct_sum
+            torch.cuda.synchronize()
+
+        self.correct += correct_sum.item()
+        self.count += correct.shape[0] * self.world_size
+
+    def compute(self):
+        if self.count == 0:
+            raise Exception('Must be at least one example for computation')
+        return self.correct / self.count
 
 
 class CifarModel(argus.Model):
@@ -91,8 +135,10 @@ if __name__ == "__main__":
         dist.init_process_group(backend='nccl', init_method='env://')
 
     if args.distributed:
-        args.world_batch_size = args.batch_size * dist.get_world_size()
+        world_size = dist.get_world_size()
+        args.world_batch_size = args.batch_size * world_size
     else:
+        world_size = 1
         args.world_batch_size = args.batch_size
     print("World batch size:", args.world_batch_size)
 
@@ -149,5 +195,5 @@ if __name__ == "__main__":
     model.fit(train_loader,
               val_loader=val_loader,
               num_epochs=args.epochs,
-              metrics=['accuracy'],
+              metrics=[CategoricalAccuracy(args.distributed, world_size)],
               callbacks=callbacks)
