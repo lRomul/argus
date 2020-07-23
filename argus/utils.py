@@ -1,5 +1,6 @@
 import torch
 import collections
+from functools import partial
 
 
 def deep_to(input, *args, **kwarg):
@@ -28,6 +29,19 @@ def deep_detach(input):
         return {k: deep_detach(sample) for k, sample in input.items()}
     else:
         return input
+
+
+def deep_chunk(input, chunks, dim=0):
+    partial_deep_chunk = partial(deep_chunk, chunks=chunks, dim=dim)
+    if torch.is_tensor(input):
+        return torch.chunk(input, chunks, dim=dim)
+    if isinstance(input, tuple) and len(input) > 0:
+        return list(zip(*map(partial_deep_chunk, input)))
+    if isinstance(input, list) and len(input) > 0:
+        return list(map(list, zip(*map(partial_deep_chunk, input))))
+    if isinstance(input, dict) and len(input) > 0:
+        return list(map(type(input), zip(*map(partial_deep_chunk, input.items()))))
+    return [input for _ in range(chunks)]
 
 
 def device_to_str(device):
