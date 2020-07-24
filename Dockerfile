@@ -30,6 +30,12 @@ RUN pip3 install --no-cache-dir \
 COPY ./docs/requirements.txt /docs_requirements.txt
 RUN pip3 install --no-cache-dir -r /docs_requirements.txt
 
+# Install Apex
+RUN git clone https://github.com/NVIDIA/apex && cd apex &&\
+    pip install -v --no-cache-dir \
+    --global-option="--cpp_ext" \
+    --global-option="--cuda_ext" ./
+
 ENV PYTHONPATH $PYTHONPATH:/workdir
 
 WORKDIR /workdir

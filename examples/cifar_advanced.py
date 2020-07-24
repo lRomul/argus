@@ -13,11 +13,12 @@ from torchvision.datasets import CIFAR10
 import timm
 
 import argus
+from argus.utils import deep_to, deep_detach, deep_chunk
 from argus.metrics import Metric
 from argus.callbacks import (
     MonitorCheckpoint,
     EarlyStopping,
-    ReduceLROnPlateau,
+    CosineAnnealingLR,
     LoggingToCSV,
     LoggingToFile
 )
@@ -50,7 +51,7 @@ def get_data_loaders(batch_size, distributed, local_rank):
     train_dataset = CIFAR10(root=CIFAR_DATA_DIR, train=True,
                             transform=train_transform, download=True)
     val_dataset = CIFAR10(root=CIFAR_DATA_DIR, train=False,
-                          transform=test_transform, download=True)
+                          transform=test_transform, download=False)
 
     train_sampler = None
     val_sampler = None
@@ -78,7 +79,7 @@ class CategoricalAccuracy(Metric):
     are not using DistributedSampler for validation data loader.
     """
 
-    name = 'accuracy'
+    name = 'dist_accuracy'
     better = 'max'
 
     def __init__(self, distributed=False, world_size=1):
@@ -110,18 +111,72 @@ class CategoricalAccuracy(Metric):
         return self.correct / self.count
 
 
+def initialize_amp(model,
+                   opt_level='O1',
+                   keep_batchnorm_fp32=None,
+                   loss_scale='dynamic'):
+    from apex import amp
+    model.nn_module, model.optimizer = amp.initialize(
+        model.nn_module, model.optimizer,
+        opt_level=opt_level,
+        keep_batchnorm_fp32=keep_batchnorm_fp32,
+        loss_scale=loss_scale
+    )
+    model.amp = amp
+
+
 class CifarModel(argus.Model):
     nn_module = timm.create_model
+
+    def __init__(self, params):
+        super().__init__(params)
+        self.amp = None
+
+        if 'iter_size' not in self.params:
+            self.params['iter_size'] = 1
+        self.iter_size = self.params['iter_size']
+
+    def train_step(self, batch, state) -> dict:
+        self.train()
+        self.optimizer.zero_grad()
+
+        # Gradient accumulation
+        for i, chunk_batch in enumerate(deep_chunk(batch, self.iter_size)):
+            input, target = deep_to(chunk_batch, self.device, non_blocking=True)
+            prediction = self.nn_module(input)
+            loss = self.loss(prediction, target)
+            if self.amp is not None:
+                delay_unscale = i != (self.iter_size - 1)
+                # Mixed precision
+                with self.amp.scale_loss(loss, self.optimizer,
+                                         delay_unscale=delay_unscale) as scaled_loss:
+                    scaled_loss.backward()
+            else:
+                loss.backward()
+
+        self.optimizer.step()
+        torch.cuda.synchronize()
+
+        prediction = deep_detach(prediction)
+        target = deep_detach(target)
+        prediction = self.prediction_transform(prediction)
+        return {
+            'prediction': prediction,
+            'target': target,
+            'loss': loss.item()
+        }
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', type=int, default=256,
                         help='input batch size for training (default: 256)')
-    parser.add_argument('--epochs', type=int, default=100,
-                        help='number of epochs to train (default: 100)')
+    parser.add_argument('--epochs', type=int, default=200,
+                        help='number of epochs to train (default: 200)')
     parser.add_argument('--lr', type=float, default=0.001,
                         help='learning rate (default: 0.001)')
+    parser.add_argument('--amp', action='store_true',
+                        help='Use Apex mixed precision')
 
     parser.add_argument("--local_rank", default=0, type=int)
     args = parser.parse_args()
@@ -158,10 +213,14 @@ if __name__ == "__main__":
             'lr': get_linear_scaled_lr(args.lr, args.world_batch_size)
         }),
         'loss': 'CrossEntropyLoss',
-        'device': 'cuda'
+        'device': 'cuda',
+        'iter_size': 2
     }
 
     model = CifarModel(params)
+
+    if args.amp:
+        initialize_amp(model)
 
     if args.distributed:
         model.nn_module = SyncBatchNorm.convert_sync_batchnorm(model.nn_module)
@@ -176,14 +235,14 @@ if __name__ == "__main__":
     callbacks = []
     if args.local_rank == 0:
         callbacks += [
-            MonitorCheckpoint(dir_path=EXPERIMENT_DIR, monitor='val_accuracy', max_saves=3),
+            MonitorCheckpoint(dir_path=EXPERIMENT_DIR, monitor='val_dist_accuracy', max_saves=3),
             LoggingToCSV(EXPERIMENT_DIR / 'log.csv'),
             LoggingToFile(EXPERIMENT_DIR / 'log.txt')
         ]
 
     callbacks += [
-        EarlyStopping(monitor='val_accuracy', patience=9),
-        ReduceLROnPlateau(monitor='val_accuracy', factor=0.64, patience=3),
+        EarlyStopping(monitor='val_dist_accuracy', patience=9),
+        CosineAnnealingLR(args.epochs),
     ]
 
     if args.distributed:
