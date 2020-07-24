@@ -1,17 +1,33 @@
 Examples
 ========
 
+You can find examples `here <https://github.com/lRomul/argus/blob/master/examples>`_.
+
 Basic examples
 --------------
 
-* `Basic MNIST example <https://github.com/lRomul/argus/blob/master/examples/mnist.py>`_
-* `Simple VAE example <https://github.com/lRomul/argus/blob/master/examples/mnist_vae.py>`_
-* `Simple CIFAR example <https://github.com/lRomul/argus/blob/master/examples/cifar_simple.py>`_
+* `MNIST example <https://github.com/lRomul/argus/blob/master/examples/mnist.py>`_
+
+    .. code:: bash
+
+        python mnist.py --device cuda
+
+* `MNIST VAE example <https://github.com/lRomul/argus/blob/master/examples/mnist_vae.py>`_
+
+    .. code:: bash
+
+        python mnist_vae.py --device cuda
+
+* `CIFAR example <https://github.com/lRomul/argus/blob/master/examples/cifar_simple.py>`_
+
+    .. code:: bash
+
+        python cifar_simple.py --device cuda
 
 Advanced examples
 -----------------
 
-* `Advanced CIFAR with DPP, mixed precision and gradient accumulation <https://github.com/lRomul/argus/blob/master/examples/cifar_advanced.py>`_
+* `CIFAR with DPP, mixed precision and gradient accumulation <https://github.com/lRomul/argus/blob/master/examples/cifar_advanced.py>`_
 
     Single GPU training:
 
