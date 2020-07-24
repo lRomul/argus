@@ -1,8 +1,35 @@
 Examples
 ========
 
+Basic examples
+--------------
+
 * `Basic MNIST example <https://github.com/lRomul/argus/blob/master/examples/mnist.py>`_
 * `Simple VAE example <https://github.com/lRomul/argus/blob/master/examples/mnist_vae.py>`_
+* `Simple CIFAR example <https://github.com/lRomul/argus/blob/master/examples/cifar_simple.py>`_
+
+Advanced examples
+-----------------
+
+* `Advanced CIFAR with DPP, mixed precision and gradient accumulation <https://github.com/lRomul/argus/blob/master/examples/cifar_advanced.py>`_
+
+    Single GPU training:
+
+    .. code:: bash
+
+        python cifar_advanced.py --batch_size 256 --lr 0.001
+
+    Single machine 2 GPUs distributed data parallel training:
+
+    .. code:: bash
+
+        ./cifar_advanced.sh 2 --batch_size 128 --lr 0.0005
+
+    DDP training with Apex mixed precision and gradient accumulation:
+
+    .. code:: bash
+
+        ./cifar_advanced.sh 2 --batch_size 128 --lr 0.0005 --amp --iter_size 2
 
 Kaggle solutions
 ----------------
@@ -14,3 +41,4 @@ Kaggle solutions
 * `Solution for Humpback Whale Identification (metric learning: arcface, center loss) <https://github.com/lRomul/argus-humpback-whale>`_
 * `Solution for VSB Power Line Fault Detection (1d conv) <https://github.com/lRomul/argus-vsb-power>`_
 * `Solution for Bengali.AI Handwritten Grapheme Classification (EMA, mixed precision, CutMix) <https://github.com/lRomul/argus-bengali-ai>`_
+* `Solution for ALASKA2 Image Steganalysis competition (DDP, EMA, mixed precision, BitMix) <https://github.com/lRomul/argus-alaska>`_

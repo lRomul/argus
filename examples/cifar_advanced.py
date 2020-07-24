@@ -175,8 +175,10 @@ if __name__ == "__main__":
                         help='number of epochs to train (default: 200)')
     parser.add_argument('--lr', type=float, default=0.001,
                         help='learning rate (default: 0.001)')
+    parser.add_argument('--iter_size', type=int, default=1,
+                        help='gradient accumulation step (default: 1)')
     parser.add_argument('--amp', action='store_true',
-                        help='Use Apex mixed precision')
+                        help='use Apex mixed precision')
 
     parser.add_argument("--local_rank", default=0, type=int)
     args = parser.parse_args()
@@ -214,7 +216,7 @@ if __name__ == "__main__":
         }),
         'loss': 'CrossEntropyLoss',
         'device': 'cuda',
-        'iter_size': 2
+        'iter_size': args.iter_size
     }
 
     model = CifarModel(params)
@@ -235,13 +237,14 @@ if __name__ == "__main__":
     callbacks = []
     if args.local_rank == 0:
         callbacks += [
-            MonitorCheckpoint(dir_path=EXPERIMENT_DIR, monitor='val_dist_accuracy', max_saves=3),
+            MonitorCheckpoint(dir_path=EXPERIMENT_DIR,
+                              monitor='val_dist_accuracy', max_saves=3),
             LoggingToCSV(EXPERIMENT_DIR / 'log.csv'),
             LoggingToFile(EXPERIMENT_DIR / 'log.txt')
         ]
 
     callbacks += [
-        EarlyStopping(monitor='val_dist_accuracy', patience=9),
+        EarlyStopping(monitor='val_dist_accuracy', patience=30),
         CosineAnnealingLR(args.epochs),
     ]
 
