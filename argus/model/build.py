@@ -6,7 +6,7 @@ import typing
 import torch
 from torch import nn
 from torch.optim.optimizer import Optimizer
-from torch.nn.parallel.data_parallel import DataParallel
+from torch.nn.parallel import DataParallel, DistributedDataParallel
 
 from argus.utils import device_to_str
 from argus.loss import pytorch_losses
@@ -199,7 +199,7 @@ class BuildModel(metaclass=ModelMeta):
         return logger
 
     def get_nn_module(self):
-        if isinstance(self.nn_module, DataParallel):
+        if isinstance(self.nn_module, (DataParallel, DistributedDataParallel)):
             return self.nn_module.module
         else:
             return self.nn_module
