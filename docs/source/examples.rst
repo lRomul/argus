@@ -6,19 +6,19 @@ You can find examples `here <https://github.com/lRomul/argus/blob/master/example
 Basic examples
 --------------
 
-* `MNIST example <https://github.com/lRomul/argus/blob/master/examples/mnist.py>`_
+* `MNIST example. <https://github.com/lRomul/argus/blob/master/examples/mnist.py>`_
 
     .. code:: bash
 
         python mnist.py --device cuda
 
-* `MNIST VAE example <https://github.com/lRomul/argus/blob/master/examples/mnist_vae.py>`_
+* `MNIST VAE example. <https://github.com/lRomul/argus/blob/master/examples/mnist_vae.py>`_
 
     .. code:: bash
 
         python mnist_vae.py --device cuda
 
-* `CIFAR example <https://github.com/lRomul/argus/blob/master/examples/cifar_simple.py>`_
+* `CIFAR example. <https://github.com/lRomul/argus/blob/master/examples/cifar_simple.py>`_
 
     .. code:: bash
 
@@ -27,7 +27,7 @@ Basic examples
 Advanced examples
 -----------------
 
-* `CIFAR with DPP, mixed precision and gradient accumulation <https://github.com/lRomul/argus/blob/master/examples/cifar_advanced.py>`_
+* `CIFAR with DPP, mixed precision and gradient accumulation. <https://github.com/lRomul/argus/blob/master/examples/cifar_advanced.py>`_
 
     Single GPU training:
 
@@ -46,6 +46,8 @@ Advanced examples
     .. code:: bash
 
         ./cifar_advanced.sh 2 --batch_size 128 --lr 0.0005 --amp --iter_size 2
+
+* `Custom build methods for creation of model parts. <https://github.com/lRomul/argus/blob/master/examples/custom_build_methods.py>`_
 
 Kaggle solutions
 ----------------

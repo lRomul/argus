@@ -38,7 +38,7 @@ from torch import nn
 import torch.nn.functional as F
 from mnist_utils import get_data_loaders
 
-from argus import Model, load_model
+from argus import Model
 from argus.callbacks import MonitorCheckpoint, EarlyStopping, ReduceLROnPlateau
 
 

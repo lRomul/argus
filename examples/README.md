@@ -2,17 +2,17 @@
 
 ## Basic examples
 
-* MNIST example 
+* MNIST example.
     ```bash
     python mnist.py --device cuda
     ```
     
-* MNIST VAE example 
+* MNIST VAE example. 
     ```bash
     python mnist_vae.py --device cuda
     ```
   
-* CIFAR example 
+* CIFAR example. 
     ```bash
     python cifar_simple.py --device cuda
     ```
@@ -40,6 +40,8 @@ Advanced examples
     ./cifar_advanced.sh 2 --batch_size 128 --lr 0.0005 --amp --iter_size 2
     ```
     
+* Custom build methods for creation of model parts [custom_build_methods.py](custom_build_methods.py).
+
 Kaggle solutions
 ----------------
 
