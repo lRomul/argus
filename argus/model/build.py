@@ -143,8 +143,10 @@ class BuildModel(metaclass=ModelMeta):
             # Use _meta that was constructed in ModelMeta
             attribute_meta = self._meta[attr_name]
             attribute_params = self.params.get(attr_name, dict())
-            attr_build_func = getattr(self, f"build_{attr_name}")
-            attribute = attr_build_func(attribute_meta, attribute_params)
+            attribute = None
+            if attribute_params is not None:
+                attr_build_func = getattr(self, f"build_{attr_name}")
+                attribute = attr_build_func(attribute_meta, attribute_params)
             setattr(self, attr_name, attribute)
 
         self.set_device(self.device)

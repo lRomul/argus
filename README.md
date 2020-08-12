@@ -75,7 +75,9 @@ if __name__ == "__main__":
             'model_name': 'tf_efficientnet_b0_ns',
             'pretrained': False,
             'num_classes': 10,
-            'in_chans': 1
+            'in_chans': 1,
+            'drop_rate': 0.2,
+            'drop_path_rate': 0.2
         },
         'optimizer': ('Adam', {'lr': 0.01}),
         'loss': 'CrossEntropyLoss',
