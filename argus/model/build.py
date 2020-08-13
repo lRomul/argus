@@ -2,15 +2,16 @@ import collections
 import warnings
 import logging
 import typing
+import copy
 
 import torch
 from torch import nn
 from torch.optim.optimizer import Optimizer
 from torch.nn.parallel import DataParallel, DistributedDataParallel
 
-from argus.utils import device_to_str
 from argus.loss import pytorch_losses
 from argus.optimizer import pytorch_optimizers
+from argus.utils import device_to_str, Identity, check_pickleble
 
 
 ATTRS_BUILD_ORDER = ('nn_module', 'optimizer', 'loss', 'device', 'prediction_transform')
@@ -64,14 +65,6 @@ def cast_device(device):
             return [torch.device(d) for d in device]
     else:
         return torch.device(device)
-
-
-class Identity:
-    def __call__(self, x):
-        return x
-
-    def __repr__(self):
-        return "Identity()"
 
 
 DEFAULT_ATTRIBUTE_VALUES = {
@@ -136,7 +129,9 @@ class BuildModel(metaclass=ModelMeta):
     prediction_transform: typing.Callable
 
     def __init__(self, params: dict, build_order: list = ATTRS_BUILD_ORDER):
-        self.params = params.copy()
+        params = copy.deepcopy(params)
+        check_pickleble(params)
+        self.params = params
         self.logger = self.build_logger()
 
         for attr_name in build_order:

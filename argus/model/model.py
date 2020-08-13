@@ -5,11 +5,11 @@ import torch
 
 from argus.model.build import BuildModel, MODEL_REGISTRY, cast_device
 from argus.engine import Engine, Events
-from argus.utils import deep_to, deep_detach, device_to_str
 from argus.callbacks import Callback, on_epoch_complete
 from argus.callbacks.logging import metrics_logging
 from argus.metrics.metric import Metric, METRIC_REGISTRY
 from argus.metrics.loss import Loss
+from argus.utils import deep_to, deep_detach, device_to_str, default, identity
 
 
 def _attach_callbacks(engine, callbacks):
@@ -327,7 +327,14 @@ class Model(BuildModel):
             self.nn_module.eval()
 
 
-def load_model(file_path, device=None):
+def load_model(file_path,
+               nn_module=default,
+               optimizer=default,
+               loss=default,
+               prediction_transform=default,
+               device=default,
+               change_params_func=identity,
+               **kwargs):
     """Load an argus model from a file.
 
     The function allows loading an argus model, saved with
@@ -336,6 +343,16 @@ def load_model(file_path, device=None):
     Args:
         file_path (str): Path to the file to load.
         device (str, optional): Device for the model. Defaults to None.
+        nn_module (dict, optional): Params of the nn_module to replace params in the state.
+        optimizer (dict, optional): Params of the optimizer to replace params in the state.
+            Set to `None` if don't want to create optimizer in the loaded model.
+        loss (dict, optional): Params of the loss to replace params in the state.
+            Set to `None` if don't want to create loss in the loaded model.
+        prediction_transform (dict, optional): Params of the prediction_transform to replace
+            params in the state. Set to `None` if don't want to create prediction_transform
+            in the loaded model.
+        change_params_func(function, optional): Function for modification of state params.
+            Takes as input params from the loaded state, outputs params to model creation.
 
     Raises:
         ImportError: If the model is not available in the scope. Often it means
@@ -351,12 +368,27 @@ def load_model(file_path, device=None):
 
         if state['model_name'] in MODEL_REGISTRY:
             params = state['params']
-            if device is not None:
+            if device is not default:
                 device = cast_device(device)
                 device = device_to_str(device)
                 params['device'] = device
 
+            if nn_module is not default:
+                if nn_module is None:
+                    raise ValueError("nn_module is required attribute for argus.Model")
+                params['nn_module'] = nn_module
+            if optimizer is not default:
+                params['optimizer'] = optimizer
+            if loss is not default:
+                params['loss'] = loss
+            if prediction_transform is not default:
+                params['prediction_transform'] = prediction_transform
+
+            for attribute, attribute_params in kwargs.items():
+                params[attribute] = attribute_params
+
             model_class = MODEL_REGISTRY[state['model_name']]
+            params = change_params_func(params)
             model = model_class(params)
             nn_state_dict = deep_to(state['nn_state_dict'], model.device)
 

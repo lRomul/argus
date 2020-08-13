@@ -1,6 +1,24 @@
 import torch
 import collections
 from functools import partial
+from tempfile import TemporaryFile
+
+
+class Default:
+    def __repr__(self):
+        return "default"
+
+
+class Identity:
+    def __call__(self, x):
+        return x
+
+    def __repr__(self):
+        return "Identity()"
+
+
+default = Default()
+identity = Identity()
 
 
 def deep_to(input, *args, **kwarg):
@@ -61,6 +79,11 @@ def inheritors(cls):
                 subclasses.add(child)
                 cls_list.append(child)
     return subclasses
+
+
+def check_pickleble(obj):
+    with TemporaryFile() as file:
+        torch.save(obj, file)
 
 
 class AverageMeter(object):
