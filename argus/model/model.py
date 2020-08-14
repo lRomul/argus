@@ -343,16 +343,20 @@ def load_model(file_path,
     Args:
         file_path (str): Path to the file to load.
         device (str, optional): Device for the model. Defaults to None.
-        nn_module (dict, optional): Params of the nn_module to replace params in the state.
-        optimizer (dict, optional): Params of the optimizer to replace params in the state.
-            Set to `None` if don't want to create optimizer in the loaded model.
-        loss (dict, optional): Params of the loss to replace params in the state.
-            Set to `None` if don't want to create loss in the loaded model.
-        prediction_transform (dict, optional): Params of the prediction_transform to replace
-            params in the state. Set to `None` if don't want to create prediction_transform
-            in the loaded model.
-        change_params_func(function, optional): Function for modification of state params.
-            Takes as input params from the loaded state, outputs params to model creation.
+        nn_module (dict, optional): Params of the nn_module to replace params
+            in the state.
+        optimizer (dict or `None`, optional): Params of the optimizer to
+            replace params in the state. Set to `None` if don't want to create
+            optimizer in the loaded model.
+        loss (dict or `None`, optional): Params of the loss to replace params
+            in the state. Set to `None` if don't want to create loss in the
+            loaded model.
+        prediction_transform (dict or `None`, optional): Params of the
+            prediction_transform to replace params in the state. Set to `None`
+            if don't want to create prediction_transform in the loaded model.
+        change_params_func(function, optional): Function for modification of
+            state params. Takes as input params from the loaded state, outputs
+            params to model creation.
 
     Raises:
         ImportError: If the model is not available in the scope. Often it means
