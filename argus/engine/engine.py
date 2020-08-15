@@ -81,13 +81,13 @@ class Engine(object):
 
             self.raise_event(Events.COMPLETE)
 
-        except BaseException as e:
+        except BaseException as exception:
             if self.state.logger is not None:
-                self.state.logger.exception(e)
+                self.state.logger.exception(exception)
 
-            self.state.exception = e
+            self.state.exception = exception
             self.raise_event(Events.CATCH_EXCEPTION)
-            raise e
+            raise exception
         finally:
             self.state.stopped = True
 

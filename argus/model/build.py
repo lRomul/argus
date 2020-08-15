@@ -3,6 +3,7 @@ import warnings
 import logging
 import typing
 import copy
+import sys
 
 import torch
 from torch import nn
@@ -187,10 +188,16 @@ class BuildModel(metaclass=ModelMeta):
         return cast_device(device)
 
     def build_logger(self):
+        stdout = logging.StreamHandler(stream=sys.stdout)
+        stdout.setLevel('INFO')
+        stderr = logging.StreamHandler(stream=sys.stderr)
+        stderr.setLevel('ERROR')
+        handlers = [stderr, stdout]
+
         logging.basicConfig(
-            format='%(asctime)s %(levelname)s %(message)s',
+            format='[%(asctime)s][%(levelname)s]: %(message)s',
             level=logging.getLevelName(logging.INFO),
-            handlers=[logging.StreamHandler()],
+            handlers=handlers,
         )
         logger = logging.getLogger(__name__)
         return logger
