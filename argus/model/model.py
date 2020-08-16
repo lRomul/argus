@@ -159,7 +159,7 @@ class Model(BuildModel):
                 Defaults to `None`.
 
         """
-        assert self.train_ready()
+        self._check_train_ready()
         metrics = [] if metrics is None else metrics
 
         train_engine = Engine(self.train_step, model=self, logger=self.logger)
@@ -201,7 +201,7 @@ class Model(BuildModel):
             dict: The metrics dictionary.
 
         """
-        assert self.train_ready()
+        self._check_train_ready()
         metrics = [] if metrics is None else metrics
         val_engine = Engine(self.val_step, model=self, logger=self.logger)
         _attach_metrics(val_engine, [Loss()] + metrics, name_prefix='val_')
@@ -231,7 +231,7 @@ class Model(BuildModel):
                 attributes are set).
 
         """
-        assert self.train_ready()
+        self._check_train_ready()
         param_groups = self.optimizer.param_groups
         if isinstance(lr, (list, tuple)):
             lrs = list(lr)
@@ -257,7 +257,7 @@ class Model(BuildModel):
             individual parameter groups learning rate values.
 
         """
-        assert self.train_ready()
+        self._check_train_ready()
         lrs = []
         for param_group in self.optimizer.param_groups:
             lrs.append(param_group['lr'])
@@ -308,7 +308,7 @@ class Model(BuildModel):
                 prediction_transform application.
 
         """
-        assert self.predict_ready()
+        self._check_predict_ready()
         with torch.no_grad():
             self.eval()
             input = deep_to(input, self.device)

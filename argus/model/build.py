@@ -244,5 +244,17 @@ class BuildModel(metaclass=ModelMeta):
     def predict_ready(self):
         return self._check_attributes(PREDICT_ATTRS)
 
+    def _check_train_ready(self):
+        if not self.train_ready():
+            raise AttributeError(
+                f"Not all required training attributes are there: {TRAIN_ATTRS}"
+            )
+
+    def _check_predict_ready(self):
+        if not self.predict_ready():
+            raise AttributeError(
+                f"Not all required prediction attributes are there: {PREDICT_ATTRS}"
+            )
+
     def __repr__(self):
         return str(self.__dict__)
