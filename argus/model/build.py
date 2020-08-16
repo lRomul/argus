@@ -21,6 +21,14 @@ PREDICT_ATTRS = {'nn_module', 'device', 'prediction_transform'}
 ALL_ATTRS = TRAIN_ATTRS | PREDICT_ATTRS
 MODEL_REGISTRY = {}
 
+DEFAULT_ATTRIBUTE_VALUES = {
+    'nn_module': None,
+    'optimizer': pytorch_optimizers,
+    'loss': pytorch_losses,
+    'device': torch.device('cpu'),
+    'prediction_transform': Identity
+}
+
 
 def cast_optimizer(optimizer):
     if callable(optimizer):
@@ -66,15 +74,6 @@ def cast_device(device):
             return [torch.device(d) for d in device]
     else:
         return torch.device(device)
-
-
-DEFAULT_ATTRIBUTE_VALUES = {
-    'nn_module': None,
-    'optimizer': pytorch_optimizers,
-    'loss': pytorch_losses,
-    'device': torch.device('cpu'),
-    'prediction_transform': Identity
-}
 
 
 class ModelMeta(type):
