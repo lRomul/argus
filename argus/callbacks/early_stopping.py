@@ -45,8 +45,8 @@ class EarlyStopping(Callback):
         self.best_value = math.inf if self.better == 'min' else -math.inf
 
     def epoch_complete(self, state: State):
-        assert self.monitor in state.metrics,\
-            f"Monitor '{self.monitor}' metric not found in state"
+        if self.monitor not in state.metrics:
+            raise ValueError(f"Monitor '{self.monitor}' metric not found in state")
         current_value = state.metrics[self.monitor]
         if self.better_comp(current_value, self.best_value):
             self.best_value = current_value

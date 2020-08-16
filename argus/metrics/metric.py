@@ -10,8 +10,8 @@ METRIC_REGISTRY = {}
 
 
 def init_better(better, monitor):
-    assert better in ['min', 'max', 'auto'], \
-        f"Unknown better option '{better}'"
+    if better not in ['min', 'max', 'auto']:
+        raise ValueError(f"Unknown better option '{better}'")
 
     if better == 'auto':
         if monitor.startswith('val_'):

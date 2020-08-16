@@ -47,7 +47,8 @@ class Engine(object):
         self.event_handlers[event].append((handler, args, kwargs))
 
     def raise_event(self, event: Events):
-        assert isinstance(event, Events)
+        if not isinstance(event, Events):
+            raise TypeError(f"Event should be 'argus.engine.Events' enum")
 
         if event in self.event_handlers:
             for handler, args, kwargs in self.event_handlers[event]:
