@@ -38,7 +38,8 @@ class Checkpoint(Callback):
                  max_saves=None,
                  period=1,
                  save_after_exception=False):
-        assert max_saves is None or max_saves > 0
+        if not (max_saves is None or max_saves > 0):
+            raise ValueError("max_saves should be positive or 'None'")
 
         self.dir_path = dir_path
         self.file_format = file_format
@@ -144,8 +145,9 @@ class MonitorCheckpoint(Checkpoint):
                  save_after_exception=False,
                  monitor='val_loss',
                  better='auto'):
+        if not monitor.startswith('val_') and not monitor.startswith('train_'):
+            raise ValueError("monitor should be prepended with 'val_' or 'train_'")
 
-        assert monitor.startswith('val_') or monitor.startswith('train_')
         super().__init__(dir_path=dir_path,
                          file_format=file_format,
                          max_saves=max_saves,
@@ -167,8 +169,8 @@ class MonitorCheckpoint(Checkpoint):
         self.best_value = math.inf if self.better == 'min' else -math.inf
 
     def epoch_complete(self, state: State):
-        assert self.monitor in state.metrics,\
-            f"Monitor '{self.monitor}' metric not found in state"
+        if self.monitor not in state.metrics:
+            raise ValueError(f"Monitor '{self.monitor}' metric not found in state")
         current_value = state.metrics[self.monitor]
         if self.better_comp(current_value, self.best_value):
             self.best_value = current_value
