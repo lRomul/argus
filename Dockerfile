@@ -20,21 +20,24 @@ RUN pip3 install --no-cache-dir \
     torch==1.5.1 \
     torchvision==0.6.1
 
-# Install python ML packages
-RUN pip3 install --no-cache-dir \
-    notebook==6.0.3 \
-    cnn-finetune==0.6.0 \
-    timm==0.1.30
-
-# Docs requirements
-COPY ./docs/requirements.txt /docs_requirements.txt
-RUN pip3 install --no-cache-dir -r /docs_requirements.txt
-
 # Install Apex
 RUN git clone https://github.com/NVIDIA/apex && cd apex &&\
     pip install -v --no-cache-dir \
     --global-option="--cpp_ext" \
     --global-option="--cuda_ext" ./
+
+# Install python ML packages
+RUN pip3 install --no-cache-dir \
+    notebook==6.0.3 \
+    cnn-finetune==0.6.0 \
+    timm==0.1.30 \
+    flake8==3.8.3 \
+    pytest==6.0.1 \
+    pytest-cov==2.10.1
+
+# Docs requirements
+COPY ./docs/requirements.txt /docs_requirements.txt
+RUN pip3 install --no-cache-dir -r /docs_requirements.txt
 
 ENV PYTHONPATH $PYTHONPATH:/workdir
 
