@@ -53,11 +53,14 @@ def deep_chunk(input, chunks, dim=0):
     partial_deep_chunk = partial(deep_chunk, chunks=chunks, dim=dim)
     if torch.is_tensor(input):
         return torch.chunk(input, chunks, dim=dim)
+    if isinstance(input, str):
+        return [input for _ in range(chunks)]
     if isinstance(input, collections.Sequence) and len(input) > 0:
         return list(map(list, zip(*map(partial_deep_chunk, input))))
     if isinstance(input, collections.Mapping) and len(input) > 0:
         return list(map(type(input), zip(*map(partial_deep_chunk, input.items()))))
-    return [input for _ in range(chunks)]
+    else:
+        return [input for _ in range(chunks)]
 
 
 def device_to_str(device):
