@@ -33,8 +33,6 @@ DEFAULT_ATTRIBUTE_VALUES = {
 def cast_optimizer(optimizer):
     if callable(optimizer):
         return optimizer
-    elif isinstance(optimizer, type) and hasattr(optimizer, 'step'):
-        return optimizer
     elif isinstance(optimizer, str) and optimizer in pytorch_optimizers:
         optimizer = getattr(torch.optim, optimizer)
         return optimizer
