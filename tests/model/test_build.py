@@ -1,9 +1,18 @@
+import pytest
+
 import torch
 from torch import nn
 import torch.nn.functional as F
 
 from argus import Model
 from argus.utils import Identity
+from argus.model.build import (
+    cast_nn_module,
+    cast_optimizer,
+    cast_loss,
+    cast_device,
+    cast_prediction_transform
+)
 
 
 class LinearNet(nn.Module):
@@ -146,14 +155,53 @@ class TestBuild:
             'nn_module': {
                 'module_name': 'vision',
                 'n_channels': 3,
-                'n_classes': 1,
-                'p_dropout': 0.1
+                'n_classes': 1
             }
         }
 
         model = TestModel5(params)
         assert isinstance(model.nn_module, SimpleVisionNet)
-        assert model.nn_module.p_dropout == 0.1
 
         model = TestModel5({'nn_module': {'module_name': 'linear'}})
         assert isinstance(model.nn_module, LinearNet)
+
+
+class TestCastFunction:
+    def test_cast_nn_module(self):
+        assert cast_nn_module(LinearNet) is LinearNet
+        with pytest.raises(TypeError):
+            cast_nn_module('qwerty')
+
+    def test_cast_optimizer(self, optimizer_class):
+        assert cast_optimizer(optimizer_class) is optimizer_class
+        assert cast_optimizer(optimizer_class.__name__) is optimizer_class
+        with pytest.raises(TypeError):
+            cast_optimizer('qwerty')
+        with pytest.raises(TypeError):
+            cast_optimizer(None)
+
+    def test_cast_loss(self, loss_class):
+        assert cast_loss(loss_class) is loss_class
+        assert cast_loss(loss_class.__name__) is loss_class
+        with pytest.raises(TypeError):
+            cast_loss('qwerty')
+        with pytest.raises(TypeError):
+            cast_loss(None)
+
+    def test_cast_prediction_transform(self):
+        assert cast_prediction_transform(Identity) is Identity
+        with pytest.raises(TypeError):
+            cast_prediction_transform('qwerty')
+        with pytest.raises(TypeError):
+            cast_prediction_transform(None)
+
+    def test_cast_device(self):
+        assert cast_device('cpu') == torch.device('cpu')
+        assert cast_device('cuda') == torch.device('cuda')
+        assert cast_device(torch.device('cpu')) == torch.device('cpu')
+        devices = [torch.device('cuda:0'), torch.device('cuda:1')]
+        assert cast_device(['cuda:0', 'cuda:1']) == devices
+        assert cast_device(devices) == devices
+        assert cast_device(['cuda:0']) == torch.device('cuda:0')
+        with pytest.raises(ValueError):
+            cast_device([])
