@@ -13,13 +13,15 @@ from argus.utils import (
 )
 
 
-@pytest.fixture
-def list_of_tensors():
+@pytest.fixture(params=[(16, torch.float16),
+                        (37, torch.float32)])
+def list_of_tensors(request):
+    first_dim, dtype = request.param
     return [
-        torch.zeros(16, requires_grad=True),
-        torch.ones(16, 4, requires_grad=True),
-        torch.randint(16, size=(16, 4, 2),
-                      dtype=torch.float32, requires_grad=True)
+        torch.zeros(first_dim, dtype=dtype, requires_grad=True),
+        torch.ones(first_dim, 4, dtype=dtype, requires_grad=True),
+        torch.randint(42, size=(first_dim, 4, 2),
+                      dtype=dtype, requires_grad=True)
     ]
 
 
@@ -40,8 +42,8 @@ def test_identity(x):
     assert "Identity()" == str(identity)
 
 
-def test_deep_to(list_of_tensors, dict_of_tensors):
-    destination_dtype = torch.float16
+@pytest.mark.parametrize("destination_dtype", [torch.float16, torch.float32])
+def test_deep_to(list_of_tensors, dict_of_tensors, destination_dtype):
 
     output_list = deep_to(list_of_tensors, dtype=destination_dtype)
     assert all([tensor.dtype == destination_dtype for tensor in output_list])
@@ -112,11 +114,13 @@ def test_check_pickleble(dict_of_tensors):
 
 @pytest.mark.parametrize("values",
                          [list(range(42)),
-                          torch.randint(1000, size=(42,)).tolist()])
+                          torch.randint(1000, size=(42,)).tolist(),
+                          (1e6 * torch.rand(dtype=torch.float32,
+                                            size=(42,))).tolist()])
 def test_average_meter(values):
     average_meter = AverageMeter()
     for value in values:
         average_meter.update(value)
 
     average = sum(values) / len(values)
-    assert average_meter.average == pytest.approx(average)
+    assert pytest.approx(average_meter.average) == average
