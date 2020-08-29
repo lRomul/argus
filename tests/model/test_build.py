@@ -10,7 +10,8 @@ from argus.model.build import (
     cast_optimizer,
     cast_loss,
     cast_device,
-    cast_prediction_transform
+    cast_prediction_transform,
+    choose_attribute_from_dict
 )
 
 
@@ -36,6 +37,7 @@ class TestBuild:
         assert model.get_lr() == 0.01
         assert isinstance(model.loss, torch.nn.MSELoss)
         assert isinstance(model.prediction_transform, Identity)
+        assert str(model)
 
     def test_default_and_string_build(self, linear_net_class):
         class BuildModel2(Model):
@@ -143,6 +145,17 @@ class TestBuild:
         with pytest.raises(ValueError):
             BuildModel6(dict())
 
+    def test_redefine_build_warn(self, linear_net_class, recwarn):
+        class BuildModel7(Model):
+            nn_module = linear_net_class
+
+        class BuildModel7(Model):
+            nn_module = linear_net_class
+
+        assert len(recwarn) == 1
+        warn = recwarn.pop()
+        assert "redefined 'BuildModel7' that was already" in str(warn.message)
+
 
 class TestCastFunction:
     def test_cast_nn_module(self, linear_net_class):
@@ -195,3 +208,91 @@ class TestBuildModelMethod:
         assert isinstance(model.nn_module, nn.parallel.DataParallel)
         assert not isinstance(model.get_nn_module(), nn.parallel.DataParallel)
         assert model.get_nn_module() is nn_module
+
+    def test_set_device(self, linear_argus_model_instance, monkeypatch):
+        model = linear_argus_model_instance
+        model.loss = None
+
+        model.set_device('cpu')
+        assert model.device == torch.device('cpu')
+
+        class MockDataParallel:
+            def __init__(self, nn_module, device_ids):
+                self.nn_module = nn_module
+                self.device_ids = device_ids
+                self.device = None
+
+            def to(self, device):
+                self.device = device
+                return self
+
+        from argus.model import build
+        monkeypatch.setattr(build, "DataParallel", MockDataParallel)
+
+        with pytest.raises(ValueError):
+            model.set_device(['cpu', 'cpu'])
+        with pytest.raises(ValueError):
+            model.set_device(['cuda', 'cuda:1'])
+        with pytest.raises(ValueError):
+            model.set_device(['cuda:1', 'cuda:1'])
+
+        model.set_device(['cuda:0', 'cuda:1'])
+        devices = [torch.device('cuda:0'), torch.device('cuda:1')]
+        assert model.device == devices[0]
+        assert model.nn_module.device_ids == [0, 1]
+
+    def test_check_attributes(self, linear_argus_model_instance):
+        model = linear_argus_model_instance
+        assert model.train_ready()
+        assert model.predict_ready()
+        model.loss = None
+        assert not model.train_ready()
+        assert model.predict_ready()
+        with pytest.raises(AttributeError):
+            model._check_train_ready()
+        model.prediction_transform = None
+        assert not model.predict_ready()
+        with pytest.raises(AttributeError):
+            model._check_predict_ready()
+
+
+class TestChooseAttributeFromDict:
+    def test_dict_choose(self, linear_net_class, vision_net_class):
+        attribute_meta = {
+            'LinearNet': linear_net_class,
+            'VisionNet': vision_net_class
+        }
+        attribute_params = (
+            'LinearNet', {
+                'in_features': 16,
+                'out_features': 1
+            }
+        )
+        attribute, params = choose_attribute_from_dict(attribute_meta, attribute_params)
+        assert attribute is linear_net_class
+        assert params == attribute_params[1]
+
+        with pytest.raises(ValueError):
+            choose_attribute_from_dict(attribute_meta, ('qwerty', dict()))
+
+        with pytest.raises(TypeError):
+            choose_attribute_from_dict(attribute_meta, ('LinearNet', pytest))
+
+        with pytest.raises(TypeError):
+            choose_attribute_from_dict(attribute_meta, 42)
+
+    def test_not_dict_choose(self, linear_net_class):
+        attribute_meta = linear_net_class
+        attribute_params = {'in_features': 16, 'out_features': 1}
+        attribute, params = choose_attribute_from_dict(attribute_meta, attribute_params)
+        assert attribute is attribute_meta
+        assert params == attribute_params
+
+        with pytest.raises(TypeError):
+            choose_attribute_from_dict(attribute_meta, ('qwerty', dict()))
+
+        with pytest.raises(TypeError):
+            choose_attribute_from_dict(attribute_meta, ('LinearNet', pytest))
+
+        with pytest.raises(TypeError):
+            choose_attribute_from_dict(attribute_meta, 42)

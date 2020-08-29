@@ -104,9 +104,6 @@ def choose_attribute_from_dict(attribute_meta, attribute_params):
             if name not in attribute_meta:
                 raise ValueError(f"Attribute '{name}' there is not in "
                                  f"attribute params {attribute_meta}.")
-            if not isinstance(params, collections.Mapping):
-                raise TypeError(f"Attribute params should be a dictionary, "
-                                f"not {type(params)}.")
         elif isinstance(attribute_params, str):
             name, params = attribute_params, dict()
         else:
@@ -115,6 +112,10 @@ def choose_attribute_from_dict(attribute_meta, attribute_params):
     else:
         attribute = attribute_meta
         params = attribute_params
+
+    if not isinstance(params, collections.Mapping):
+        raise TypeError(f"Attribute params should be a dictionary, "
+                        f"not {type(params)}.")
 
     return attribute, params
 
@@ -223,11 +224,11 @@ class BuildModel(metaclass=ModelMeta):
             nn_module = DataParallel(nn_module, device_ids=device_ids)
             device = device[0]
 
+        self.nn_module = nn_module.to(device)
+        if self.loss is not None:
+            self.loss = self.loss.to(device)
         self.params['device'] = str_device
         self.device = device
-        self.nn_module = nn_module.to(self.device)
-        if self.loss is not None:
-            self.loss = self.loss.to(self.device)
 
     def _check_attributes(self, attrs):
         for attr_name in attrs:
