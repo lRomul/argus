@@ -138,23 +138,41 @@ class TestBuild:
         model = BuildModel5({'nn_module': {'module_name': 'linear'}})
         assert isinstance(model.nn_module, linear_net_class)
 
-    def test_none_nn_module_build(self):
+    def test_none_params_build(self, linear_net_class):
         class BuildModel6(Model):
+            nn_module = linear_net_class
+
+        params = {
+            'nn_module': {'in_features': 16, 'out_features': 1},
+            'optimizer': None,
+            'loss': None,
+            'prediction_transform': None
+        }
+
+        model = BuildModel6(params)
+        assert model.optimizer is None
+        assert model.loss is None
+        assert model.prediction_transform is None
+        assert not model.train_ready()
+        assert not model.predict_ready()
+
+    def test_none_nn_module_build(self):
+        class BuildModel7(Model):
             nn_module = None
 
         with pytest.raises(ValueError):
-            BuildModel6(dict())
+            BuildModel7(dict())
 
     def test_redefine_build_warn(self, linear_net_class, recwarn):
-        class BuildModel7(Model):
+        class BuildModel8(Model):
             nn_module = linear_net_class
 
-        class BuildModel7(Model):
+        class BuildModel8(Model):
             nn_module = linear_net_class
 
         assert len(recwarn) == 1
         warn = recwarn.pop()
-        assert "redefined 'BuildModel7' that was already" in str(warn.message)
+        assert "redefined 'BuildModel8' that was already" in str(warn.message)
 
 
 class TestCastFunction:
