@@ -239,6 +239,7 @@ class TestBuildModelMethod:
         model.set_device(['cuda:0', 'cuda:1'])
         devices = [torch.device('cuda:0'), torch.device('cuda:1')]
         assert model.device == devices[0]
+        assert model.nn_module.device == devices[0]
         assert model.nn_module.device_ids == [0, 1]
 
     def test_check_attributes(self, linear_argus_model_instance):
