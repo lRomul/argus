@@ -1,5 +1,6 @@
 import pytest
 
+import torch
 from torch import nn
 import torch.nn.functional as F
 
@@ -70,15 +71,62 @@ def argus_model_class():
     return ArgusTestModel
 
 
+@pytest.fixture(scope='session')
+def poly_degree():
+    return 4
+
+
+@pytest.fixture(scope='session')
+def poly_coefficients(poly_degree):
+    weights = torch.randn(poly_degree, 1) * 5
+    bias = torch.randn(1) * 5
+    return weights, bias
+
+
+@pytest.fixture(scope='session')
+def poly_function(poly_coefficients):
+    weights, bias = poly_coefficients
+
+    def poly(x):
+        return x.mm(weights) + bias.item()
+
+    return poly
+
+
+@pytest.fixture(scope='session')
+def make_features_function(poly_degree):
+    def make_features(x):
+        x = x.unsqueeze(1)
+        return torch.cat([x ** i for i in range(1, poly_degree + 1)], 1)
+
+    return make_features
+
+
+@pytest.fixture(scope='session')
+def get_batch_function(make_features_function, poly_function):
+    def get_batch(batch_size=32):
+        random = torch.randn(batch_size)
+        x = make_features_function(random)
+        y = poly_function(x)
+        return x, y
+
+    return get_batch
+
+
 @pytest.fixture(scope='function')
-def linear_argus_model_instance(argus_model_class):
+def poly_batch(get_batch_function):
+    return get_batch_function(batch_size=32)
+
+
+@pytest.fixture(scope='function')
+def linear_argus_model_instance(argus_model_class, poly_degree):
     params = {
         'nn_module': ('LinearNet', {
-            'in_features': 16,
+            'in_features': poly_degree,
             'out_features': 1
         }),
-        'optimizer': ('Adam', {'lr': 0.001}),
-        'loss': 'MSELoss',
+        'optimizer': ('Adam', {'lr': 0.01}),
+        'loss': 'SmoothL1Loss',
         'device': 'cpu'
     }
     return argus_model_class(params)

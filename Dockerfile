@@ -31,7 +31,6 @@ RUN pip3 install --no-cache-dir \
     notebook==6.1.3 \
     cnn-finetune==0.6.0 \
     timm==0.2.1 \
-    flake8==3.8.3 \
     pytest==6.0.1 \
     pytest-cov==2.10.1
 
