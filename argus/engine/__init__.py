@@ -1,1 +1,6 @@
-from argus.engine.engine import Engine, Events, State
+from argus.engine.engine import (
+    EventEnum,
+    Events,
+    Engine,
+    State,
+)

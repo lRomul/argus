@@ -1,8 +1,14 @@
+import logging
 from enum import Enum
-from typing import Callable
+from collections import defaultdict
+from typing import Callable, Optional, Iterable, Dict, Any
 
 
-class Events(Enum):
+class EventEnum(Enum):
+    pass
+
+
+class Events(EventEnum):
     START = "start"
     COMPLETE = "complete"
     EPOCH_START = "epoch_start"
@@ -12,21 +18,21 @@ class Events(Enum):
     CATCH_EXCEPTION = "catch_exception"
 
 
-class State(object):
+class State:
     def __init__(self, **kwargs):
-        self.iteration = None
-        self.epoch = None
-        self.model = None
-        self.data_loader = None
-        self.logger = None
-        self.exception = None
-        self.engine = None
+        self.iteration: Optional[int] = None
+        self.epoch: Optional[int] = None
+        self.model: Optional['argus.model.Model'] = None
+        self.data_loader: Optional[Iterable] = None
+        self.logger: Optional[logging.Logger] = None
+        self.exception: Optional[BaseException] = None
+        self.engine: Optional[Engine] = None
 
-        self.batch = None
-        self.step_output = None
+        self.batch: Any = None
+        self.step_output: Any = None
 
-        self.metrics = dict()
-        self.stopped = True
+        self.metrics: Dict[str, float] = dict()
+        self.stopped: bool = True
 
         self.update(**kwargs)
 
@@ -35,9 +41,9 @@ class State(object):
             setattr(self, key, value)
 
 
-class Engine(object):
+class Engine:
     def __init__(self, step_function: Callable, **kwargs):
-        self.event_handlers = {event: [] for event in Events.__members__.values()}
+        self.event_handlers = defaultdict(list)
         self.step_function = step_function
         self.state = State(
             step_function=step_function,
@@ -45,18 +51,21 @@ class Engine(object):
             **kwargs
         )
 
-    def add_event_handler(self, event: Events, handler: Callable, *args, **kwargs):
+    def add_event_handler(self, event: EventEnum, handler: Callable, *args, **kwargs):
+        if not isinstance(event, EventEnum):
+            raise TypeError(f"Event should be 'argus.engine.EventEnum' enum")
+
         self.event_handlers[event].append((handler, args, kwargs))
 
-    def raise_event(self, event: Events):
-        if not isinstance(event, Events):
-            raise TypeError(f"Event should be 'argus.engine.Events' enum")
+    def raise_event(self, event: EventEnum):
+        if not isinstance(event, EventEnum):
+            raise TypeError(f"Event should be 'argus.engine.EventEnum' enum")
 
         if event in self.event_handlers:
             for handler, args, kwargs in self.event_handlers[event]:
                 handler(self.state, *args, **kwargs)
 
-    def run(self, data_loader, start_epoch=0, end_epoch=1):
+    def run(self, data_loader: Iterable, start_epoch=0, end_epoch=1) -> State:
         self.state.update(data_loader=data_loader,
                           epoch=start_epoch,
                           iteration=0,
