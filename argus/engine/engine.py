@@ -20,6 +20,7 @@ class State(object):
         self.data_loader = None
         self.logger = None
         self.exception = None
+        self.engine = None
 
         self.batch = None
         self.step_output = None
@@ -40,6 +41,7 @@ class Engine(object):
         self.step_function = step_function
         self.state = State(
             step_function=step_function,
+            engine=self,
             **kwargs
         )
 
