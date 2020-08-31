@@ -1,4 +1,5 @@
 import pytest
+import logging
 
 from argus.engine import State, Engine, Events
 
@@ -47,3 +48,57 @@ class TestEngineMethods:
 
         with pytest.raises(TypeError):
             engine.raise_event(None)
+
+    def test_run(self):
+        class StepStorage:
+            def __init__(self):
+                self.batch_lst = []
+                self.state = None
+
+            def reset(self):
+                self.batch_lst = []
+                self.state = None
+
+            def step_function(self, batch, state):
+                self.batch_lst.append(batch)
+                self.state = state
+
+        step_storage = StepStorage()
+        data_loader = [4, 8, 15, 16, 23, 42]
+        engine = Engine(step_storage.step_function,
+                        logger=logging.getLogger(__name__))
+        state = engine.run(data_loader, start_epoch=0, end_epoch=3)
+
+        assert step_storage.batch_lst == data_loader * 3
+        assert state.epoch == 3
+        assert state.iteration == len(data_loader)
+
+        def stop_function(state):
+            state.stopped = True
+
+        step_storage.reset()
+        engine.add_event_handler(Events.EPOCH_COMPLETE, stop_function)
+        state = engine.run(data_loader, start_epoch=0, end_epoch=3)
+        assert step_storage.batch_lst == data_loader
+        assert state.epoch == 1
+        assert state.iteration == len(data_loader)
+
+        step_storage.reset()
+        engine.add_event_handler(Events.ITERATION_COMPLETE, stop_function)
+        state = engine.run(data_loader, start_epoch=0, end_epoch=3)
+        assert step_storage.batch_lst == [data_loader[0]]
+        assert state.iteration == 1
+
+        class MyException(Exception):
+            pass
+
+        def exception_function(state):
+            raise MyException
+
+        step_storage.reset()
+        engine.add_event_handler(Events.START, exception_function)
+        with pytest.raises(MyException):
+            engine.run(data_loader, start_epoch=0, end_epoch=3)
+        assert step_storage.batch_lst == []
+        assert engine.state.iteration == 0
+        assert engine.state.epoch == 0
