@@ -5,8 +5,10 @@ from torch import nn
 import torch.nn.functional as F
 
 from argus import Model
+from argus.utils import Identity
 from argus.loss import pytorch_losses
 from argus.optimizer import pytorch_optimizers
+
 
 
 @pytest.fixture(scope='session', params=pytorch_losses.values())
@@ -53,6 +55,10 @@ class ArgusTestModel(Model):
     nn_module = {
         'LinearNet': LinearNet,
         'VisionNet': VisionNet
+    }
+    prediction_transform = {
+        'Sigmoid': nn.Sigmoid,
+        'Identity': Identity
     }
 
 
@@ -127,6 +133,7 @@ def linear_argus_model_instance(argus_model_class, poly_degree):
         }),
         'optimizer': ('Adam', {'lr': 0.01}),
         'loss': 'SmoothL1Loss',
+        'prediction_transform': 'Identity',
         'device': 'cpu'
     }
     return argus_model_class(params)
@@ -142,6 +149,7 @@ def vision_argus_model_instance(argus_model_class):
         }),
         'optimizer': ('Adam', {'lr': 0.001}),
         'loss': 'CrossEntropyLoss',
+        'prediction_transform': 'Identity',
         'device': 'cpu'
     }
     return argus_model_class(params)
