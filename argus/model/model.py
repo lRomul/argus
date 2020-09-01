@@ -1,10 +1,12 @@
 import os
 import numbers
+from pathlib import Path
+from typing import Iterable, Optional, List, Union, Dict
 
 import torch
 
 from argus.model.build import BuildModel, MODEL_REGISTRY, cast_device
-from argus.engine import Engine, Events
+from argus.engine import Engine, State
 from argus.callbacks import Callback, on_epoch_complete
 from argus.callbacks.logging import metrics_logging
 from argus.metrics.metric import Metric, METRIC_REGISTRY
@@ -23,7 +25,7 @@ def _attach_callbacks(engine, callbacks):
                 )
 
 
-def _attach_metrics(engine, metrics, name_prefix=''):
+def _attach_metrics(engine, metrics):
     for metric in metrics:
         if isinstance(metric, str):
             if metric in METRIC_REGISTRY:
@@ -31,9 +33,7 @@ def _attach_metrics(engine, metrics, name_prefix=''):
             else:
                 raise ValueError(f"Metric '{metric}' not found in scope")
         if isinstance(metric, Metric):
-            metric.attach(engine, {
-                Events.EPOCH_COMPLETE: {'name_prefix': name_prefix}
-            })
+            metric.attach(engine)
         else:
             raise TypeError(
                 f"Expected metric type {Metric} or str, got {type(metric)}"
@@ -47,7 +47,7 @@ class Model(BuildModel):
     def __init__(self, params: dict):
         super().__init__(params)
 
-    def train_step(self, batch, state) -> dict:
+    def train_step(self, batch, state: State) -> dict:
         """Perform a single train step.
 
         The method is used by :class:`argus.engine.Engine`.
@@ -87,7 +87,7 @@ class Model(BuildModel):
             'loss': loss.item()
         }
 
-    def val_step(self, batch, state) -> dict:
+    def val_step(self, batch, state: State) -> dict:
         """Perform a single validation step.
 
         The method is used by :class:`argus.engine.Engine`.
@@ -127,34 +127,34 @@ class Model(BuildModel):
             }
 
     def fit(self,
-            train_loader,
-            val_loader=None,
-            num_epochs=1,
-            metrics=None,
-            metrics_on_train=False,
-            callbacks=None,
-            val_callbacks=None):
+            train_loader: Iterable,
+            val_loader: Optional[Iterable] = None,
+            num_epochs: int = 1,
+            metrics: Optional[List[Metric]] = None,
+            metrics_on_train: bool = False,
+            callbacks: Optional[List[Callback]] = None,
+            val_callbacks: Optional[List[Callback]] = None):
         """Train the argus model.
 
         The method attaches metrics and callbacks to the train and validation,
         and runs the training process.
 
         Args:
-            train_loader (torch.utils.data.DataLoader): The train dataloader.
-            val_loader (torch.utils.data.DataLoader or `None`, optional):
-                The validation dataloader. Defaults to `None`.
+            train_loader (Iterable): The train data loader.
+            val_loader (Iterable, optional):
+                The validation data loader. Defaults to `None`.
             num_epochs (int, optional): Number of training epochs to
                 run. Defaults to 1.
-            metrics (list of :class:`argus.metrics.Metric` or `None`, optional):
+            metrics (list of :class:`argus.metrics.Metric`, optional):
                 List of metrics to evaluate. By default, the metrics are
                 evaluated on the validation data (if any) only.
                 Defaults to `None`.
             metrics_on_train (bool, optional): Evaluate the metrics on train
                 data as well. Defaults to False.
-            callbacks (list of :class:`argus.callbacks.Callback` or `None`, optional):
+            callbacks (list of :class:`argus.callbacks.Callback`, optional):
                 List of callbacks to be attached to the training process.
                 Defaults to `None`.
-            val_callbacks (list of :class:`argus.callbacks.Callback` or `None`, optional):
+            val_callbacks (list of :class:`argus.callbacks.Callback`, optional):
                 List of callbacks to be attached to the validation process.
                 Defaults to `None`.
 
@@ -162,15 +162,17 @@ class Model(BuildModel):
         self._check_train_ready()
         metrics = [] if metrics is None else metrics
 
-        train_engine = Engine(self.train_step, model=self, logger=self.logger)
+        train_engine = Engine(self.train_step, model=self,
+                              logger=self.logger, phase='train')
         train_metrics = [Loss()] + metrics if metrics_on_train else [Loss()]
-        _attach_metrics(train_engine, train_metrics, name_prefix='train_')
+        _attach_metrics(train_engine, train_metrics)
         metrics_logging.attach(train_engine, train=True)
 
         if val_loader is not None:
             self.validate(val_loader, metrics, val_callbacks)
-            val_engine = Engine(self.val_step, model=self, logger=self.logger)
-            _attach_metrics(val_engine, [Loss()] + metrics, name_prefix='val_')
+            val_engine = Engine(self.val_step, model=self,
+                                logger=self.logger, phase='val')
+            _attach_metrics(val_engine, [Loss()] + metrics)
             _attach_callbacks(val_engine, val_callbacks)
 
             @on_epoch_complete
@@ -185,15 +187,17 @@ class Model(BuildModel):
         _attach_callbacks(train_engine, callbacks)
         train_engine.run(train_loader, 0, num_epochs)
 
-    def validate(self, val_loader, metrics=None, callbacks=None):
+    def validate(self,
+                 val_loader: Optional[Iterable],
+                 metrics: Optional[List[Metric]] = None,
+                 callbacks: Optional[List[Callback]] = None) -> Dict[str, float]:
         """Perform a validation.
 
         Args:
-            val_loader (torch.utils.data.DataLoader): The validation
-                dataloader.
-            metrics (list of :class:`argus.metrics.Metric` or `None`, optional):
+            val_loader (Iterable): The validation data loader.
+            metrics (list of :class:`argus.metrics.Metric`, optional):
                 List of metrics to evaluate with the data. Defaults to `None`.
-            callbacks (list of :class:`argus.callbacks.Callback` or `None`, optional):
+            callbacks (list of :class:`argus.callbacks.Callback`, optional):
                 List of callbacks to be attached to the validation process.
                 Defaults to `None`.
 
@@ -203,13 +207,14 @@ class Model(BuildModel):
         """
         self._check_train_ready()
         metrics = [] if metrics is None else metrics
-        val_engine = Engine(self.val_step, model=self, logger=self.logger)
-        _attach_metrics(val_engine, [Loss()] + metrics, name_prefix='val_')
+        val_engine = Engine(self.val_step, model=self,
+                            logger=self.logger, phase='val')
+        _attach_metrics(val_engine, [Loss()] + metrics)
         _attach_callbacks(val_engine, callbacks)
         metrics_logging.attach(val_engine, train=False, print_epoch=False)
         return val_engine.run(val_loader).metrics
 
-    def set_lr(self, lr):
+    def set_lr(self, lr: Union[float, List[float]]):
         """Set the learning rate for the optimizer.
 
         The method allows setting individual learning rates for the optimizer
@@ -246,7 +251,7 @@ class Model(BuildModel):
         for group_lr, param_group in zip(lrs, param_groups):
             param_group['lr'] = group_lr
 
-    def get_lr(self):
+    def get_lr(self) -> Union[float, List[float]]:
         """Get the learning rate from the optimizer.
 
         It could be a single value or a list of values in the case of multiple
@@ -265,7 +270,7 @@ class Model(BuildModel):
             return lrs[0]
         return lrs
 
-    def save(self, file_path):
+    def save(self, file_path: Union[str, Path]):
         """Save the argus model into a file.
 
         The argus model is saved as a dict::
@@ -327,7 +332,7 @@ class Model(BuildModel):
             self.nn_module.eval()
 
 
-def load_model(file_path,
+def load_model(file_path: Union[str, Path],
                nn_module=default,
                optimizer=default,
                loss=default,
@@ -344,22 +349,23 @@ def load_model(file_path,
 
     Args:
         file_path (str): Path to the file to load.
-        device (str, optional): Device for the model. Defaults to None.
-        nn_module (dict, optional): Params of the nn_module to replace params
-            in the state.
-        optimizer (dict or `None`, optional): Params of the optimizer to
+        device (str or :class:`torch.device`, optional): Device for the model.
+            Defaults to None.
+        nn_module (dict, tuple or str, optional): Params of the nn_module to
+            replace params in the state.
+        optimizer (dict, tuple or str, optional): Params of the optimizer to
             replace params in the state. Set to `None` if don't want to create
             optimizer in the loaded model.
-        loss (dict or `None`, optional): Params of the loss to replace params
+        loss (dict, tuple or str, optional): Params of the loss to replace params
             in the state. Set to `None` if don't want to create loss in the
             loaded model.
-        prediction_transform (dict or `None`, optional): Params of the
+        prediction_transform (dict, tuple or str, optional): Params of the
             prediction_transform to replace params in the state. Set to `None`
             if don't want to create prediction_transform in the loaded model.
-        change_params_func(function, optional): Function for modification of
+        change_params_func (function, optional): Function for modification of
             state params. Takes as input params from the loaded state, outputs
             params to model creation.
-        change_state_dict_func: Function for modification of
+        change_state_dict_func (function, optional): Function for modification of
             nn_module state dict. Takes as input state dict from the loaded
             state, outputs state dict to model creation.
         model_name (str): Class name of :class:`argus.model.Model`.

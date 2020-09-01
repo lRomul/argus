@@ -9,7 +9,7 @@ from argus.engine import State
 METRIC_REGISTRY = {}
 
 
-def init_better(better, monitor):
+def init_better(better: str, monitor: str) -> tuple:
     if better not in ['min', 'max', 'auto']:
         raise ValueError(f"Unknown better option '{better}'")
 
@@ -46,8 +46,8 @@ class MetricMeta(type):
 
 
 class Metric(Callback, metaclass=MetricMeta):
-    name = ''
-    better = 'min'
+    name: str = ''
+    better: str = 'min'
 
     def reset(self):
         pass
@@ -64,7 +64,8 @@ class Metric(Callback, metaclass=MetricMeta):
     def iteration_complete(self, state: State):
         self.update(state.step_output)
 
-    def epoch_complete(self, state: State, name_prefix=''):
+    def epoch_complete(self, state: State):
         with torch.no_grad():
             score = self.compute()
+        name_prefix = f"{state.phase}_" if state.phase else ''
         state.metrics[name_prefix + self.name] = score

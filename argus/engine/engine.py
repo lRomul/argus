@@ -27,6 +27,7 @@ class State:
         self.logger: Optional[logging.Logger] = None
         self.exception: Optional[BaseException] = None
         self.engine: Optional[Engine] = None
+        self.phase: str = ""
 
         self.batch: Any = None
         self.step_output: Any = None

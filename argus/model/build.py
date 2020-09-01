@@ -1,7 +1,7 @@
+from typing import Callable, Union
 import collections
 import warnings
 import logging
-import typing
 import copy
 import sys
 
@@ -125,7 +125,7 @@ class BuildModel(metaclass=ModelMeta):
     optimizer: Optimizer
     loss: nn.Module
     device: torch.device
-    prediction_transform: typing.Callable
+    prediction_transform: Callable
 
     def __init__(self, params: dict, build_order: list = ATTRS_BUILD_ORDER):
         params = copy.deepcopy(params)
@@ -200,13 +200,13 @@ class BuildModel(metaclass=ModelMeta):
         logger = logging.getLogger(__name__)
         return logger
 
-    def get_nn_module(self):
+    def get_nn_module(self) -> nn.Module:
         if isinstance(self.nn_module, (DataParallel, DistributedDataParallel)):
             return self.nn_module.module
         else:
             return self.nn_module
 
-    def set_device(self, device):
+    def set_device(self, device: Union[str, torch.device]):
         device = cast_device(device)
         str_device = device_to_str(device)
         nn_module = self.get_nn_module()
@@ -230,17 +230,17 @@ class BuildModel(metaclass=ModelMeta):
         self.params['device'] = str_device
         self.device = device
 
-    def _check_attributes(self, attrs):
+    def _check_attributes(self, attrs) -> bool:
         for attr_name in attrs:
             attr_value = getattr(self, attr_name, None)
             if attr_value is None:
                 return False
         return True
 
-    def train_ready(self):
+    def train_ready(self) -> bool:
         return self._check_attributes(TRAIN_ATTRS)
 
-    def predict_ready(self):
+    def predict_ready(self) -> bool:
         return self._check_attributes(PREDICT_ATTRS)
 
     def _check_train_ready(self):
