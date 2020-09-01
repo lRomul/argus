@@ -1,8 +1,10 @@
 """Base class for Callbacks.
 """
 
-from argus.engine import Events
 from typing import Callable
+
+from argus.utils import inheritors
+from argus.engine import Events, EventEnum
 
 
 class Callback:
@@ -17,18 +19,19 @@ class Callback:
         if handler_kwargs_dict is None:
             handler_kwargs_dict = dict()
 
-        for key, event in Events.__members__.items():
-            if hasattr(self, event.value):
-                handler = getattr(self, event.value)
-                if isinstance(handler, Callable):
-                    handler_kwargs = handler_kwargs_dict.get(event, dict())
-                    engine.add_event_handler(event, handler, **handler_kwargs)
-                else:
-                    raise TypeError(f"Attribute {event.value} is not callable.")
+        for event_enum in inheritors(EventEnum):
+            for key, event in event_enum.__members__.items():
+                if hasattr(self, event.value):
+                    handler = getattr(self, event.value)
+                    if isinstance(handler, Callable):
+                        handler_kwargs = handler_kwargs_dict.get(event, dict())
+                        engine.add_event_handler(event, handler, **handler_kwargs)
+                    else:
+                        raise TypeError(f"Attribute {event.value} is not callable.")
 
 
 class FunctionCallback(Callback):
-    def __init__(self, event: Events, handler):
+    def __init__(self, event: EventEnum, handler):
         self.event = event
         self.handler = handler
 

@@ -1,7 +1,9 @@
 import pytest
 import logging
 
-from argus.engine import State, Engine, Events
+from argus.engine import State, Engine, Events, EventEnum
+from argus.callbacks import Callback
+from argus.model.model import _attach_callbacks
 
 
 def test_state_update():
@@ -89,16 +91,47 @@ class TestEngineMethods:
         assert step_storage.batch_lst == [data_loader[0]]
         assert state.iteration == 1
 
-        class MyException(Exception):
+        class CustomException(Exception):
             pass
 
         def exception_function(state):
-            raise MyException
+            raise CustomException
 
         step_storage.reset()
         engine.add_event_handler(Events.START, exception_function)
-        with pytest.raises(MyException):
+        with pytest.raises(CustomException):
             engine.run(data_loader, start_epoch=0, end_epoch=3)
         assert step_storage.batch_lst == []
         assert engine.state.iteration == 0
         assert engine.state.epoch == 0
+
+    def test_custom_events(self):
+        class CustomEvents(EventEnum):
+            STEP_START = 'step_start'
+            END_COMPLETE = 'end_complete'
+
+        def step_function(batch, state):
+            state.step_output = batch
+            state.engine.raise_event(CustomEvents.STEP_START)
+            state.step_output += 1
+            state.engine.raise_event(CustomEvents.END_COMPLETE)
+
+        class CustomCallback(Callback):
+            def __init__(self):
+                self.start_storage = []
+                self.end_storage = []
+
+            def step_start(self, state):
+                self.start_storage.append(state.step_output)
+
+            def end_complete(self, state):
+                self.end_storage.append(state.step_output)
+
+        data_loader = [4, 8, 15, 16, 23, 42]
+        callback = CustomCallback()
+        engine = Engine(step_function)
+        _attach_callbacks(engine, [callback])
+        engine.run(data_loader)
+        print(engine.event_handlers)
+        assert callback.start_storage == data_loader
+        assert callback.end_storage == [d + 1 for d in data_loader]
