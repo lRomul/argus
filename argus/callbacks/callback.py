@@ -67,3 +67,7 @@ def on_iteration_start(func):
 
 def on_iteration_complete(func):
     return FunctionCallback(Events.ITERATION_COMPLETE, func)
+
+
+def on_catch_exception(func):
+    return FunctionCallback(Events.CATCH_EXCEPTION, func)

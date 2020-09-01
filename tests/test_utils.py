@@ -9,7 +9,8 @@ from argus.utils import (
     deep_chunk,
     device_to_str,
     check_pickleble,
-    AverageMeter
+    AverageMeter,
+    inheritors
 )
 
 
@@ -124,3 +125,27 @@ def test_average_meter(values):
 
     average = sum(values) / len(values)
     assert pytest.approx(average_meter.average) == average
+
+
+def test_inheritors():
+    class ParentClass:
+        pass
+
+    class ChildClass1(ParentClass):
+        pass
+
+    classes = inheritors(ParentClass)
+    assert len(classes) == 1
+    assert list(classes)[0] is ChildClass1
+
+    class ChildClass2(ParentClass):
+        pass
+
+    class ChildClass3(ParentClass):
+        pass
+
+    classes = inheritors(ParentClass)
+
+    assert len(classes) == 3
+    for cls in [ChildClass1, ChildClass2, ChildClass3]:
+        assert cls in classes
