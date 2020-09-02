@@ -1,8 +1,10 @@
 import math
 import pytest
 
+import argus
 from argus.metrics.metric import Metric, init_better
-from argus.utils import AverageMeter
+from argus.model.model import _attach_metrics
+from argus.engine import Engine
 
 
 class CustomMetric(Metric):
@@ -10,17 +12,17 @@ class CustomMetric(Metric):
     better = 'max'
 
     def __init__(self):
-        self.avg_meter = AverageMeter()
+        self.data = []
         super().__init__()
 
     def reset(self):
-        self.avg_meter.reset()
+        self.data = []
 
     def update(self, step_output: dict):
-        self.avg_meter.update(step_output['loss'])
+        self.data.append(step_output)
 
     def compute(self):
-        return self.avg_meter.average
+        return len(self.data)
 
 
 def test_init_better():
@@ -46,3 +48,61 @@ def test_init_better():
 
     with pytest.raises(ImportError):
         init_better('auto', 'train_qwerty')
+
+
+class TestMetric:
+    def test_redefine_metric_warn(self, recwarn):
+        class RedefineModel1(Metric):
+            name = 'redefine_model'
+
+        class RedefineModel2(Metric):
+            name = 'redefine_model'
+
+        assert len(recwarn) == 1
+        warn = recwarn.pop()
+        assert "redefined 'redefine_model' that was already" in str(warn.message)
+
+    def test_custom_metric(self):
+        metric = CustomMetric()
+        data_loader = [4, 8, 15, 16, 23, 42]
+        engine = Engine(lambda batch, state: batch)
+        _attach_metrics(engine, [metric])
+        with pytest.raises(TypeError):
+            _attach_metrics(engine, [None])
+        state = engine.run(data_loader)
+        assert metric.data == data_loader
+        assert metric.compute() == len(data_loader)
+        assert state.metrics == {"custom_metric": len(data_loader)}
+        metric.reset()
+        assert metric.data == []
+        assert metric.compute() == 0
+
+        engine = Engine(lambda batch, state: batch, phase='train')
+        _attach_metrics(engine, [metric])
+        state = engine.run(data_loader)
+        assert metric.compute() == len(data_loader)
+        assert state.metrics == {"train_custom_metric": len(data_loader)}
+
+        @argus.callbacks.on_iteration_start
+        def stop_on_first_iteration(state):
+            state.stopped = True
+
+        stop_on_first_iteration.attach(engine)
+        engine.run(data_loader)
+        assert metric.compute() == 1
+
+    def test_custom_callback_by_name(self):
+        data_loader = [4, 8, 15, 16, 23, 42]
+        engine = Engine(lambda batch, state: batch, phase='val')
+        _attach_metrics(engine, ["custom_metric"])
+        state = engine.run(data_loader)
+        assert state.metrics == {"val_custom_metric": len(data_loader)}
+
+        with pytest.raises(ValueError):
+            _attach_metrics(engine, ["qwerty"])
+
+    def just_for_coverage_useless_test(self):
+        metric = Metric()
+        assert metric.reset() is None
+        assert metric.update(dict()) is None
+        assert metric.compute() is None
