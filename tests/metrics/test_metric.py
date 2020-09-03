@@ -101,7 +101,7 @@ class TestMetric:
         with pytest.raises(ValueError):
             _attach_metrics(engine, ["qwerty"])
 
-    def just_for_coverage_useless_test(self):
+    def test_just_for_coverage(self):
         metric = Metric()
         assert metric.reset() is None
         assert metric.update(dict()) is None

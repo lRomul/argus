@@ -17,5 +17,5 @@ class Loss(Metric):
 
     def compute(self):
         if self.avg_meter.count == 0:
-            raise Exception('Must be at least one example for computation')
+            raise RuntimeError('Must be at least one example for computation')
         return self.avg_meter.average

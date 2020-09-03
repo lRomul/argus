@@ -10,7 +10,6 @@ from argus.loss import pytorch_losses
 from argus.optimizer import pytorch_optimizers
 
 
-
 @pytest.fixture(scope='session', params=pytorch_losses.values())
 def loss_class(request):
     return request.param
@@ -153,3 +152,13 @@ def vision_argus_model_instance(argus_model_class):
         'device': 'cpu'
     }
     return argus_model_class(params)
+
+
+@pytest.fixture(scope='function',
+                params=[[4, 8, 15, 16, 23, 42],
+                        list(range(42)),
+                        torch.randint(1000, size=(42,)).tolist(),
+                        (1e6 * torch.rand(dtype=torch.float32,
+                                          size=(42,))).tolist()])
+def one_dim_num_sequence(request):
+    return request.param

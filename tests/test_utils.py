@@ -113,17 +113,12 @@ def test_check_pickleble(dict_of_tensors):
         check_pickleble(pytest)
 
 
-@pytest.mark.parametrize("values",
-                         [list(range(42)),
-                          torch.randint(1000, size=(42,)).tolist(),
-                          (1e6 * torch.rand(dtype=torch.float32,
-                                            size=(42,))).tolist()])
-def test_average_meter(values):
+def test_average_meter(one_dim_num_sequence):
     average_meter = AverageMeter()
-    for value in values:
+    for value in one_dim_num_sequence:
         average_meter.update(value)
 
-    average = sum(values) / len(values)
+    average = sum(one_dim_num_sequence) / len(one_dim_num_sequence)
     assert pytest.approx(average_meter.average) == average
 
 
