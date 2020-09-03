@@ -60,14 +60,14 @@ class LoggingToFile(Callback):
             format the log messages. Defaults to
             '%(asctime)s %(levelname)s %(message)s'.
         append (bool, optional): Append the log file if it already exists
-            or rewrite it. Defaults to True.
+            or rewrite it. Defaults to False.
 
     """
 
     def __init__(self, file_path,
                  create_dir=True,
                  formatter='[%(asctime)s][%(levelname)s]: %(message)s',
-                 append=True):
+                 append=False):
         self.file_path = file_path
         self.create_dir = create_dir
         self.formatter = logging.Formatter(formatter)

@@ -186,18 +186,18 @@ class BuildModel(metaclass=ModelMeta):
         return cast_device(device)
 
     def build_logger(self):
+        formatter = logging.Formatter('[%(asctime)s][%(levelname)s]: %(message)s')
         stdout = logging.StreamHandler(stream=sys.stdout)
-        stdout.setLevel('INFO')
+        stdout.setLevel(logging.INFO)
+        stdout.setFormatter(formatter)
         stderr = logging.StreamHandler(stream=sys.stderr)
-        stderr.setLevel('ERROR')
-        handlers = [stderr, stdout]
+        stderr.setLevel(logging.ERROR)
+        stderr.setFormatter(formatter)
 
-        logging.basicConfig(
-            format='[%(asctime)s][%(levelname)s]: %(message)s',
-            level=logging.getLevelName(logging.INFO),
-            handlers=handlers,
-        )
         logger = logging.getLogger(__name__)
+        logger.setLevel(logging.INFO)
+        logger.addHandler(stdout)
+        logger.addHandler(stderr)
         return logger
 
     def get_nn_module(self) -> nn.Module:

@@ -68,7 +68,7 @@ class TestEngineMethods:
 
         data_loader = [4, 8, 15, 16, 23, 42]
         engine = Engine(step_storage.step_method,
-                        logger=logging.getLogger(__name__))
+                        logger=logging.getLogger('TestEngineMethods::test_run'))
         state = engine.run(data_loader, start_epoch=0, end_epoch=3)
 
         assert step_storage.batch_lst == data_loader * 3

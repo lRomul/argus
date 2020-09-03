@@ -130,7 +130,7 @@ class Model(BuildModel):
             train_loader: Iterable,
             val_loader: Optional[Iterable] = None,
             num_epochs: int = 1,
-            metrics: Optional[List[Metric]] = None,
+            metrics: Optional[List[Union[Metric, str]]] = None,
             metrics_on_train: bool = False,
             callbacks: Optional[List[Callback]] = None,
             val_callbacks: Optional[List[Callback]] = None):

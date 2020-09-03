@@ -9,6 +9,18 @@ from argus.callbacks.logging import (
 )
 
 
+@pytest.fixture(scope='function')
+def state(linear_argus_model_instance):
+    engine = Engine(lambda batch, state: batch,
+                    model=linear_argus_model_instance)
+    return engine.state
+
+
+def read_file(path):
+    with open(path, 'r') as file:
+        return file.readlines()
+
+
 @pytest.mark.parametrize("lr, precision, str_lr", [
     (0.001, 5, "0.001"),
     (0.0000039, 6, "3.9e-06"),
@@ -20,7 +32,7 @@ def test_format_lr_to_str(lr, precision, str_lr):
     assert result == str_lr
 
 
-def test_metrics_logging(linear_argus_model_instance):
+def test_metrics_logging(state):
     class MockLogger:
         def __init__(self):
             self.message = ''
@@ -28,32 +40,65 @@ def test_metrics_logging(linear_argus_model_instance):
         def info(self, message):
             self.message = message
 
-    engine = Engine(lambda batch, state: batch,
-                    model=linear_argus_model_instance,
-                    logger=MockLogger())
+    state.logger = MockLogger()
 
-    engine.state.metrics = {"train_loss": 0.1}
-    engine.state.logger = MockLogger()
-    metrics_logging.handler(state=engine.state, train=True, print_epoch=False)
-    assert engine.state.logger.message == 'Train, LR: 0.01, train_loss: 0.1'
+    state.metrics = {"train_loss": 0.1}
+    state.logger = MockLogger()
+    metrics_logging.handler(state=state, train=True, print_epoch=False)
+    assert state.logger.message == 'Train, LR: 0.01, train_loss: 0.1'
 
-    engine.state.metrics = {"val_loss": 0.01}
-    metrics_logging.handler(state=engine.state, train=False, print_epoch=False)
-    assert engine.state.logger.message == 'Validation, val_loss: 0.01'
+    state.metrics = {"val_loss": 0.01}
+    metrics_logging.handler(state=state, train=False, print_epoch=False)
+    assert state.logger.message == 'Validation, val_loss: 0.01'
 
-    engine.state.metrics = {"val_loss": 0.01, "val_accuracy": 0.42}
-    engine.state.epoch = 12
-    metrics_logging.handler(state=engine.state, train=False, print_epoch=True)
-    assert engine.state.logger.message == 'Validation - Epoch: 12, val_loss: 0.01, val_accuracy: 0.42'
+    state.metrics = {"val_loss": 0.01, "val_accuracy": 0.42}
+    state.epoch = 12
+    metrics_logging.handler(state=state, train=False, print_epoch=True)
+    assert state.logger.message == 'Validation - Epoch: 12, val_loss: 0.01, val_accuracy: 0.42'
 
-    engine.state.metrics = {"train_loss": 0.01, "train_accuracy": 0.42}
-    engine.state.epoch = 42
-    metrics_logging.handler(state=engine.state, train=True, print_epoch=True)
-    assert engine.state.logger.message == 'Train - Epoch: 42, LR: 0.01, train_loss: 0.01, train_accuracy: 0.42'
+    state.metrics = {"train_loss": 0.01, "train_accuracy": 0.42}
+    state.epoch = 42
+    metrics_logging.handler(state=state, train=True, print_epoch=True)
+    assert state.logger.message == 'Train - Epoch: 42, LR: 0.01, train_loss: 0.01, train_accuracy: 0.42'
 
 
-def test_logging_to_file():
-    pass
+def test_logging_to_file(tmpdir, state):
+    logger = state.model.logger
+    state.logger = logger
+    path = str(tmpdir.mkdir('logs').join("log.txt"))
+
+    with open(path, 'w') as file:
+        file.write('qwerty')
+
+    logging_to_file = LoggingToFile(path, append=False, create_dir=True,
+                                    formatter='[%(levelname)s]: %(message)s')
+
+    logging_to_file.start(state)
+    assert [logging_to_file.file_handler is h for h in logger.handlers]
+    metrics_logging.handler(state=state, train=True, print_epoch=False)
+    log_messages = ['[INFO]: Train, LR: 0.01\n']
+    assert read_file(path) == log_messages
+    state.epoch = 12
+    state.metrics = {'val_loss': 0.123}
+    metrics_logging.handler(state=state, train=False, print_epoch=True)
+    log_messages += ['[INFO]: Validation - Epoch: 12, val_loss: 0.123\n']
+    assert read_file(path) == log_messages
+    logging_to_file.complete(state)
+    assert not any(logging_to_file.file_handler is h for h in logger.handlers)
+
+    logging_to_file = LoggingToFile(path, append=True, create_dir=True,
+                                    formatter='[%(levelname)s]: %(message)s')
+    logging_to_file.start(state)
+    state.epoch = 42
+    state.metrics = {'val_loss': 0.246}
+    metrics_logging.handler(state=state, train=False, print_epoch=True)
+    log_messages += ['[INFO]: Validation - Epoch: 42, val_loss: 0.246\n']
+    assert read_file(path) == log_messages
+
+    logging_to_file.start(state)
+    assert any(logging_to_file.file_handler is h for h in logger.handlers)
+    logging_to_file.catch_exception(state)
+    assert not any(logging_to_file.file_handler is h for h in logger.handlers)
 
 
 def test_logging_to_csv():
