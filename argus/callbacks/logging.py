@@ -66,7 +66,7 @@ class LoggingToFile(Callback):
 
     def __init__(self, file_path,
                  create_dir=True,
-                 formatter='%(asctime)s %(levelname)s %(message)s',
+                 formatter='[%(asctime)s][%(levelname)s]: %(message)s',
                  append=True):
         self.file_path = file_path
         self.create_dir = create_dir
