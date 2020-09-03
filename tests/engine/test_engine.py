@@ -26,7 +26,7 @@ class TestEngineMethods:
             engine.add_event_handler(42, some_function)
 
     @pytest.mark.parametrize("event", [e for e in Events])
-    def test_raise_event(self, event):
+    def test_raise_event(self, event, engine):
         class CallArgsStorage:
             def __init__(self):
                 self.state = None
@@ -39,7 +39,6 @@ class TestEngineMethods:
                 self.kwargs = kwargs
 
         call_args_storage = CallArgsStorage()
-        engine = Engine(lambda x: x)
         assert len(engine.event_handlers[event]) == 0
         engine.add_event_handler(event, call_args_storage,
                                  4, 8, 15, 16, 23, 42, qwerty="qwerty")

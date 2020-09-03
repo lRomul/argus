@@ -62,10 +62,9 @@ class TestMetric:
         warn = recwarn.pop()
         assert "redefined 'redefine_model' that was already" in str(warn.message)
 
-    def test_custom_metric(self):
+    def test_custom_metric(self, engine):
         metric = CustomMetric()
         data_loader = [4, 8, 15, 16, 23, 42]
-        engine = Engine(lambda batch, state: batch)
         _attach_metrics(engine, [metric])
         with pytest.raises(TypeError):
             _attach_metrics(engine, [None])

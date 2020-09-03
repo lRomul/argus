@@ -5,6 +5,7 @@ from torch import nn
 import torch.nn.functional as F
 
 from argus import Model
+from argus.engine import Engine
 from argus.utils import Identity
 from argus.loss import pytorch_losses
 from argus.optimizer import pytorch_optimizers
@@ -162,3 +163,8 @@ def vision_argus_model_instance(argus_model_class):
                                           size=(42,))).tolist()])
 def one_dim_num_sequence(request):
     return request.param
+
+
+@pytest.fixture(scope='function')
+def engine():
+    return Engine(lambda batch, state: batch)

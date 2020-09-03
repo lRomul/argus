@@ -98,14 +98,12 @@ class TestCallbacks:
         assert step_storage.state is engine.state if n_epochs \
             else step_storage.state is None
 
-    def test_attach_non_callable_handler(self, custom_test_callback):
-        engine = Engine(lambda x: x)
+    def test_attach_non_callable_handler(self, custom_test_callback, engine):
         custom_test_callback.start = 'no_a_method_or_function'
         with pytest.raises(TypeError):
             custom_test_callback.attach(engine)
 
-    def test_attach_not_a_callback(self):
-        engine = Engine(lambda x: x)
+    def test_attach_not_a_callback(self, engine):
         with pytest.raises(TypeError):
             _attach_callbacks(engine, [None])
         with pytest.raises(TypeError):

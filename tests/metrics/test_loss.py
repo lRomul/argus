@@ -1,10 +1,12 @@
 import pytest
 
 from argus.metrics.loss import Loss
+from argus.callbacks import Callback
 
 
 def test_loss_metric(one_dim_num_sequence):
     metric = Loss()
+    assert isinstance(metric, Callback)
     assert metric.name == 'loss'
     assert metric.better == 'min'
     step_outputs = [{'loss': s} for s in one_dim_num_sequence]

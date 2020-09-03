@@ -2,12 +2,14 @@ import pytest
 import torch
 
 from argus.metrics import CategoricalAccuracy
+from argus.callbacks import Callback
 
 
 @pytest.mark.parametrize("batch_size, n_classes, n_iterations",
                          [(8, 4, 32), (16, 2, 15), (27, 13, 38)])
 def test_categorical_accuracy(batch_size, n_classes, n_iterations):
     metric = CategoricalAccuracy()
+    assert isinstance(metric, Callback)
     prediction_lst = []
     target_lst = []
     for _ in range(n_iterations):
