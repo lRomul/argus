@@ -79,7 +79,7 @@ class LoggingToFile(Callback):
             dir_path = os.path.dirname(self.file_path)
             if dir_path:
                 if not os.path.exists(dir_path):
-                    os.mkdir(dir_path)
+                    os.makedirs(dir_path, exist_ok=True)
         if not self.append and os.path.exists(self.file_path):
             os.remove(self.file_path)
         self.file_handler = logging.FileHandler(self.file_path)
@@ -101,6 +101,8 @@ class LoggingToCSV(Callback):
 
     Args:
         file_path (str): Path to the .csv logging file.
+        create_dir (bool, optional): Create the directory for the logging
+            file if it does not exist. Defaults to True.
         separator (str, optional): Values separator character to use.
             Defaults to ','.
         write_header (bool, optional): Write the column headers.
@@ -111,6 +113,7 @@ class LoggingToCSV(Callback):
     """
 
     def __init__(self, file_path,
+                 create_dir=True,
                  separator=',',
                  write_header=True,
                  append=False):
@@ -119,6 +122,7 @@ class LoggingToCSV(Callback):
         self.write_header = write_header
         self.append = append
         self.csv_file = None
+        self.create_dir = create_dir
 
     def start(self, state: State):
         if self.append:
@@ -126,6 +130,11 @@ class LoggingToCSV(Callback):
         else:
             file_mode = 'w'
 
+        if self.create_dir:
+            dir_path = os.path.dirname(self.file_path)
+            if dir_path:
+                if not os.path.exists(dir_path):
+                    os.makedirs(dir_path, exist_ok=True)
         self.csv_file = open(self.file_path, file_mode, newline='')
 
     def epoch_complete(self, state: State):
