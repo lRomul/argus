@@ -16,19 +16,19 @@ class LRScheduler(Callback):
     def __init__(self, scheduler_factory, step_on_iteration=False):
         self.scheduler_factory = scheduler_factory
         self.step_on_iteration = step_on_iteration
-        self._scheduler = None
+        self.scheduler = None
 
     def start(self, state: State):
-        if self._scheduler is None:
-            self._scheduler = self.scheduler_factory(state.model.optimizer)
+        if self.scheduler is None:
+            self.scheduler = self.scheduler_factory(state.model.optimizer)
 
     def epoch_complete(self, state: State):
         if not self.step_on_iteration:
-            self._scheduler.step()
+            self.scheduler.step()
 
     def iteration_complete(self, state: State):
         if self.step_on_iteration:
-            self._scheduler.step()
+            self.scheduler.step()
 
 
 class LambdaLR(LRScheduler):
@@ -179,8 +179,7 @@ class ReduceLROnPlateau(LRScheduler):
                  threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-8):
         self.monitor = monitor
         self.patience = patience
-        self.better, self.better_comp, self.best_value = init_better(
-            better, monitor)
+        self.better, _, _ = init_better(better, monitor)
 
         super().__init__(
             lambda opt: _scheduler.ReduceLROnPlateau(opt,
@@ -196,12 +195,8 @@ class ReduceLROnPlateau(LRScheduler):
             step_on_iteration=False
         )
 
-    def start(self, state: State):
-        self._scheduler = self.scheduler_factory(state.model.optimizer)
-        self.best_value = math.inf if self.better == 'min' else -math.inf
-
     def epoch_complete(self, state: State):
-        self._scheduler.step(metrics=state.metrics[self.monitor])
+        self.scheduler.step(metrics=state.metrics[self.monitor])
 
 
 class CyclicLR(LRScheduler):

@@ -1,20 +1,12 @@
 import pytest
 import datetime
 
-from argus.engine import Engine
 from argus.callbacks.logging import (
     _format_lr_to_str,
     metrics_logging,
     LoggingToFile,
     LoggingToCSV
 )
-
-
-@pytest.fixture(scope='function')
-def state(linear_argus_model_instance):
-    engine = Engine(lambda batch, state: batch,
-                    model=linear_argus_model_instance)
-    return engine.state
 
 
 def read_file(path):
@@ -77,13 +69,13 @@ def test_logging_to_file(tmpdir, state):
     logging_to_file.start(state)
     assert [logging_to_file.file_handler is h for h in logger.handlers]
     metrics_logging.handler(state=state, train=True, print_epoch=False)
-    log_messages = ['[INFO]: Train, LR: 0.01\n']
-    assert read_file(path) == log_messages
+    expected_messages = ['[INFO]: Train, LR: 0.01\n']
+    assert read_file(path) == expected_messages
     state.epoch = 12
     state.metrics = {'val_loss': 0.123}
     metrics_logging.handler(state=state, train=False, print_epoch=True)
-    log_messages += ['[INFO]: Validation - Epoch: 12, val_loss: 0.123\n']
-    assert read_file(path) == log_messages
+    expected_messages += ['[INFO]: Validation - Epoch: 12, val_loss: 0.123\n']
+    assert read_file(path) == expected_messages
     logging_to_file.complete(state)
     assert not any(logging_to_file.file_handler is h for h in logger.handlers)
 
@@ -93,8 +85,8 @@ def test_logging_to_file(tmpdir, state):
     state.epoch = 42
     state.metrics = {'val_loss': 0.246}
     metrics_logging.handler(state=state, train=False, print_epoch=True)
-    log_messages += ['[INFO]: Validation - Epoch: 42, val_loss: 0.246\n']
-    assert read_file(path) == log_messages
+    expected_messages += ['[INFO]: Validation - Epoch: 42, val_loss: 0.246\n']
+    assert read_file(path) == expected_messages
     logging_to_file.complete(state)
     assert not any(logging_to_file.file_handler is h for h in logger.handlers)
 
@@ -107,8 +99,8 @@ def test_logging_to_file_create_dir(tmpdir, state):
                                     formatter='[%(levelname)s]: %(message)s')
     logging_to_file.start(state)
     metrics_logging.handler(state=state, train=True, print_epoch=False)
-    log_messages = ['[INFO]: Train, LR: 0.01\n']
-    assert read_file(path) == log_messages
+    expected_messages = ['[INFO]: Train, LR: 0.01\n']
+    assert read_file(path) == expected_messages
     assert any(logging_to_file.file_handler is h for h in logger.handlers)
     logging_to_file.catch_exception(state)
     assert not any(logging_to_file.file_handler is h for h in logger.handlers)
@@ -116,12 +108,13 @@ def test_logging_to_file_create_dir(tmpdir, state):
 
 @pytest.mark.parametrize("separator", [',', '|', '\t'])
 def test_logging_to_csv(tmpdir, state, separator):
-    def check_log_lines(readed_messages, log_messages, separator):
-        assert readed_messages[0].split(separator) == log_messages[0]
-        assert len(readed_messages) == len(log_messages)
-        for readed_log, log in zip(readed_messages[1:], log_messages[1:]):
+    def check_log_lines(readed_messages, expected_messages, separator):
+        assert readed_messages[0].split(separator) == expected_messages[0]
+        assert len(readed_messages) == len(expected_messages)
+        for readed_log, expected_log in zip(readed_messages[1:],
+                                            expected_messages[1:]):
             readed_log = readed_log.split(separator)
-            assert readed_log[1:] == log[1:]
+            assert readed_log[1:] == expected_log[1:]
             datetime.datetime.strptime(readed_log[0],
                                        '%Y-%m-%d %H:%M:%S.%f')
 
@@ -137,14 +130,14 @@ def test_logging_to_csv(tmpdir, state, separator):
     state.metrics = {'val_loss': 0.132}
     logging_to_csv.epoch_complete(state)
 
-    log_messages = [
+    expected_messages = [
         ['time', 'epoch', 'lr', 'val_loss\n'],
         ['2020-09-03 21:36:11.420144', '1', '0.01', '0.246\n'],
         ['2020-09-03 21:36:11.420907', '2', '0.01', '0.132\n']
     ]
 
     readed_messages = read_file(path)
-    check_log_lines(readed_messages, log_messages, separator)
+    check_log_lines(readed_messages, expected_messages, separator)
 
     logging_to_csv.complete(state)
     assert logging_to_csv.csv_file.closed
@@ -156,9 +149,9 @@ def test_logging_to_csv(tmpdir, state, separator):
     state.epoch = 3
     state.metrics = {'val_loss': 0.057}
     logging_to_csv.epoch_complete(state)
-    log_messages += [['2020-09-03 21:54:13.806078', '3', '0.01', '0.057\n']]
+    expected_messages += [['2020-09-03 21:54:13.806078', '3', '0.01', '0.057\n']]
 
     readed_messages = read_file(path)
-    check_log_lines(readed_messages, log_messages, separator)
+    check_log_lines(readed_messages, expected_messages, separator)
     logging_to_csv.catch_exception(state)
     assert logging_to_csv.csv_file.closed

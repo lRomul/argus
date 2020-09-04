@@ -1,4 +1,5 @@
 import pytest
+import logging
 
 import torch
 from torch import nn
@@ -131,7 +132,7 @@ def linear_argus_model_instance(argus_model_class, poly_degree):
             'in_features': poly_degree,
             'out_features': 1
         }),
-        'optimizer': ('Adam', {'lr': 0.01}),
+        'optimizer': ('SGD', {'lr': 0.01}),
         'loss': 'SmoothL1Loss',
         'prediction_transform': 'Identity',
         'device': 'cpu'
@@ -166,5 +167,12 @@ def one_dim_num_sequence(request):
 
 
 @pytest.fixture(scope='function')
-def engine():
-    return Engine(lambda batch, state: batch)
+def engine(linear_argus_model_instance):
+    return Engine(lambda batch, state: batch,
+                  model=linear_argus_model_instance,
+                  logger=logging.getLogger("engine"))
+
+
+@pytest.fixture(scope='function')
+def state(engine):
+    return engine.state
