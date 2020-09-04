@@ -2,8 +2,6 @@
 
 It enables the PyTorch lr_schedulers to be used as normal argus Callbacks.
 """
-import math
-
 import torch
 from torch.optim import lr_scheduler as _scheduler
 

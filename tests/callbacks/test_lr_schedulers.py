@@ -102,7 +102,7 @@ class TestLrSchedulers:
         assert cosine_annealing_lr.scheduler.T_max == 10
         assert cosine_annealing_lr.scheduler.eta_min == 0
 
-    def test_multiplicative_lr(self, engine, step_on_iteration):
+    def test_multiplicative_lr(self, engine, step_on_iteration, monkeypatch):
         multiplicative_lr = MultiplicativeLR(lambda epoch: 0.95,
                                              step_on_iteration=step_on_iteration)
         multiplicative_lr.attach(engine)
@@ -111,13 +111,23 @@ class TestLrSchedulers:
         assert multiplicative_lr.scheduler.lr_lambdas[0](1) == 0.95
         assert multiplicative_lr.step_on_iteration == step_on_iteration
 
-    def test_one_cycle_lr(self, engine):
+        from argus.callbacks.lr_schedulers import torch
+        monkeypatch.setattr(torch, "__version__", '1.3.0')
+        with pytest.raises(ImportError):
+            MultiplicativeLR(lambda epoch: 0.95)
+
+    def test_one_cycle_lr(self, engine, monkeypatch):
         one_cycle_lr = OneCycleLR(max_lr=0.01, steps_per_epoch=1000, epochs=10)
         one_cycle_lr.attach(engine)
         one_cycle_lr.start(engine.state)
         assert isinstance(one_cycle_lr.scheduler, lr_scheduler.OneCycleLR)
         assert one_cycle_lr.scheduler.total_steps == 10000
         assert one_cycle_lr.step_on_iteration
+
+        from argus.callbacks.lr_schedulers import torch
+        monkeypatch.setattr(torch, "__version__", '1.1.0')
+        with pytest.raises(ImportError):
+            OneCycleLR(max_lr=0.01, steps_per_epoch=1000, epochs=10)
 
     def test_cosine_annealing_warm_restarts(self, engine, step_on_iteration):
         warm_restarts = CosineAnnealingWarmRestarts(T_0=1, T_mult=1, eta_min=0,
