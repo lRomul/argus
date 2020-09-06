@@ -119,10 +119,6 @@ class MonitorCheckpoint(Checkpoint):
         max_saves ([type], optional): Number of last saved models to keep.
             Should be positive. If None - save all models. Defaults to
             None.
-        period (int, optional): Interval (number of epochs) between
-            checkpoint saves. Defaults to 1.
-        copy_last (bool, optional): Always save the last checkpoint.
-            Defaults to False.
         save_after_exception (bool, optional): Save the model checkpoint
             after an exception occurs. Defaults to False.
         monitor (str, optional): Metric name to monitor. It should be
