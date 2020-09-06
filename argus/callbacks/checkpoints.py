@@ -98,7 +98,7 @@ class Checkpoint(Callback):
         if self.save_after_exception:
             exception_model_path = os.path.join(self.dir_path,
                                                 'model-after-exception.pth')
-            state.model.save_model(exception_model_path)
+            self.save_model(state, exception_model_path)
 
 
 class MonitorCheckpoint(Checkpoint):

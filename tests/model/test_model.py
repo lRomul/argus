@@ -96,20 +96,13 @@ def saved_argus_model(tmpdir, vision_argus_model_instance):
     return path, model
 
 
-def check_weights(model, loaded_model):
-    nn_state_dict = model.nn_module.state_dict()
-    for layer_name, weight in loaded_model.nn_module.state_dict().items():
-        assert layer_name in nn_state_dict
-        assert torch.all(nn_state_dict[layer_name] == weight)
-
-
 class TestLoadModel:
-    def test_load_model(self, saved_argus_model):
+    def test_load_model(self, saved_argus_model, check_weights):
         path, model = saved_argus_model
         loaded_model = load_model(path, device='cpu')
 
         assert loaded_model.params == model.params
-        check_weights(model, loaded_model)
+        assert check_weights(model, loaded_model)
         assert isinstance(loaded_model.loss, model.loss.__class__)
         assert isinstance(loaded_model.optimizer, model.optimizer.__class__)
         assert isinstance(loaded_model.prediction_transform,
@@ -117,7 +110,7 @@ class TestLoadModel:
 
         nn.init.xavier_uniform_(loaded_model.nn_module.fc.weight)
         with pytest.raises(AssertionError):
-            check_weights(model, loaded_model)
+            assert check_weights(model, loaded_model)
 
     def test_none_attributes(self, saved_argus_model):
         path, model = saved_argus_model
