@@ -177,13 +177,3 @@ def engine(linear_argus_model_instance):
 def state(engine):
     return engine.state
 
-
-@pytest.fixture(scope='session')
-def check_weights():
-    def check_weights(model, loaded_model):
-        nn_state_dict = model.nn_module.state_dict()
-        for layer_name, weight in loaded_model.nn_module.state_dict().items():
-            assert layer_name in nn_state_dict
-            assert torch.all(nn_state_dict[layer_name] == weight)
-        return True
-    return check_weights

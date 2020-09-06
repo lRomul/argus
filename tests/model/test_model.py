@@ -96,8 +96,16 @@ def saved_argus_model(tmpdir, vision_argus_model_instance):
     return path, model
 
 
+def check_weights(model, loaded_model):
+    nn_state_dict = model.nn_module.state_dict()
+    for layer_name, weight in loaded_model.nn_module.state_dict().items():
+        assert layer_name in nn_state_dict
+        assert torch.all(nn_state_dict[layer_name] == weight)
+    return True
+
+
 class TestLoadModel:
-    def test_load_model(self, saved_argus_model, check_weights):
+    def test_load_model(self, saved_argus_model):
         path, model = saved_argus_model
         loaded_model = load_model(path, device='cpu')
 
