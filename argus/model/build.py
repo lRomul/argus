@@ -194,7 +194,9 @@ class BuildModel(metaclass=ModelMeta):
         stderr.setLevel(logging.ERROR)
         stderr.setFormatter(formatter)
 
-        logger = logging.getLogger(__name__)
+        logger = logging.getLogger(f"{__name__}_{id(self)}")
+        if logger.hasHandlers():
+            logger.handlers.clear()
         logger.setLevel(logging.INFO)
         logger.addHandler(stdout)
         logger.addHandler(stderr)

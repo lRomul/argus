@@ -176,4 +176,3 @@ def engine(linear_argus_model_instance):
 @pytest.fixture(scope='function')
 def state(engine):
     return engine.state
-
