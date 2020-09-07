@@ -190,16 +190,12 @@ class BuildModel(metaclass=ModelMeta):
         stdout = logging.StreamHandler(stream=sys.stdout)
         stdout.setLevel(logging.INFO)
         stdout.setFormatter(formatter)
-        stderr = logging.StreamHandler(stream=sys.stderr)
-        stderr.setLevel(logging.ERROR)
-        stderr.setFormatter(formatter)
 
         logger = logging.getLogger(f"{__name__}_{id(self)}")
+        logger.setLevel(logging.INFO)
         if logger.hasHandlers():
             logger.handlers.clear()
-        logger.setLevel(logging.INFO)
         logger.addHandler(stdout)
-        logger.addHandler(stderr)
         return logger
 
     def get_nn_module(self) -> nn.Module:
