@@ -15,7 +15,8 @@ def test_state_update():
 
 class TestEngineMethods:
     def test_add_event_handler(self):
-        def some_function(): pass
+        def some_function():
+            pass
         engine = Engine(some_function)
         assert len(engine.event_handlers[Events.START]) == 0
         engine.add_event_handler(Events.START, some_function)

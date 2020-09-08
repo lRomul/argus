@@ -79,7 +79,7 @@ class TestModelMethod:
                   num_epochs=32)
         val_loss_after = model.validate(val_loader)['val_loss']
         assert val_loss_after < val_loss_before
-        assert val_loss_after < 0.1
+        assert val_loss_after < 0.3
 
     def test_save(self, tmpdir, linear_argus_model_instance):
         path = str(tmpdir.mkdir("experiment").join("model.pth"))
