@@ -26,9 +26,9 @@ def deep_to(input, *args, **kwarg):
         return input.to(*args, **kwarg)
     elif isinstance(input, str):
         return input
-    elif isinstance(input, collections.Sequence):
+    elif isinstance(input, collections.abc.Sequence):
         return [deep_to(sample, *args, **kwarg) for sample in input]
-    elif isinstance(input, collections.Mapping):
+    elif isinstance(input, collections.abc.Mapping):
         return {k: deep_to(sample, *args, **kwarg) for k, sample in input.items()}
     elif isinstance(input, torch.nn.Module):
         return input.to(*args, **kwarg)
@@ -41,9 +41,9 @@ def deep_detach(input):
         return input.detach()
     elif isinstance(input, str):
         return input
-    elif isinstance(input, collections.Sequence):
+    elif isinstance(input, collections.abc.Sequence):
         return [deep_detach(sample) for sample in input]
-    elif isinstance(input, collections.Mapping):
+    elif isinstance(input, collections.abc.Mapping):
         return {k: deep_detach(sample) for k, sample in input.items()}
     else:
         return input
@@ -55,9 +55,9 @@ def deep_chunk(input, chunks, dim=0):
         return torch.chunk(input, chunks, dim=dim)
     if isinstance(input, str):
         return [input for _ in range(chunks)]
-    if isinstance(input, collections.Sequence) and len(input) > 0:
+    if isinstance(input, collections.abc.Sequence) and len(input) > 0:
         return list(map(list, zip(*map(partial_deep_chunk, input))))
-    if isinstance(input, collections.Mapping) and len(input) > 0:
+    if isinstance(input, collections.abc.Mapping) and len(input) > 0:
         return list(map(type(input), zip(*map(partial_deep_chunk, input.items()))))
     else:
         return [input for _ in range(chunks)]

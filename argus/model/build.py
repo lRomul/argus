@@ -98,7 +98,7 @@ class ModelMeta(type):
 
 
 def choose_attribute_from_dict(attribute_meta, attribute_params):
-    if isinstance(attribute_meta, collections.Mapping):
+    if isinstance(attribute_meta, collections.abc.Mapping):
         if isinstance(attribute_params, (list, tuple)) and len(attribute_params) == 2:
             name, params = attribute_params
             if name not in attribute_meta:
@@ -113,7 +113,7 @@ def choose_attribute_from_dict(attribute_meta, attribute_params):
         attribute = attribute_meta
         params = attribute_params
 
-    if not isinstance(params, collections.Mapping):
+    if not isinstance(params, collections.abc.Mapping):
         raise TypeError(f"Attribute params should be a dictionary, "
                         f"not {type(params)}.")
 
