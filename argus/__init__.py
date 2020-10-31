@@ -1,4 +1,4 @@
-from argus.model.model import Model, load_model
+from argus.model import Model, load_model
 import argus.engine
 import argus.callbacks
 import argus.metrics

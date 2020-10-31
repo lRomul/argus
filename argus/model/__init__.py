@@ -1,1 +1,2 @@
-from argus.model.model import Model, load_model
+from argus.model.model import Model
+from argus.model.load import load_model
