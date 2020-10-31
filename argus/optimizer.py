@@ -2,9 +2,18 @@ from torch.optim.optimizer import Optimizer
 from argus.utils import inheritors
 
 
+def _check_optimizer(optimizer):
+    if not optimizer.__module__.startswith('torch.optim'):
+        return False
+    elif optimizer.__module__.startswith('torch.optim._multi_tensor'):
+        return False
+    return True
+
+
 def get_pytorch_optimizers():
     optimizers = inheritors(Optimizer)
-    optimizers_dict = {opt.__name__: opt for opt in optimizers}
+    optimizers_dict = {opt.__name__: opt for opt in optimizers
+                       if _check_optimizer(opt)}
     return optimizers_dict
 
 
