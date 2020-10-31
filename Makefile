@@ -1,4 +1,6 @@
 NAME?=argus
+COMMAND?=bash
+OPTIONS?=
 
 GPUS?=all
 ifeq ($(GPUS),none)
@@ -22,13 +24,14 @@ stop:
 .PHONY: run
 run:
 	docker run --rm -dit \
+		$(OPTIONS) \
 		$(GPUS_OPTION) \
 		--net=host \
 		--ipc=host \
 		-v $(shell pwd):/workdir \
 		--name=$(NAME) \
 		$(NAME) \
-		bash
+		$(COMMAND)
 	docker attach $(NAME)
 
 .PHONY: attach
@@ -41,4 +44,4 @@ logs:
 
 .PHONY: exec
 exec:
-	docker exec -it $(NAME) bash
+	docker exec -it $(OPTIONS) $(NAME) $(COMMAND)
