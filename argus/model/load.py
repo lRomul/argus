@@ -1,11 +1,16 @@
 import os
 from pathlib import Path
-from typing import Union
+from typing import Union, Optional
 
 import torch
 
 from argus.model.build import MODEL_REGISTRY, cast_device
 from argus.utils import deep_to, device_to_str, default, identity
+
+
+def default_change_state_dict_func(nn_state_dict: dict,
+                                   optimizer_state_dict: Optional[dict] = None):
+    return nn_state_dict, optimizer_state_dict
 
 
 def load_model(file_path: Union[str, Path],
@@ -15,7 +20,7 @@ def load_model(file_path: Union[str, Path],
                prediction_transform=default,
                device=default,
                change_params_func=identity,
-               change_state_dict_func=identity,
+               change_state_dict_func=default_change_state_dict_func,
                model_name=default,
                **kwargs):
     """Load an argus model from a file.
@@ -38,12 +43,12 @@ def load_model(file_path: Union[str, Path],
         prediction_transform (dict, tuple or str, optional): Params of the
             prediction_transform to replace params in the state. Set to `None`
             if don't want to create prediction_transform in the loaded model.
-        change_params_func (function, optional): Function for modification of
-            state params. Takes as input params from the loaded state, outputs
+        change_params_func (function, optional): Function for modification the
+            loaded params. Takes as input params from the loaded state, outputs
             params to model creation.
         change_state_dict_func (function, optional): Function for modification of
-            nn_module state dict. Takes as input state dict from the loaded
-            state, outputs state dict to model creation.
+            nn_module and optimizer state dict. Takes as input `nn_state_dict` and
+            `optimizer_state_dict`, outputs state dicts to model creation.
         model_name (str): Class name of :class:`argus.model.Model`.
             By default uses name from loaded state.
 
@@ -90,9 +95,15 @@ def load_model(file_path: Union[str, Path],
             params = change_params_func(params)
             model = model_class(params)
             nn_state_dict = deep_to(state['nn_state_dict'], model.device)
-            nn_state_dict = change_state_dict_func(nn_state_dict)
+            optimizer_state_dict = None
+            if 'optimizer_state_dict' in state:
+                optimizer_state_dict = deep_to(state['optimizer_state_dict'], model.device)
+            nn_state_dict, optimizer_state_dict = change_state_dict_func(nn_state_dict,
+                                                                         optimizer_state_dict)
 
             model.get_nn_module().load_state_dict(nn_state_dict)
+            if model.optimizer is not None and optimizer_state_dict is not None:
+                model.optimizer.load_state_dict(optimizer_state_dict)
             model.eval()
             return model
         else:

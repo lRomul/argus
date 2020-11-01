@@ -118,9 +118,9 @@ class TestLoadModel:
     def test_change_state_dict_func(self, saved_argus_model):
         path, model = saved_argus_model
 
-        def change_state_dict_func(nn_state_dict):
+        def change_state_dict_func(nn_state_dict, optimizer_state_dict):
             nn_state_dict['fc.weight'][0][0] = 0
-            return nn_state_dict
+            return nn_state_dict, optimizer_state_dict
 
         loaded_model = load_model(path, change_state_dict_func=change_state_dict_func)
         assert loaded_model.nn_module.state_dict()['fc.weight'][0][0] == 0
