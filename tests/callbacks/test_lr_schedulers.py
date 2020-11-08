@@ -1,6 +1,8 @@
 import pytest
 from collections import Counter
+from distutils.version import LooseVersion
 
+import torch
 from torch.optim import lr_scheduler
 from torch.optim.optimizer import Optimizer
 
@@ -102,6 +104,8 @@ class TestLrSchedulers:
         assert cosine_annealing_lr.scheduler.T_max == 10
         assert cosine_annealing_lr.scheduler.eta_min == 0
 
+    @pytest.mark.skipif(LooseVersion(torch.__version__) < LooseVersion("1.4.0"),
+                        reason="Requires torch==1.4.0 or higher")
     def test_multiplicative_lr(self, engine, step_on_iteration, monkeypatch):
         multiplicative_lr = MultiplicativeLR(lambda epoch: 0.95,
                                              step_on_iteration=step_on_iteration)
@@ -116,6 +120,8 @@ class TestLrSchedulers:
         with pytest.raises(ImportError):
             MultiplicativeLR(lambda epoch: 0.95)
 
+    @pytest.mark.skipif(LooseVersion(torch.__version__) < LooseVersion("1.3.0"),
+                        reason="Requires torch==1.3.0 or higher")
     def test_one_cycle_lr(self, engine, monkeypatch):
         one_cycle_lr = OneCycleLR(max_lr=0.01, steps_per_epoch=1000, epochs=10)
         one_cycle_lr.attach(engine)
