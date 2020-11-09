@@ -269,7 +269,7 @@ class Model(BuildModel):
             return lrs[0]
         return lrs
 
-    def save(self, file_path: Union[str, Path], optimizer: bool = False):
+    def save(self, file_path: Union[str, Path], optimizer_state: bool = False):
         """Save the argus model into a file.
 
         The argus model is saved as a dict::
@@ -285,7 +285,7 @@ class Model(BuildModel):
 
         Args:
             file_path (str): Path to the argus model file.
-            optimizer (bool): Save optimizer state.
+            optimizer_state (bool): Save optimizer state.
 
         """
         nn_module = self.get_nn_module()
@@ -294,7 +294,7 @@ class Model(BuildModel):
             'params': self.params,
             'nn_state_dict': deep_to(nn_module.state_dict(), 'cpu')
         }
-        if optimizer and self.optimizer is not None:
+        if optimizer_state and self.optimizer is not None:
             state['optimizer_state_dict'] = deep_to(
                 self.optimizer.state_dict(), 'cpu'
             )

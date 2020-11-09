@@ -22,12 +22,15 @@ def optimizer_class(request):
 
 
 class LinearNet(nn.Module):
-    def __init__(self, in_features=1, out_features=1):
+    def __init__(self, in_features=1, out_features=1, sigmoid=False):
         super().__init__()
         self.fc = nn.Linear(in_features, out_features)
+        self.sigmoid = sigmoid
 
     def forward(self, x):
         x = self.fc(x)
+        if self.sigmoid:
+            x = torch.sigmoid(x)
         return x
 
 
@@ -129,9 +132,10 @@ def linear_argus_model_instance(argus_model_class, poly_degree):
     params = {
         'nn_module': ('LinearNet', {
             'in_features': poly_degree,
-            'out_features': 1
+            'out_features': 1,
+            'sigmoid': False
         }),
-        'optimizer': ('SGD', {'lr': 0.01}),
+        'optimizer': ('SGD', {'lr': 0.01, 'momentum': 0.9}),
         'loss': 'SmoothL1Loss',
         'prediction_transform': 'Identity',
         'device': 'cpu'

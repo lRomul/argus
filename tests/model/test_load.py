@@ -2,18 +2,24 @@ import pytest
 
 import torch
 from torch import nn
+from torch.utils.data import TensorDataset, DataLoader
 
 from argus import load_model
 from argus.model import Model
 from argus.utils import Identity
 
 
-@pytest.fixture(scope='function')
-def saved_argus_model(tmpdir, vision_argus_model_instance):
-    model = vision_argus_model_instance
+@pytest.fixture(scope='function', params=[False, True])
+def saved_argus_model(request, tmpdir, linear_argus_model_instance, get_batch_function):
+    optimizer_state = request.param
+    model = linear_argus_model_instance
+    train_dataset = TensorDataset(*get_batch_function(batch_size=1024))
+    train_loader = DataLoader(train_dataset, shuffle=True,
+                              drop_last=True, batch_size=32)
+    model.fit(train_loader, num_epochs=3)
     path = str(tmpdir.mkdir("experiment").join("model.pth"))
-    model.save(path)
-    return path, model
+    model.save(path, optimizer_state=optimizer_state)
+    return optimizer_state, path, model
 
 
 def check_weights(model, loaded_model):
@@ -26,7 +32,7 @@ def check_weights(model, loaded_model):
 
 class TestLoadModel:
     def test_load_model(self, saved_argus_model):
-        path, model = saved_argus_model
+        optimizer_state, path, model = saved_argus_model
         loaded_model = load_model(path, device='cpu')
 
         assert loaded_model.params == model.params
@@ -40,8 +46,14 @@ class TestLoadModel:
         with pytest.raises(AssertionError):
             assert check_weights(model, loaded_model)
 
+        if optimizer_state:
+            assert torch.all(loaded_model.optimizer.state_dict()['state'][0]['momentum_buffer']
+                             == model.optimizer.state_dict()['state'][0]['momentum_buffer'])
+        else:
+            assert loaded_model.optimizer.state_dict()['state'] == {}
+
     def test_none_attributes(self, saved_argus_model):
-        path, model = saved_argus_model
+        optimizer_state, path, model = saved_argus_model
         assert load_model(path, optimizer=None).optimizer is None
         assert load_model(path, loss=None).loss is None
         assert load_model(path, prediction_transform=None).prediction_transform is None
@@ -49,42 +61,43 @@ class TestLoadModel:
             assert load_model(path, nn_module=None)
 
     def test_replace_nn_module_params(self, saved_argus_model):
-        path, model = saved_argus_model
-        nn_module_params = ('VisionNet', {
-            'n_channels': 3,
-            'n_classes': 1,
-            'p_dropout': 0.42
+        optimizer_state, path, model = saved_argus_model
+        nn_module_params = ('LinearNet', {
+            'in_features': 4,
+            'out_features': 1,
+            'sigmoid': True
         })
         loaded_model = load_model(path, nn_module=nn_module_params)
-        assert loaded_model.nn_module.p_dropout == 0.42
+        assert loaded_model.nn_module.sigmoid
         assert loaded_model.params['nn_module'] == nn_module_params
-        assert loaded_model.nn_module.p_dropout != model.nn_module.p_dropout
+        assert not model.nn_module.sigmoid
 
     def test_replace_optimizer_params(self, saved_argus_model):
-        path, model = saved_argus_model
-        optimizer_params = ('SGD', {'lr': 0.42})
-        loaded_model = load_model(path, optimizer=optimizer_params)
-        assert isinstance(loaded_model.optimizer, torch.optim.SGD)
+        optimizer_state, path, model = saved_argus_model
+        optimizer_params = ('Adam', {'lr': 0.42})
+        loaded_model = load_model(path, optimizer=optimizer_params,
+                                  change_state_dict_func=lambda nn, optim: (nn, None))
+        assert isinstance(loaded_model.optimizer, torch.optim.Adam)
         assert loaded_model.get_lr() == 0.42
         assert loaded_model.params['optimizer'] == optimizer_params
-        assert not isinstance(model.optimizer, torch.optim.SGD)
+        assert not isinstance(model.optimizer, torch.optim.Adam)
 
     def test_replace_loss_params(self, saved_argus_model):
-        path, model = saved_argus_model
+        optimizer_state, path, model = saved_argus_model
         loaded_model = load_model(path, loss='BCEWithLogitsLoss')
         assert isinstance(loaded_model.loss, nn.BCEWithLogitsLoss)
         assert loaded_model.params['loss'] == 'BCEWithLogitsLoss'
         assert not isinstance(model.loss, nn.BCEWithLogitsLoss)
 
     def test_replace_prediction_transform_params(self, saved_argus_model):
-        path, model = saved_argus_model
+        optimizer_state, path, model = saved_argus_model
         loaded_model = load_model(path, prediction_transform='Sigmoid')
         assert isinstance(loaded_model.prediction_transform, nn.Sigmoid)
         assert loaded_model.params['prediction_transform'] == 'Sigmoid'
         assert not isinstance(model.prediction_transform, nn.Sigmoid)
 
     def test_replace_kwargs_params(self, saved_argus_model):
-        path, model = saved_argus_model
+        optimizer_state, path, model = saved_argus_model
         loaded_model = load_model(path, new_param={"qwerty": 42})
         assert loaded_model.params['new_param'] == {"qwerty": 42}
 
@@ -96,7 +109,10 @@ class TestLoadModel:
                                 saved_argus_model,
                                 linear_net_class,
                                 vision_net_class):
-        path, model = saved_argus_model
+        optimizer_state, path, model = saved_argus_model
+
+        if optimizer_state:
+            return
 
         class ArgusReplaceModel(Model):
             nn_module = {
@@ -116,12 +132,17 @@ class TestLoadModel:
             load_model(path, model_name='Qwerty')
 
     def test_change_state_dict_func(self, saved_argus_model):
-        path, model = saved_argus_model
+        optimizer_state, path, model = saved_argus_model
 
         def change_state_dict_func(nn_state_dict, optimizer_state_dict):
             nn_state_dict['fc.weight'][0][0] = 0
+            if optimizer_state:
+                optimizer_state_dict['param_groups'][0]['lr'] = 0.123
             return nn_state_dict, optimizer_state_dict
 
         loaded_model = load_model(path, change_state_dict_func=change_state_dict_func)
         assert loaded_model.nn_module.state_dict()['fc.weight'][0][0] == 0
         assert model.nn_module.state_dict()['fc.weight'][0][0] != 0
+        if optimizer_state:
+            assert loaded_model.get_lr() == 0.123
+            assert model.get_lr() != 0.123

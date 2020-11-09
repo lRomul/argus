@@ -81,3 +81,16 @@ class TestModelMethod:
         linear_argus_model_instance.save(path)
         model = load_model(path, device='cpu')
         assert model.params == linear_argus_model_instance.params
+
+        state = torch.load(path)
+        assert set(state.keys()) == {'model_name', 'params', 'nn_state_dict'}
+
+    def test_save_with_optimizer_state(self, tmpdir, linear_argus_model_instance):
+        path = str(tmpdir.mkdir("experiment").join("model.pth"))
+        linear_argus_model_instance.save(path, optimizer_state=True)
+        model = load_model(path, device='cpu')
+        assert model.params == linear_argus_model_instance.params
+
+        state = torch.load(path)
+        assert set(state.keys()) == {'model_name', 'params',
+                                     'nn_state_dict', 'optimizer_state_dict'}
