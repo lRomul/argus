@@ -135,7 +135,7 @@ def linear_argus_model_instance(argus_model_class, poly_degree):
             'out_features': 1,
             'sigmoid': False
         }),
-        'optimizer': ('SGD', {'lr': 0.01, 'momentum': 0.9}),
+        'optimizer': ('SGD', {'lr': 0.01, 'momentum': 0.42}),
         'loss': 'SmoothL1Loss',
         'prediction_transform': 'Identity',
         'device': 'cpu'

@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
     model = TimmModel(params)
     model_path = 'model_load.pth'
-    model.save(model_path)
+    model.save(model_path, optimizer_state=True)
     del model
 
     loaded_model = load_model(model_path)
@@ -43,22 +43,33 @@ if __name__ == "__main__":
             'in_chans': 1,
             'drop_rate': 0.6,
             'drop_path_rate': 0.4
-        }
+        },
+        optimizer=None,
+        loss=None
     )
     print("Change nn_module params:", loaded_model.params)
+    print(f"Load model without optimizer '{loaded_model.optimizer}' "
+          f"and loss '{loaded_model.loss}'")
+    assert loaded_model.predict_ready()
+    assert not loaded_model.train_ready()
 
     def pretrain_to_false(params):
         params['nn_module']['pretrained'] = True
         return params
 
-    loaded_model = load_model(model_path, optimizer=None, loss=None,
-                              change_params_func=pretrain_to_false)
+    def reset_optimizer_and_zero_classifier(nn_state_dict, optimizer_state_dict):
+        # Here you can change nn_module state dict
+        nn_state_dict['classifier.weight'][:] = 0
+        return nn_state_dict, None
 
-    print(f"Load model without optimizer '{loaded_model.optimizer}' "
-          f"and loss '{loaded_model.loss}'")
+    loaded_model = load_model(model_path, optimizer=('SGD', {'lr': 0.01}),
+                              change_params_func=pretrain_to_false,
+                              change_state_dict_func=reset_optimizer_and_zero_classifier)
+
     print("Set pretrain to False with 'change_params_func'", loaded_model.params)
-    assert loaded_model.predict_ready()
-    assert not loaded_model.train_ready()
+    print("New optimizer:", loaded_model.optimizer)
+    print("Classifier weights sum",
+          loaded_model.nn_module.classifier.weight.sum().item())
 
     loaded_model = load_model(model_path, model_name='AnotherTimmModel')
     assert isinstance(loaded_model, AnotherTimmModel)
