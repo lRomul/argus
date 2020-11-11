@@ -5,6 +5,7 @@ argus.model
 
 .. autoclass:: Model
    :members:
+   :inherited-members:
 
 Load argus model
 ----------------

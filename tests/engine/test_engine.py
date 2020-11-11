@@ -90,7 +90,7 @@ class TestEngineMethods:
         engine.add_event_handler(Events.ITERATION_COMPLETE, stop_function)
         state = engine.run(data_loader, start_epoch=0, end_epoch=3)
         assert step_storage.batch_lst == [data_loader[0]]
-        assert state.iteration == 1
+        assert state.iteration == 0
 
         class CustomException(Exception):
             pass
