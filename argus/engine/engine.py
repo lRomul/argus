@@ -9,10 +9,27 @@ from typing import Callable, Optional, Iterable, Dict, Any
 
 
 class EventEnum(Enum):
+    """Base class for engine events. User defined custom events should also
+    inherit this class. Example of creating custom events you can find
+    `here <https://github.com/lRomul/argus/blob/master/examples/custom_events.py>`_.
+    """
     pass
 
 
 class Events(EventEnum):
+    """Events that are fired by the :class:`argus.engine.Engine` during running.
+
+    Built-in events:
+
+    - START : trigger callback method ``start`` on start of engine's run.
+    - COMPLETE : trigger callback method ``complete`` on end of engine's run.
+    - EPOCH_START : trigger callback method ``epoch_start`` on start of the epoch.
+    - EPOCH_COMPLETE : trigger callback method ``epoch_complete`` on end of the epoch.
+    - ITERATION_START : trigger callback method ``iteration_start`` on start of the iteration.
+    - ITERATION_COMPLETE : trigger callback method ``iteration_complete`` on end of the iteration.
+    - CATCH_EXCEPTION : trigger callback method ``catch_exception`` on catching of exception.
+    """
+
     START = "start"
     COMPLETE = "complete"
     EPOCH_START = "epoch_start"
@@ -40,7 +57,7 @@ class State:
         exception (BaseException, optional): Catched exception.
         engine (Engine, optional): :class:`argus.engine.Engine` that uses this
             object of state.
-        phase (str): A phase of training `{"", "train", "test"}` this state
+        phase (str): A phase of training ``{"", "train", "test"}`` this state
             was created for.
         batch (Any): Batch took from a data loader on the current iteration.
         step_output (Any): Current output from `step_function` on current
