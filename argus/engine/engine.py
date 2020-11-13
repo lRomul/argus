@@ -17,17 +17,18 @@ class EventEnum(Enum):
 
 
 class Events(EventEnum):
-    """Events that are fired by the :class:`argus.engine.Engine` during running.
+    """Events that are fired by the :class:`argus.engine.Engine` during
+    running.
 
     Built-in events:
 
-    - START : trigger callback method ``start`` on start of engine's run.
-    - COMPLETE : trigger callback method ``complete`` on end of engine's run.
-    - EPOCH_START : trigger callback method ``epoch_start`` on start of the epoch.
-    - EPOCH_COMPLETE : trigger callback method ``epoch_complete`` on end of the epoch.
-    - ITERATION_START : trigger callback method ``iteration_start`` on start of the iteration.
-    - ITERATION_COMPLETE : trigger callback method ``iteration_complete`` on end of the iteration.
-    - CATCH_EXCEPTION : trigger callback method ``catch_exception`` on catching of exception.
+    - START : triggered when engine's run is started.
+    - COMPLETE : triggered when engine's run is completed.
+    - EPOCH_START : triggered when the epoch is started.
+    - EPOCH_COMPLETE : triggered when the epoch is ended.
+    - ITERATION_START : triggered when an iteration is started.
+    - ITERATION_COMPLETE : triggered when the iteration is ended.
+    - CATCH_EXCEPTION : triggered on catching of exception.
     """
 
     START = "start"
@@ -71,7 +72,8 @@ class State:
     def __init__(self, **kwargs):
         """
         Args:
-            **kwargs: Init attributes using kwargs.
+            **kwargs: Initial attributes of the state.
+
         """
         self.iteration: Optional[int] = None
         self.epoch: Optional[int] = None
@@ -92,15 +94,38 @@ class State:
 
     def update(self, **kwargs):
         """
+        Update state attributes.
+
         Args:
             **kwargs: Update attributes using kwargs
+
         """
         for key, value in kwargs.items():
             setattr(self, key, value)
 
 
 class Engine:
+    """Runs ``step_function`` over each batch of a data loader with triggering
+    event handlers.
+    The class is highly inspired by State from
+    `pytorch-ignite <https://github.com/pytorch/ignite>`_.
+
+    Attributes:
+        state (State): Stores internal and user-defined variables during
+            a run of the engine.
+        step_function (Callable): Function that takes batch from data loader
+            and return step output.
+        event_handlers (Dict[List]): Dictionary that stores event handlers.
+    """
+
     def __init__(self, step_function: Callable, **kwargs):
+        """
+        Args:
+            step_function (Callable): Function that takes batch from data
+                loader and returns step output.
+            **kwargs: Initial attributes of the state.
+
+        """
         self.event_handlers = defaultdict(list)
         self.step_function = step_function
         self.state = State(
