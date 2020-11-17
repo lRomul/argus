@@ -22,13 +22,13 @@ class Events(EventEnum):
 
     Built-in events:
 
-    - START : triggered when engine's run is started.
-    - COMPLETE : triggered when engine's run is completed.
+    - START : triggered when the engine's run is started.
+    - COMPLETE : triggered when the engine's run is completed.
     - EPOCH_START : triggered when the epoch is started.
     - EPOCH_COMPLETE : triggered when the epoch is ended.
     - ITERATION_START : triggered when an iteration is started.
     - ITERATION_COMPLETE : triggered when the iteration is ended.
-    - CATCH_EXCEPTION : triggered on catching of exception.
+    - CATCH_EXCEPTION : triggered on catching of an exception.
     """
 
     START = "start"
@@ -42,8 +42,8 @@ class Events(EventEnum):
 
 class State:
     """A state used to store internal and user-defined variables during a run
-    of :class:`argus.engine.Engine`. The class is highly inspired by State from
-    `pytorch-ignite <https://github.com/pytorch/ignite>`_.
+    of :class:`argus.engine.Engine`. The class is highly inspired by the State
+    from `pytorch-ignite <https://github.com/pytorch/ignite>`_.
 
     By default, the state contains the following attributes.
 
@@ -106,23 +106,22 @@ class State:
 
 class Engine:
     """Runs ``step_function`` over each batch of a data loader with triggering
-    event handlers.
-    The class is highly inspired by State from
+    event handlers. The class is highly inspired by the Engine from
     `pytorch-ignite <https://github.com/pytorch/ignite>`_.
 
     Attributes:
         state (State): Stores internal and user-defined variables during
             a run of the engine.
         step_function (Callable): Function that takes batch from data loader
-            and return step output.
+            and state returns step output.
         event_handlers (Dict[List]): Dictionary that stores event handlers.
     """
 
     def __init__(self, step_function: Callable, **kwargs):
         """
         Args:
-            step_function (Callable): Function that takes batch from data
-                loader and returns step output.
+            step_function (Callable): Function that takes ``batch, state`` and
+                returns step output.
             **kwargs: Initial attributes of the state.
 
         """
@@ -135,12 +134,26 @@ class Engine:
         )
 
     def add_event_handler(self, event: EventEnum, handler: Callable, *args, **kwargs):
+        """Add an event handler to be executed when the event is triggered.
+
+        Args:
+            event (EventEnum): An event that will be associated with the handler.
+            handler (Callable): A callable handler that will be executed.
+            *args, **kwargs: optional arguments to be passed to the handler.
+
+        """
         if not isinstance(event, EventEnum):
             raise TypeError(f"Event should be 'argus.engine.EventEnum' enum")
 
         self.event_handlers[event].append((handler, args, kwargs))
 
     def raise_event(self, event: EventEnum):
+        """Execute all the handlers associated with the given event.
+
+        Args:
+           event (EventEnum): An event that will be triggered.
+
+        """
         if not isinstance(event, EventEnum):
             raise TypeError(f"Event should be 'argus.engine.EventEnum' enum")
 
@@ -149,6 +162,19 @@ class Engine:
                 handler(self.state, *args, **kwargs)
 
     def run(self, data_loader: Iterable, start_epoch=0, end_epoch=1) -> State:
+        """Run ``step_function`` on each batch from data loader
+            ``end_epoch - start_epoch`` times.
+
+        Args:
+            data_loader (Iterable): An iterable collection that returns
+                batches.
+            start_epoch (int): Number of the first epoch.
+            end_epoch (int): One above the largest epoch number.
+
+        Returns:
+            state (State): An engine state.
+
+        """
         self.state.update(data_loader=data_loader,
                           epoch=start_epoch,
                           iteration=0,
