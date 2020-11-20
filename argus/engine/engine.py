@@ -1,4 +1,4 @@
-"""Events, State and Engine in the current file are highly inspired by
+"""Events, State, and Engine in the current file are highly inspired by
 pytorch-ignite (https://github.com/pytorch/ignite).
 """
 
@@ -137,9 +137,12 @@ class Engine:
         """Add an event handler to be executed when the event is triggered.
 
         Args:
-            event (EventEnum): An event that will be associated with the handler.
-            handler (Callable): A callable handler that will be executed.
-            *args, **kwargs: optional arguments to be passed to the handler.
+            event (EventEnum): An event that will be associated with the
+                handler.
+            handler (Callable): A callable handler that will be executed on
+                the event.
+            *args: optional args arguments to be passed to the handler.
+            **kwargs: optional kwargs arguments to be passed to the handler.
 
         """
         if not isinstance(event, EventEnum):
