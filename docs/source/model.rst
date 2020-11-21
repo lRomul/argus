@@ -1,6 +1,9 @@
 argus.model
 ===========
 
+Model
+-----
+
 .. currentmodule:: argus.model
 
 .. autoclass:: Model

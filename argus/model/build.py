@@ -1,4 +1,4 @@
-from typing import Callable, Union
+from typing import Callable, Union, List
 import collections
 import warnings
 import logging
@@ -199,12 +199,45 @@ class BuildModel(metaclass=ModelMeta):
         return logger
 
     def get_nn_module(self) -> nn.Module:
+        """Get nn_module without :class:`torch.nn.DataParallel` or
+        :class:`torch.nn.parallel.DistributedDataParallel`.
+
+        Returns:
+            nn.Module: nn_module
+
+        """
         if isinstance(self.nn_module, (DataParallel, DistributedDataParallel)):
             return self.nn_module.module
         else:
             return self.nn_module
 
-    def set_device(self, device: Union[str, torch.device]):
+    def set_device(self, device: Union[str, torch.device,
+                                       List[Union[str, torch.device]]]):
+        """Move nn_module and loss to the specified device.
+
+        If a list of devices is passed, :class:`torch.nn.DataParallel` will be
+        used. Batch tensors will be scattered on dim 0. The first device in the
+        list is the location of the output. By default, device "cuda" is one
+        GPU training on :func:`torch.cuda.current_device`.
+
+        Example:
+
+            .. code-block:: python
+
+                model.set_device("cuda")
+                model.set_device(torch.device("cuda"))
+
+                model.set_device("cuda:0")
+                model.set_device(["cuda:2", "cuda:3"])  # Use DataParallel
+
+                model.set_device([torch.device("cuda:2"),
+                                  torch.device("cuda", index=3)])
+
+        Args:
+            device (Union[str, torch.device, List[Union[str, torch.device]]]):
+                A device or list of devices.
+
+        """
         device = cast_device(device)
         str_device = device_to_str(device)
         nn_module = self.get_nn_module()

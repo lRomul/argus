@@ -67,14 +67,12 @@ class State:
         stopped (bool): Boolean indicates :class:`argus.engine.Engine` is
             stopped or not.
 
+    Args:
+        **kwargs: Initial attributes of the state.
+
     """
 
     def __init__(self, **kwargs):
-        """
-        Args:
-            **kwargs: Initial attributes of the state.
-
-        """
         self.iteration: Optional[int] = None
         self.epoch: Optional[int] = None
         self.model: Optional['argus.model.Model'] = None
@@ -115,16 +113,15 @@ class Engine:
         step_function (Callable): Function that takes batch from data loader
             and state returns step output.
         event_handlers (Dict[List]): Dictionary that stores event handlers.
+
+    Args:
+        step_function (Callable): Function that takes ``batch, state`` and
+            returns step output.
+        **kwargs: Initial attributes of the state.
+
     """
 
     def __init__(self, step_function: Callable, **kwargs):
-        """
-        Args:
-            step_function (Callable): Function that takes ``batch, state`` and
-                returns step output.
-            **kwargs: Initial attributes of the state.
-
-        """
         self.event_handlers = defaultdict(list)
         self.step_function = step_function
         self.state = State(
@@ -166,7 +163,7 @@ class Engine:
 
     def run(self, data_loader: Iterable, start_epoch=0, end_epoch=1) -> State:
         """Run ``step_function`` on each batch from data loader
-            ``end_epoch - start_epoch`` times.
+        ``end_epoch - start_epoch`` times.
 
         Args:
             data_loader (Iterable): An iterable collection that returns
