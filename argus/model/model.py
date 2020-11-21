@@ -40,7 +40,64 @@ def _attach_metrics(engine, metrics):
 
 
 class Model(BuildModel):
-    """Model
+    """Argus model is an abstraction of trainer/predictor that uses:
+
+    Attributes:
+        nn_module (torch.nn.Module): PyTorch model as :class:`torch.nn.Module`.
+        optimizer (torch.optim.Optimizer): Optimizer as
+            :class:`torch.optim.Optimizer`.
+        loss (torch.nn.Module): Loss as :class:`torch.nn.Module`.
+        device: (torch.device): device as :class:`torch.torch.device`.
+        prediction_transform (Callable): postprocessing function of predictions
+            as :class:`Callable` function or object.
+
+    Args:
+        params (dict): A model parameters.
+
+    Examples:
+
+        Set parameters for each part of the model.
+
+        .. code-block:: python
+
+            class MnistModel(argus.Model):
+                nn_module = Net  # torch.nn.Module
+                optimizer = torch.optim.SGD
+                loss = torch.nn.CrossEntropyLoss
+
+            params = {
+                'nn_module': {'n_classes': 10, 'p_dropout': 0.1},
+                'optimizer': {'lr': 0.01},
+                'device': 'cpu'
+            }
+
+            model = MnistModel(params)
+
+        Select parts of the model from multiple options using a tuple where the
+        first element is a name, second is init arguments.
+
+        .. code-block:: python
+
+            from torchvision.models import resnet18
+
+            class FlexModel(argus.Model):
+                nn_module = {
+                    'net': Net,
+                    'resnet18': resnet18
+                }
+
+            params = {
+                'nn_module': ('resnet18', {
+                    'pretrained': False,
+                    'num_classes': 1
+                }),
+                'optimizer': ('Adam', {'lr': 0.01}),
+                'loss': 'CrossEntropyLoss',
+                'device': 'cuda'
+            }
+
+            model = FlexModel(params)
+
     """
 
     def __init__(self, params: dict):

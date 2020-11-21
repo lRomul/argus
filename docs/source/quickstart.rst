@@ -131,7 +131,7 @@ necessary to define them in argus model.
         }
 
 
-Create a model instance. Parameters for nn_module is a tuple where the first element is a name, second is arguments.
+Create a model instance. Parameters for nn_module is a tuple where the first element is a name, second is init arguments.
 PyTorch losses and optimizers can be selected by a string with a class name.
 
 .. code-block:: python

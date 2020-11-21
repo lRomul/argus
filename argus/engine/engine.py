@@ -47,6 +47,9 @@ class State:
 
     By default, the state contains the following attributes.
 
+    Args:
+        **kwargs: Initial attributes of the state.
+
     Attributes:
         iteration (int, optional): Iteration, the first iteration is 0.
         epoch (int, optional): Epoch, the first iteration is 0.
@@ -66,9 +69,6 @@ class State:
         metrics (Dict[str, float]): Dictionary with metrics values.
         stopped (bool): Boolean indicates :class:`argus.engine.Engine` is
             stopped or not.
-
-    Args:
-        **kwargs: Initial attributes of the state.
 
     """
 
@@ -107,17 +107,17 @@ class Engine:
     event handlers. The class is highly inspired by the Engine from
     `pytorch-ignite <https://github.com/pytorch/ignite>`_.
 
+    Args:
+        step_function (Callable): Function that takes ``batch, state`` and
+            returns step output.
+        **kwargs: Initial attributes of the state.
+
     Attributes:
         state (State): Stores internal and user-defined variables during
             a run of the engine.
         step_function (Callable): Function that takes batch from data loader
             and state returns step output.
         event_handlers (Dict[List]): Dictionary that stores event handlers.
-
-    Args:
-        step_function (Callable): Function that takes ``batch, state`` and
-            returns step output.
-        **kwargs: Initial attributes of the state.
 
     """
 
