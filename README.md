@@ -17,13 +17,16 @@ __/\\\/////////\\\_\/\\\_____\/\\\____/\\\_____________\/\\\_______\/\\\__\//\\\
 [![codecov](https://codecov.io/gh/lRomul/argus/branch/master/graph/badge.svg)](https://codecov.io/gh/lRomul/argus)
 [![Downloads](https://pepy.tech/badge/pytorch-argus)](https://pepy.tech/project/pytorch-argus)
 
-Argus is easy-to-use flexible library for training neural networks in PyTorch.
+Argus is a lightweight flexible library for training neural networks in PyTorch.
 
 ## Documentation
 
 https://pytorch-argus.readthedocs.io
 
 ## Installation
+
+Requirements: 
+* torch>=1.1.0
 
 From pip:
 

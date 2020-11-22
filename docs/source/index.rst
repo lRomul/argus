@@ -10,7 +10,7 @@
        _\/\\\_______\/\\\_\/\\\______\//\\\_\//\\\\\\\\\\\\/___\///\\\\\\\\\/___\///\\\\\\\\\\\/
         _\///________\///__\///________\///___\////////////_______\/////////_______\///////////_
 
-Argus is easy-to-use flexible library for training neural networks in PyTorch.
+Argus is a lightweight flexible library for training neural networks in PyTorch.
 
 Project info
 ------------
@@ -19,6 +19,10 @@ Project info
 
 Installation
 ------------
+
+Requirements:
+
+* torch>=1.1.0
 
 You can use pip to install argus:
 
@@ -30,7 +34,7 @@ If you want to get the latest version of the code before it is released on PyPI 
 
 .. code:: bash
 
-    pip install -U git+https://github.com/lRomul/argus.git
+    pip install -U git+https://github.com/lRomul/argus.git@dev
 
 
 .. toctree::

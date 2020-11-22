@@ -126,7 +126,7 @@ class Metric(Callback, metaclass=MetricMeta):
 
             model.fit(train_loader,
                       val_loader=val_loader,
-                      metrics=['map_at_k'],  # or the same: metrics=[MAPatK()]
+                      metrics=['map_at_k'],  # or the same: metrics=[MAPatK(k=3)]
                       callbacks=callbacks)
 
     """
