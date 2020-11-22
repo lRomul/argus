@@ -52,13 +52,28 @@ def load_model(file_path: Union[str, Path],
         model_name (str): Class name of :class:`argus.model.Model`.
             By default uses name from loaded state.
 
+    Returns:
+        :class:`argus.model.Model`: Loaded argus model.
+
+    Example:
+
+        .. code-block:: python
+
+            model = ArgusModel(params)
+            model.save(model_path, optimizer_state=True)
+
+            # restarting python...
+
+            # ArgusModel class must be in scope at this moment
+            model = argus.load_model(model_path, device="cuda:0")
+
+        More options how to use load_model you can find
+        `here <https://github.com/lRomul/argus/blob/master/examples/load_model.py>`_.
+
     Raises:
         ImportError: If the model is not available in the scope. Often it means
             that it is not imported or defined.
         FileNotFoundError: If the file is not found by the *file_path*.
-
-    Returns:
-        :class:`argus.model.Model`: Loaded argus model.
 
     """
 

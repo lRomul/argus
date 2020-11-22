@@ -40,7 +40,7 @@ class Callback:
                 def __init__(self, time_limit: int):
                     self.time_limit = time_limit
                     self.start_time = 0
-            
+
                 def start(self, state: State):
                     self.start_time = time()
 

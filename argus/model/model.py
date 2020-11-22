@@ -109,7 +109,7 @@ class Model(BuildModel):
         The method is used by :class:`argus.engine.Engine`.
         The train step includes input and target tensor transition to the model
         device, forward pass, loss evaluation, backward pass, and the train
-        batch prediction preparation with a *prediction_transform*.
+        batch prediction preparation with a prediction_transform.
 
         Args:
             batch (tuple of 2 torch.Tensors: (input, target)): The input data
@@ -149,7 +149,7 @@ class Model(BuildModel):
         The method is used by :class:`argus.engine.Engine`.
         The validation step includes input and target tensor transition to the
         model device, forward pass, loss evaluation, and the train batch
-        prediction preparation with a *prediction_transform*.
+        prediction preparation with a prediction_transform.
 
         Gradient calculations and the model weights update are omitted, which
         is the main difference with the :meth:`train_step`
