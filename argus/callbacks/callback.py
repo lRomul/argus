@@ -17,13 +17,13 @@ class Callback:
     The actions should be specified within corresponding methods that take the
     :class:`argus.engine.State` as input:
 
-    * ``start``
-    * ``complete``
-    * ``epoch_start``
-    * ``epoch_complete``
-    * ``iteration_start``
-    * ``iteration_complete``
-    * ``catch_exception``
+    * ``start`` : triggered when the training is started.
+    * ``complete`` : triggered when the training is completed.
+    * ``epoch_start`` : triggered when the epoch is started.
+    * ``epoch_complete`` : triggered when the epoch is ended.
+    * ``iteration_start`` : triggered when an iteration is started.
+    * ``iteration_complete`` : triggered when the iteration is ended.
+    * ``catch_exception`` : triggered on catching of an exception.
 
     Example:
 
@@ -36,20 +36,20 @@ class Callback:
             from argus.engine import State
             from argus.callbacks.callback import Callback
 
-
             class TimerCallback(Callback):
                 def __init__(self, time_limit: int):
                     self.time_limit = time_limit
                     self.start_time = 0
-
-                def epoch_start(self, state: State):
-                    if state.epoch == 0:
-                         self.start_time = time()
+            
+                def start(self, state: State):
+                    self.start_time = time()
 
                 def iteration_complete(self, state: State):
                     if time() - self.start_time > self.time_limit:
                         state.stopped = True
-                        state.logger.info("Run out of time!")
+                        state.logger.info(f"Run out of time {self.time_limit} sec, "
+                                          f"{(state.epoch + 1) * (state.iteration + 1)} "
+                                          f"iterations performed!")
 
         Example of creating custom events you can find
         `here <https://github.com/lRomul/argus/blob/master/examples/custom_events.py>`_.
