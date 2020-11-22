@@ -42,9 +42,10 @@ If you want to get the latest version of the code before it is released on PyPI 
 
 .. toctree::
    :maxdepth: 2
-   :caption: Package Reference
+   :caption: Modules
 
    model
-   callbacks/index
-   engine/index
-   metrics/index
+   callbacks
+   metrics
+   engine
+

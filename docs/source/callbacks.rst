@@ -10,7 +10,7 @@ argus.callbacks
    :maxdepth: 2
    :caption: Сallbacks
 
-   ./checkpoints
-   ./early_stopping
-   ./lr_schedulers
-   ./logging
+   ./callbacks/checkpoints
+   ./callbacks/early_stopping
+   ./callbacks/lr_schedulers
+   ./callbacks/logging

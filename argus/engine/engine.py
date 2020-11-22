@@ -22,13 +22,13 @@ class Events(EventEnum):
 
     Built-in events:
 
-    - START : triggered when the engine's run is started.
-    - COMPLETE : triggered when the engine's run is completed.
-    - EPOCH_START : triggered when the epoch is started.
-    - EPOCH_COMPLETE : triggered when the epoch is ended.
-    - ITERATION_START : triggered when an iteration is started.
-    - ITERATION_COMPLETE : triggered when the iteration is ended.
-    - CATCH_EXCEPTION : triggered on catching of an exception.
+    - ``START``: triggered when the engine's run is started.
+    - ``COMPLETE``: triggered when the engine's run is completed.
+    - ``EPOCH_START``: triggered when the epoch is started.
+    - ``EPOCH_COMPLETE``: triggered when the epoch is ended.
+    - ``ITERATION_START``: triggered when an iteration is started.
+    - ``ITERATION_COMPLETE``: triggered when the iteration is ended.
+    - ``CATCH_EXCEPTION``: triggered on catching of an exception.
     """
 
     START = "start"

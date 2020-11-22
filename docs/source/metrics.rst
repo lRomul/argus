@@ -3,9 +3,6 @@ argus.metrics
 
 .. currentmodule:: argus.metrics
 
-Base
-----
-
 .. autoclass:: Metric
    :members:
 

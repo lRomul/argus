@@ -7,22 +7,8 @@ Basic examples
 --------------
 
 * `MNIST example. <https://github.com/lRomul/argus/blob/master/examples/mnist.py>`_
-
-    .. code:: bash
-
-        python mnist.py --device cuda
-
 * `MNIST VAE example. <https://github.com/lRomul/argus/blob/master/examples/mnist_vae.py>`_
-
-    .. code:: bash
-
-        python mnist_vae.py --device cuda
-
 * `CIFAR example. <https://github.com/lRomul/argus/blob/master/examples/cifar_simple.py>`_
-
-    .. code:: bash
-
-        python cifar_simple.py --device cuda
 
 Advanced examples
 -----------------

@@ -18,13 +18,13 @@ class Callback:
     The actions should be specified within corresponding methods that take the
     :class:`argus.engine.State` as input:
 
-    * ``start`` : triggered when the training is started.
-    * ``complete`` : triggered when the training is completed.
-    * ``epoch_start`` : triggered when the epoch is started.
-    * ``epoch_complete`` : triggered when the epoch is ended.
-    * ``iteration_start`` : triggered when an iteration is started.
-    * ``iteration_complete`` : triggered when the iteration is ended.
-    * ``catch_exception`` : triggered on catching of an exception.
+    * ``start``: triggered when the training is started.
+    * ``complete``: triggered when the training is completed.
+    * ``epoch_start``: triggered when the epoch is started.
+    * ``epoch_complete``: triggered when the epoch is ended.
+    * ``iteration_start``: triggered when an iteration is started.
+    * ``iteration_complete``: triggered when the iteration is ended.
+    * ``catch_exception``: triggered on catching of an exception.
 
     Example:
 
