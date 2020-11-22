@@ -1,4 +1,4 @@
-FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu18.04
+FROM nvidia/cuda:11.0-cudnn8-devel-ubuntu18.04
 
 RUN apt-get update &&\
     apt-get -y install build-essential yasm nasm \
@@ -13,12 +13,13 @@ RUN apt-get update &&\
     rm -rf /var/lib/apt/lists/* &&\
     rm -rf /var/cache/apt/archives/*
 
-RUN pip3 install --no-cache-dir numpy==1.19.1
+RUN pip3 install --no-cache-dir numpy==1.19.4
 
 # Install PyTorch
 RUN pip3 install --no-cache-dir \
-    torch==1.7.0 \
-    torchvision==0.8.1
+    torch==1.7.0+cu110 \
+    torchvision==0.8.1+cu110 \
+    -f https://download.pytorch.org/whl/torch_stable.html
 
 # Install Apex
 RUN git clone https://github.com/NVIDIA/apex && cd apex &&\
