@@ -24,22 +24,17 @@ readme = read('README.md')
 VERSION = find_version('argus', '__init__.py')
 
 setup(
-    # Metadata
     name='pytorch-argus',
     version=VERSION,
     author='Ruslan Baikulov',
     author_email='ruslan1123@gmail.com',
     url='https://github.com/lRomul/argus',
-    description='Easy high-level library for training neural networks in PyTorch.',
+    description='Argus is a lightweight flexible library for training neural networks in PyTorch.',
     long_description=readme,
     long_description_content_type='text/markdown',
     license='MIT',
-
-    # Package info
-    packages=find_packages(),
-
+    packages=find_packages(exclude=("tests", "tests.*",)),
     zip_safe=True,
-
     python_requires='>=3.6',
     classifiers=[
         'Development Status :: 4 - Beta',

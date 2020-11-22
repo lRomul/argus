@@ -27,17 +27,17 @@ RUN git clone https://github.com/NVIDIA/apex && cd apex &&\
     --global-option="--cpp_ext" \
     --global-option="--cuda_ext" ./
 
-# Install python ML packages
-RUN pip3 install --no-cache-dir \
-    notebook==6.1.5 \
-    cnn-finetune==0.6.0 \
-    timm==0.3.1 \
-    pytest==6.1.2 \
-    pytest-cov==2.10.1
-
 # Docs requirements
 COPY ./docs/requirements.txt /docs_requirements.txt
 RUN pip3 install --no-cache-dir -r /docs_requirements.txt
+
+# Tests requirements
+COPY ./tests/requirements.txt /tests_requirements.txt
+RUN pip3 install --no-cache-dir -r /tests_requirements.txt
+
+# Examples requirements
+COPY ./examples/requirements.txt /examples_requirements.txt
+RUN pip3 install --no-cache-dir -r /examples_requirements.txt
 
 ENV PYTHONPATH $PYTHONPATH:/workdir
 
