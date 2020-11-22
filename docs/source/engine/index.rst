@@ -3,14 +3,23 @@ argus.engine
 
 .. currentmodule:: argus.engine
 
-.. autoclass:: EventEnum
-   :members:
+Events
+------
 
 .. autoclass:: Events
    :members:
 
+.. autoclass:: EventEnum
+   :members:
+
+State
+-----
+
 .. autoclass:: State
    :members:
+
+Engine
+------
 
 .. autoclass:: Engine
    :members:

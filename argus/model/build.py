@@ -234,8 +234,8 @@ class BuildModel(metaclass=ModelMeta):
                                   torch.device("cuda", index=3)])
 
         Args:
-            device (Union[str, torch.device, List[Union[str, torch.device]]]):
-                A device or list of devices.
+            device (str, torch.device or list of devices): A device or list of
+                devices.
 
         """
         device = cast_device(device)
