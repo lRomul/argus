@@ -47,5 +47,5 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
     ],
-    install_requires=['torch>=1.1.0'],
+    install_requires=read('requirements.txt').split(),
 )
