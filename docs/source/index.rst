@@ -47,3 +47,4 @@ If you want to get the latest version of the code before it is released on PyPI 
    model
    callbacks/index
    engine/index
+   metrics/index

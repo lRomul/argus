@@ -3,6 +3,11 @@ from argus.utils import AverageMeter
 
 
 class Loss(Metric):
+    """Accumulates the average of a loss function. By default used by
+    :meth:`argus.model.Model.fit`.
+
+    """
+
     name = 'loss'
 
     def __init__(self):

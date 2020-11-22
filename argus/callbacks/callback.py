@@ -8,7 +8,8 @@ from argus.engine import Events, EventEnum
 
 
 class Callback:
-    """Base callback class. All callbacks classes should inherit the class.
+    """Base callback class. All callbacks classes should inherit from this
+    class.
 
     A callback may execute actions on the start and the end of the whole
     training process, each epoch or iteration, as well as any other custom

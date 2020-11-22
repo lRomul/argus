@@ -161,7 +161,7 @@ class Model(BuildModel):
             state (:class:`argus.engine.State`): The argus model state.
 
         Returns:
-            dict: The train step results::
+            dict: Default train step results::
 
                 {
                     'prediction': The train batch predictions,

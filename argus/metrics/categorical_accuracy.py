@@ -4,6 +4,8 @@ from argus.metrics.metric import Metric
 
 
 class CategoricalAccuracy(Metric):
+    """Calculates the accuracy for multiclass classification."""
+
     name = 'accuracy'
     better = 'max'
 
