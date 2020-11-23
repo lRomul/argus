@@ -3,8 +3,14 @@ argus.callbacks
 
 .. currentmodule:: argus.callbacks
 
+Base callback
+-------------
+
 .. autoclass:: Callback
    :members:
+
+Callbacks
+---------
 
 .. toctree::
    :maxdepth: 2

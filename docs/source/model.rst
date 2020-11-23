@@ -1,10 +1,10 @@
 argus.model
 ===========
 
+.. currentmodule:: argus.model
+
 Model
 -----
-
-.. currentmodule:: argus.model
 
 .. autoclass:: Model
    :members:

@@ -1,6 +1,9 @@
 argus.metrics
 =============
 
+Base metric
+-----------
+
 .. currentmodule:: argus.metrics
 
 .. autoclass:: Metric
