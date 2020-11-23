@@ -14,7 +14,6 @@ Callbacks
 
 .. toctree::
    :maxdepth: 2
-   :caption: Сallbacks
 
    ./callbacks/checkpoints
    ./callbacks/early_stopping

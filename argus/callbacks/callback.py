@@ -33,9 +33,9 @@ class Callback:
         .. code-block:: python
 
             from time import time
-
             from argus.engine import State
             from argus.callbacks.callback import Callback
+
 
             class TimerCallback(Callback):
                 def __init__(self, time_limit: int):
