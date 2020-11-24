@@ -19,18 +19,14 @@ def find_version(*file_paths):
     raise RuntimeError("Unable to find version string.")
 
 
-readme = read('README.md')
-
-VERSION = find_version('argus', '__init__.py')
-
 setup(
     name='pytorch-argus',
-    version=VERSION,
+    version=find_version('argus', '__init__.py'),
     author='Ruslan Baikulov',
     author_email='ruslan1123@gmail.com',
     url='https://github.com/lRomul/argus',
     description='Argus is a lightweight flexible library for training neural networks in PyTorch.',
-    long_description=readme,
+    long_description=read('README.md'),
     long_description_content_type='text/markdown',
     license='MIT',
     packages=find_packages(exclude=("tests", "tests.*",)),
