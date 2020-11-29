@@ -103,11 +103,13 @@ def choose_attribute_from_dict(attribute_meta, attribute_params):
             name, params = attribute_params
             if name not in attribute_meta:
                 raise ValueError(f"Attribute '{name}' there is not in "
-                                 f"attribute params {attribute_meta}.")
+                                 f"attribute meta '{attribute_meta}'.")
         elif isinstance(attribute_params, str):
             name, params = attribute_params, dict()
         else:
-            raise TypeError(f"Incorrect attribute params {attribute_params}")
+            raise TypeError(f"Incorrect attribute params '{attribute_params}' "
+                            f"for attribute meta '{attribute_meta}'. Attribute "
+                            f"params should be str or (str, dict).")
         attribute = attribute_meta[name]
     else:
         attribute = attribute_meta
@@ -115,7 +117,7 @@ def choose_attribute_from_dict(attribute_meta, attribute_params):
 
     if not isinstance(params, collections.abc.Mapping):
         raise TypeError(f"Attribute params should be a dictionary, "
-                        f"not {type(params)}.")
+                        f"not '{type(params)}'.")
 
     return attribute, params
 

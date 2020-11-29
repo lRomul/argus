@@ -191,8 +191,7 @@ class Engine:
                 for batch in data_loader:
                     self.state.batch = batch
                     self.raise_event(Events.ITERATION_START)
-                    self.state.step_output = self.step_function(
-                        batch, self.state)
+                    self.state.step_output = self.step_function(batch, self.state)
                     self.raise_event(Events.ITERATION_COMPLETE)
                     self.state.step_output = None
                     if self.state.stopped:

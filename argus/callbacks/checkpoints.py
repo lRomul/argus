@@ -116,7 +116,7 @@ class MonitorCheckpoint(Checkpoint):
         file_format (str, optional): Model saving filename format. Any
             valid value names from the model State may be used. Defaults to
             'model-{epoch:03d}-{monitor:.6f}.pth'.
-        max_saves ([type], optional): Number of last saved models to keep.
+        max_saves (int, optional): Number of last saved models to keep.
             Should be positive. If None - save all models. Defaults to
             None.
         save_after_exception (bool, optional): Save the model checkpoint

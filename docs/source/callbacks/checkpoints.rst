@@ -10,3 +10,4 @@ Callbacks for argus model saving.
 
 .. autoclass:: MonitorCheckpoint
    :members:
+   :inherited-members:
