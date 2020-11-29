@@ -54,16 +54,16 @@ class State:
         iteration (int, optional): Iteration, the first iteration is 0.
         epoch (int, optional): Epoch, the first iteration is 0.
         model (:class:`argus.Model`): :class:`argus.Model` that uses
-            :attr:`argus.engine.State.engine` and this object of state.
+            :attr:`argus.engine.State.engine` and this object as a state.
         data_loader (Iterable, optional): A data passed to the
             :class:`argus.engine.Engine`.
         logger (logging.Logger, optional): Logger.
         exception (BaseException, optional): Catched exception.
         engine (Engine, optional): :class:`argus.engine.Engine` that uses this
-            object of state.
+            object as a state.
         phase (str): A phase of training ``{"", "train", "test"}`` this state
             was created for.
-        batch (Any): Batch took from a data loader on the current iteration.
+        batch (Any): Batch sample from a data loader on the current iteration.
         step_output (Any): Current output from `step_function` on current
             iteration.
         metrics (dict of str: float): Dictionary with metrics values.
@@ -169,7 +169,7 @@ class Engine:
         Args:
             data_loader (Iterable): An iterable collection that returns
                 batches.
-            start_epoch (int): Number of the first epoch.
+            start_epoch (int): The first epoch number.
             end_epoch (int): One above the largest epoch number.
 
         Returns:
@@ -191,7 +191,8 @@ class Engine:
                 for batch in data_loader:
                     self.state.batch = batch
                     self.raise_event(Events.ITERATION_START)
-                    self.state.step_output = self.step_function(batch, self.state)
+                    self.state.step_output = self.step_function(
+                        batch, self.state)
                     self.raise_event(Events.ITERATION_COMPLETE)
                     self.state.step_output = None
                     if self.state.stopped:

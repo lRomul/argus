@@ -48,13 +48,16 @@ class MetricMeta(type):
 class Metric(Callback, metaclass=MetricMeta):
     """Base metric class.
 
-    To create a custom metric needs to create a class inheriting from Metric:
+    One needs to create a class inherited from the Metric class,
+    to define a custom metric. In the basic use case scenarios, the following
+    should be done:
 
     * Override three methods: reset, update, and compute.
     * Set class attribute: name, better.
 
     Attributes:
-        name (str): Metric name. Defaults to ''.
+        name (str): Unique metric name. The name is used to reference the
+            metric by other components, like Callbacks. Defaults to ''.
         better (str): Minimization or maximization is better. Should be ‘min’
             or ‘max’. It will be used, for example, by
             :class:`argus.callbacks.MonitorCheckpoint`. Defaults to 'min'.
@@ -129,17 +132,24 @@ class Metric(Callback, metaclass=MetricMeta):
                       metrics=['map_at_k'],  # or the same: metrics=[MAPatK(k=3)]
                       callbacks=callbacks)
 
+        In the case of name-based custom metric reference, it is enough to
+        define or import the metric class in the module to use it. Note that
+        the metric values saved into :class:`argus.engine.State` are prepended
+        with *val_* or *train_*, so, the full metric name, like *val_map_at_k*
+        in the example, should be used to retrieve the metric value, for
+        instance, as a value to monitor by :class:`argus.callbacks.MonitorCheckpoint`
+
     """
 
     name: str = ''
     better: str = 'min'
 
     def reset(self):
-        """Init or resets internal variables and accumulators."""
+        """Init or reset internal variables and accumulators."""
         pass
 
     def update(self, step_output: dict):
-        """Updates internal variables with provided *step_output*.
+        """Update internal variables with a provided *step_output*.
 
         *step_output* from default :meth:`argus.model.Model.train_step` and
         :meth:`argus.model.Model.val_step` looks like::
@@ -154,7 +164,7 @@ class Metric(Callback, metaclass=MetricMeta):
         pass
 
     def compute(self):
-        """Computes custom metric and return the result."""
+        """Compute the custom metric and return the result."""
         pass
 
     def epoch_start(self, state: State):
@@ -164,7 +174,7 @@ class Metric(Callback, metaclass=MetricMeta):
         self.update(state.step_output)
 
     def epoch_complete(self, state: State):
-        """Stores metric value to :class:`argus.engine.State`.
+        """Store metric value to :class:`argus.engine.State`.
         You can override this method if you want, for example, to save several
         metrics values in the state.
         """
