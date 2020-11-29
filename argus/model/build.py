@@ -219,7 +219,7 @@ class BuildModel(metaclass=ModelMeta):
 
         If a list of devices is passed, :class:`torch.nn.DataParallel` will be
         used. Batch tensors will be scattered on dim 0. The first device in the
-        list is the location of the output. By default, device "cuda" is one
+        list is the location of the output. By default, device "cuda" is the
         GPU training on :func:`torch.cuda.current_device`.
 
         Example:

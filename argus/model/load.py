@@ -35,22 +35,24 @@ def load_model(file_path: Union[str, Path],
         nn_module (dict, tuple or str, optional): Params of the nn_module to
             replace params in the state.
         optimizer (dict, tuple or str, optional): Params of the optimizer to
-            replace params in the state. Set to `None` if don't want to create
-            optimizer in the loaded model.
+            replace params in the state. Optimizer is not created in the loaded
+            model if it is set to `None`.
         loss (dict, tuple or str, optional): Params of the loss to replace params
-            in the state. Set to `None` if don't want to create loss in the
-            loaded model.
+            in the state. Loss is not created in the loaded model if it is set
+            to `None`.
         prediction_transform (dict, tuple or str, optional): Params of the
-            prediction_transform to replace params in the state. Set to `None`
-            if don't want to create prediction_transform in the loaded model.
-        change_params_func (function, optional): Function for modification the
-            loaded params. Takes as input params from the loaded state, outputs
-            params to model creation.
+            prediction_transform to replace params in the state.
+            prediction_transform is not created in the loaded model if it is
+            set to `None`.
+        change_params_func (function, optional): Function for modification of
+            the loaded params. It takes params from the loaded state as an
+            input and outputs params to use during the model creation.
         change_state_dict_func (function, optional): Function for modification of
-            nn_module and optimizer state dict. Takes as input `nn_state_dict` and
-            `optimizer_state_dict`, outputs state dicts to model creation.
+            nn_module and optimizer state dict. Takes `nn_state_dict` and
+            `optimizer_state_dict` as inputs and outputs state dicts for the
+            model creation.
         model_name (str): Class name of :class:`argus.model.Model`.
-            By default uses name from loaded state.
+            By default uses the name from the loaded state.
 
     Returns:
         :class:`argus.model.Model`: Loaded argus model.

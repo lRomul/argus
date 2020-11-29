@@ -40,13 +40,13 @@ def _attach_metrics(engine, metrics):
 
 
 class Model(BuildModel):
-    """Argus model is an abstraction of trainer/predictor that uses:
+    """Argus model is an abstraction of a trainer/predictor that uses:
 
     Attributes:
         nn_module (torch.nn.Module): PyTorch model as :class:`torch.nn.Module`.
         optimizer (torch.optim.Optimizer): Optimizer as
             :class:`torch.optim.Optimizer`.
-        loss (torch.nn.Module): Loss as :class:`torch.nn.Module`.
+        loss (torch.nn.Module): Loss function as :class:`torch.nn.Module`.
         device: (torch.device): device as :class:`torch.torch.device`.
         prediction_transform (Callable): postprocessing function of predictions
             as :class:`Callable` function or object.
@@ -56,7 +56,9 @@ class Model(BuildModel):
 
     Examples:
 
-        Set parameters for each part of the model.
+        One can use several ways to initialize :class:`argus.model.Model`:
+
+        1. Set parameters for each part of the model directly:
 
         .. code-block:: python
 
@@ -73,8 +75,8 @@ class Model(BuildModel):
 
             model = MnistModel(params)
 
-        Select parts of the model from multiple options using a tuple where the
-        first element is a name, second is init arguments.
+        2. Set components of the model from multiple options using two
+        elements tuples (component name, the component init arguments):
 
         .. code-block:: python
 
@@ -107,13 +109,13 @@ class Model(BuildModel):
         """Perform a single train step.
 
         The method is used by :class:`argus.engine.Engine`.
-        The train step includes input and target tensor transition to the model
-        device, forward pass, loss evaluation, backward pass, and the train
-        batch prediction preparation with a prediction_transform.
+        The train step includes input and target tensor transferring to the
+        model device, forward pass, loss evaluation, backward pass, and the
+        train batch prediction treating with a prediction_transform.
 
         Args:
-            batch (tuple of 2 torch.Tensors: (input, target)): The input data
-                and target tensors to process.
+            batch (tuple of 2 torch.Tensors: (input, target)): The input and
+                target tensors to process.
             state (:class:`argus.engine.State`): The argus model state.
 
         Returns:
@@ -122,7 +124,7 @@ class Model(BuildModel):
                 {
                     'prediction': The train batch predictions,
                     'target': The train batch target data on the model device,
-                    'loss': Loss function value
+                    'loss': The loss function value
                 }
 
         """
@@ -147,11 +149,11 @@ class Model(BuildModel):
         """Perform a single validation step.
 
         The method is used by :class:`argus.engine.Engine`.
-        The validation step includes input and target tensor transition to the
-        model device, forward pass, loss evaluation, and the train batch
-        prediction preparation with a prediction_transform.
+        The validation step includes input and target tensor transferring to
+        the model device, forward pass, loss evaluation, and the val batch
+        prediction treating with a prediction_transform.
 
-        Gradient calculations and the model weights update are omitted, which
+        Gradients calculation and the model weights update are omitted, which
         is the main difference with the :meth:`train_step`
         method.
 
@@ -161,18 +163,19 @@ class Model(BuildModel):
             state (:class:`argus.engine.State`): The argus model state.
 
         Returns:
-            dict: Default train step results::
+            dict: Default val step results::
 
                 {
-                    'prediction': The train batch predictions,
-                    'target': The train batch target data on the model device,
-                    'loss': Loss function value
+                    'prediction': The val batch predictions,
+                    'target': The val batch target data on the model device,
+                    'loss': The loss function value
                 }
 
         """
         self.eval()
         with torch.no_grad():
-            input, target = deep_to(batch, device=self.device, non_blocking=True)
+            input, target = deep_to(
+                batch, device=self.device, non_blocking=True)
             prediction = self.nn_module(input)
             loss = self.loss(prediction, target)
             prediction = self.prediction_transform(prediction)
@@ -192,13 +195,13 @@ class Model(BuildModel):
             val_callbacks: Optional[List[Callback]] = None):
         """Train the argus model.
 
-        The method attaches metrics and callbacks to the train and validation,
-        and runs the training process.
+        The method attaches metrics and callbacks to the train and validation
+        process, and performs training itself.
 
         Args:
             train_loader (Iterable): The train data loader.
-            val_loader (Iterable, optional):
-                The validation data loader. Defaults to `None`.
+            val_loader (Iterable, optional): The validation data loader.
+                Defaults to `None`.
             num_epochs (int, optional): Number of training epochs to
                 run. Defaults to 1.
             metrics (list of :class:`argus.metrics.Metric`, optional):
@@ -287,7 +290,7 @@ class Model(BuildModel):
         Raises:
             ValueError: If *lr* is a list or tuple and its length is not equal
                 to the number of parameter groups.
-            ValueError: If *lr* type is not list, tuple, or number.
+            ValueError: If *lr* type is not a list, tuple, or number.
             AttributeError: If the model is not *train_ready* (i.e. not all
                 attributes are set).
 
@@ -338,11 +341,11 @@ class Model(BuildModel):
                 'optimizer_state_dict': torch optimizer.state_dict()
             }
 
-        The *state_dict* is always transferred to cpu prior to saving.
+        The *state_dict* is always transferred to CPU before saving.
 
         Args:
             file_path (str): Path to the argus model file.
-            optimizer_state (bool): Save optimizer state.
+            optimizer_state (bool): Save optimizer state. Defaults to False.
 
         """
         nn_module = self.get_nn_module()
