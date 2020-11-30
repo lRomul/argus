@@ -38,6 +38,13 @@ class Callback:
 
 
             class TimerCallback(Callback):
+                \"""Stop training afrer the specified time.
+
+                Args:
+                    time_limit(int): Time to run training in seconds.
+
+                \"""
+
                 def __init__(self, time_limit: int):
                     self.time_limit = time_limit
                     self.start_time = 0
@@ -52,7 +59,7 @@ class Callback:
                                           f"{(state.epoch + 1) * (state.iteration + 1)} "
                                           f"iterations performed!")
 
-        Example of creating custom events you can find
+        You can find an example of creating custom events
         `here <https://github.com/lRomul/argus/blob/master/examples/custom_events.py>`_.
 
     Raises:
