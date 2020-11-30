@@ -6,7 +6,7 @@ Quick start
 Simple example
 --------------
 
-Define a PyTorch model.
+1. Define a PyTorch model:
 
 .. code-block:: python
 
@@ -33,7 +33,7 @@ Define a PyTorch model.
             return x
 
 
-Define a :class:`argus.model.Model` with ``nn_module``, ``optimizer``, ``loss`` attributes. Each value must be a class
+2. Define a :class:`argus.model.Model` with ``nn_module``, ``optimizer``, ``loss`` attributes. Each value must be a class
 or function that returns object (:class:`torch.nn.Module` for loss and nn_module, :class:`torch.optim.Optimizer` for optimizer).
 
 .. code-block:: python
@@ -46,9 +46,9 @@ or function that returns object (:class:`torch.nn.Module` for loss and nn_module
         loss = torch.nn.CrossEntropyLoss
 
 
-Create instance of ``MnistModel`` with specific parameters. Net will be initialized like
-``Net(n_classes=10, p_dropout=0.1)``. Same logic for optimizer ``torch.optim.SGD(lr=0.01)``. Loss will be created
-without arguments ``torch.nn.CrossEntropyLoss()``.
+3. Create an instance of ``MnistModel`` with the specified parameters. Net will be initialized like
+``Net(n_classes=10, p_dropout=0.1)``. The same logic is applied for the optimizer ``torch.optim.SGD(lr=0.01)``.
+Loss will be created without any arguments ``torch.nn.CrossEntropyLoss()``. The model will use the CPU.
 
 .. code-block:: python
 
@@ -61,7 +61,7 @@ without arguments ``torch.nn.CrossEntropyLoss()``.
     model = MnistModel(params)
 
 
-Download MNIST dataset. Create validation and training PyTorch data loaders.
+4. Download MNIST dataset. Create validation and training PyTorch data loaders.
 
 .. code-block:: python
 
@@ -80,7 +80,7 @@ Download MNIST dataset. Create validation and training PyTorch data loaders.
                             batch_size=128, shuffle=False)
 
 
-Use callbacks and start train a model for 50 epochs.
+5. Define some callbacks and start training the model for 50 epochs.
 
 .. code-block:: python
 
@@ -98,8 +98,7 @@ Use callbacks and start train a model for 50 epochs.
               metrics=['accuracy'],
               callbacks=callbacks)
 
-
-Load model from checkpoint.
+6. Load the model from the best checkpoint.
 
 .. code-block:: python
 
@@ -117,8 +116,8 @@ More flexibility
 ----------------
 
 Argus can help you simplify the experiments with different architectures, losses, and optimizers. Let's define a
-:class:`argus.model.Model` with two models via a dictionary. If you want to use PyTorch losses and optimizers it's not
-necessary to define them in argus model.
+:class:`argus.model.Model` with two models via a dictionary. If you want to use PyTorch losses and optimizers, it's not
+necessary to define them in the argus model.
 
 .. code-block:: python
 
@@ -149,9 +148,9 @@ PyTorch losses and optimizers can be selected by a string with a class name.
     model = FlexModel(params)
 
 
-Argus allows managing different combinations of your pipeline.
+Argus allows managing different combinations of pipelines.
 
-If you need for more flexibility you can:
+If you need more flexibility you can:
 
 * Override methods of :class:`argus.model.Model`. For example :meth:`argus.model.Model.train_step` and :meth:`argus.model.Model.val_step`.
 * Create custom :class:`argus.callbacks.Callback`.
