@@ -62,7 +62,7 @@ class TestMetric:
         warn = recwarn.pop()
         assert "redefined 'redefine_model' that was already" in str(warn.message)
 
-    def test_custom_metric(self, engine, linear_argus_model_instance):
+    def test_custom_metric(self, engine):
         metric = CustomMetric()
         data_loader = [4, 8, 15, 16, 23, 42]
         _attach_metrics(engine, [metric])
@@ -71,20 +71,10 @@ class TestMetric:
         state = engine.run(data_loader)
         assert metric.data == data_loader
         assert metric.compute() == len(data_loader)
-        assert state.metrics == {"custom_metric": len(data_loader)}
+        assert state.metrics == {"test_custom_metric": len(data_loader)}
         metric.reset()
         assert metric.data == []
         assert metric.compute() == 0
-
-        engine = Engine(
-            lambda batch, state: batch,
-            model=linear_argus_model_instance,
-            phase='train'
-        )
-        _attach_metrics(engine, [metric])
-        state = engine.run(data_loader)
-        assert metric.compute() == len(data_loader)
-        assert state.metrics == {"train_custom_metric": len(data_loader)}
 
         @argus.callbacks.on_iteration_start
         def stop_on_first_iteration(state):
@@ -94,16 +84,11 @@ class TestMetric:
         engine.run(data_loader)
         assert metric.compute() == 1
 
-    def test_custom_callback_by_name(self, linear_argus_model_instance):
+    def test_custom_callback_by_name(self, engine):
         data_loader = [4, 8, 15, 16, 23, 42]
-        engine = Engine(
-            lambda batch, state: batch,
-            model=linear_argus_model_instance,
-            phase='val'
-        )
         _attach_metrics(engine, ["custom_metric"])
         state = engine.run(data_loader)
-        assert state.metrics == {"val_custom_metric": len(data_loader)}
+        assert state.metrics == {"test_custom_metric": len(data_loader)}
 
         with pytest.raises(ValueError):
             _attach_metrics(engine, ["qwerty"])

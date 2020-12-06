@@ -221,16 +221,14 @@ class Model(BuildModel):
         self._check_train_ready()
         metrics = [] if metrics is None else metrics
 
-        train_engine = Engine(self.train_step, model=self,
-                              logger=self.logger, phase='train')
+        train_engine = Engine(self.train_step)
         train_metrics = [Loss()] + metrics if metrics_on_train else [Loss()]
         _attach_metrics(train_engine, train_metrics)
         metrics_logging.attach(train_engine, train=True)
 
         if val_loader is not None:
             self.validate(val_loader, metrics, val_callbacks)
-            val_engine = Engine(self.val_step, model=self,
-                                logger=self.logger, phase='val')
+            val_engine = Engine(self.val_step)
             _attach_metrics(val_engine, [Loss()] + metrics)
             _attach_callbacks(val_engine, val_callbacks)
 
@@ -266,8 +264,7 @@ class Model(BuildModel):
         """
         self._check_train_ready()
         metrics = [] if metrics is None else metrics
-        val_engine = Engine(self.val_step, model=self,
-                            logger=self.logger, phase='val')
+        val_engine = Engine(self.val_step)
         _attach_metrics(val_engine, [Loss()] + metrics)
         _attach_callbacks(val_engine, callbacks)
         metrics_logging.attach(val_engine, train=False, print_epoch=False)

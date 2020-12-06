@@ -1,3 +1,4 @@
+import torch
 import pytest
 
 import argus
@@ -56,12 +57,11 @@ def custom_test_callback():
     return CustomTestCallback()
 
 
-class StepStorage:
-    def __init__(self):
-        self.batch_lst = []
-        self.state = None
+class StorageModel(argus.Model):
+    nn_module = torch.nn.ReLU
 
-    def reset(self):
+    def __init__(self, params):
+        super().__init__(params)
         self.batch_lst = []
         self.state = None
 
@@ -74,18 +74,17 @@ class StepStorage:
 
 @pytest.fixture(scope='function')
 def step_storage():
-    return StepStorage()
+    return StorageModel(params={
+        "loss": None,
+        "optimizer": None
+    })
 
 
 class TestCallbacks:
     @pytest.mark.parametrize("n_epochs", [0, 1, 2, 3, 16])
-    def test_attach_callback(self, n_epochs, custom_test_callback,
-                             step_storage, linear_argus_model_instance):
+    def test_attach_callback(self, n_epochs, custom_test_callback, step_storage):
         callback = custom_test_callback
-        engine = Engine(
-            step_storage.step_method,
-            model=linear_argus_model_instance
-        )
+        engine = Engine(step_storage.step_method)
         callback.attach(engine)
         data_loader = [4, 8, 15, 16, 23, 42]
         engine.run(data_loader, start_epoch=0, end_epoch=n_epochs)
@@ -115,15 +114,12 @@ class TestCallbacks:
 
 
 class TestDecoratorCallbacks:
-    def test_on_event(self, step_storage, linear_argus_model_instance):
+    def test_on_event(self, step_storage):
         @argus.callbacks.on_event(Events.START)
         def some_function(state):
             state.special_secret = 42
 
-        engine = Engine(
-            step_storage.step_method,
-            model=linear_argus_model_instance
-        )
+        engine = Engine(step_storage.step_method)
         some_function.attach(engine)
         data_loader = [4, 8, 15, 16, 23, 42]
         state = engine.run(data_loader)

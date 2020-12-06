@@ -36,7 +36,9 @@ Param = Union[str, dict, Tuple[str, dict]]
 AttrMeta = Union[Dict[str, Any], Any]
 
 
-def cast_optimizer(optimizer: Union[Optimizer, Callable, str]) -> Union[Optimizer, Callable]:
+def cast_optimizer(
+        optimizer: Union[Optimizer, Callable, str]
+) -> Union[Optimizer, Callable]:
     if callable(optimizer):
         return optimizer
     elif isinstance(optimizer, str) and optimizer in pytorch_optimizers:
@@ -112,8 +114,8 @@ def choose_attribute_from_dict(
                 raise ValueError(f"Attribute '{name}' there is not in "
                                  f"attribute meta '{attribute_meta}'.")
             if not isinstance(params, collections.abc.Mapping):
-                raise TypeError(f"Attribute params should be a dictionary, "
-                                f"not '{type(params)}'.")
+                raise TypeError(f"Attribute params '{params}' should be a "
+                                f"dictionary, not '{type(params)}'.")
         elif isinstance(attribute_params, str):
             name, params = attribute_params, dict()
         else:
@@ -124,8 +126,8 @@ def choose_attribute_from_dict(
     else:
         attribute = attribute_meta
         if not isinstance(attribute_params, collections.abc.Mapping):
-            raise TypeError(f"Attribute params should be a dictionary, "
-                            f"not '{type(attribute_params)}'.")
+            raise TypeError(f"Attribute params '{attribute_params}' should be a "
+                            f"dictionary, not '{type(attribute_params)}'.")
         params = attribute_params
 
     return attribute, params
@@ -162,7 +164,7 @@ class BuildModel(metaclass=ModelMeta):
             raise ValueError("nn_module is required attribute for argus.Model")
 
         nn_module, params = choose_attribute_from_dict(nn_module_meta,
-                                                                 nn_module_params)
+                                                       nn_module_params)
         nn_module = cast_nn_module(nn_module)
         nn_module = nn_module(**params)
         return nn_module

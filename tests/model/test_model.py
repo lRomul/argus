@@ -11,8 +11,7 @@ class TestModelMethod:
         batch_size = poly_batch[0].shape[0]
         output = model.train_step(
             poly_batch,
-            State(model=linear_argus_model_instance,
-                  logger=linear_argus_model_instance.logger)
+            State(linear_argus_model_instance.test_step)
         )
 
         assert isinstance(output, dict)
@@ -30,8 +29,7 @@ class TestModelMethod:
         batch_size = poly_batch[0].shape[0]
         output = model.val_step(
             poly_batch,
-            State(model=linear_argus_model_instance,
-                  logger=linear_argus_model_instance.logger)
+            State(linear_argus_model_instance.test_step)
         )
 
         assert isinstance(output, dict)

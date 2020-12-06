@@ -64,6 +64,14 @@ class ArgusTestModel(Model):
         'Identity': Identity
     }
 
+    def reset(self):
+        self.batch_lst = []
+
+    def test_step(self, batch, state):
+        if hasattr(self, 'batch_lst'):
+            self.batch_lst.append(batch)
+        return batch
+
 
 @pytest.fixture(scope='session')
 def linear_net_class():
@@ -171,9 +179,7 @@ def one_dim_num_sequence(request):
 
 @pytest.fixture(scope='function')
 def engine(linear_argus_model_instance):
-    return Engine(lambda batch, state: batch,
-                  model=linear_argus_model_instance,
-                  logger=linear_argus_model_instance.logger)
+    return Engine(linear_argus_model_instance.test_step)
 
 
 @pytest.fixture(scope='function')

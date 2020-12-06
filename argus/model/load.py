@@ -85,7 +85,7 @@ def load_model(file_path: Union[str, Path],
     if os.path.isfile(file_path):
         state = torch.load(file_path)
 
-        if model_name is default and isinstance(model_name, Default):
+        if isinstance(model_name, Default):
             str_model_name = state['model_name']
         else:
             str_model_name = model_name
@@ -95,7 +95,7 @@ def load_model(file_path: Union[str, Path],
             if not isinstance(device, Default):
                 params['device'] = device_to_str(cast_device(device))
 
-            if model_name is default and nn_module is not default:
+            if nn_module is not default:
                 if nn_module is None:
                     raise ValueError("nn_module is required attribute for argus.Model")
                 params['nn_module'] = nn_module

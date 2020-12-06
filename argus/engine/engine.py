@@ -1,8 +1,10 @@
 """Events, State, and Engine in the current file are highly inspired by
 pytorch-ignite (https://github.com/pytorch/ignite).
 """
+import re
 import logging
 from enum import Enum
+from types import MethodType
 from collections import defaultdict
 from typing import Callable, Optional, Iterable, Tuple, List, Dict, Any
 
@@ -41,14 +43,29 @@ class Events(EventEnum):
     CATCH_EXCEPTION = "catch_exception"
 
 
+def _init_step_method(
+        step_method: Callable
+) -> Tuple[Callable, 'argus.model.Model', str]:
+    if isinstance(step_method, MethodType):
+        model = step_method.__self__
+        if isinstance(model, argus.model.Model):
+            phase_match = re.search(r'^(.*)_step$', step_method.__name__)
+            if phase_match is None:
+                phase = ""
+            else:
+                phase = phase_match.group(1)
+            return step_method, model, phase
+    raise TypeError("step_method must be a method of 'argus.model.Model'.")
+
+
 class State:
     """A state used to store internal and user-defined variables during a run
     of :class:`argus.engine.Engine`. The class is highly inspired by the State
     from `pytorch-ignite <https://github.com/pytorch/ignite>`_.
 
     Args:
-        model (:class:`argus.Model`): :class:`argus.Model` that uses
-            :attr:`argus.engine.State.engine` and this object as a state.
+        step_method (Callable): Method of :class:`argus.model.Model` that takes
+            ``batch, state`` and returns step output.
         **kwargs: Initial attributes of the state.
 
     By default, the state contains the following attributes.
@@ -76,16 +93,15 @@ class State:
     """
 
     def __init__(self,
-                 model: 'argus.model.Model',
+                 step_method: Callable,
                  **kwargs):
         self.iteration: int = 0
         self.epoch: int = 0
-        self.model = model
-        self.logger: logging.Logger = model.logger
+        self.step_method, self.model, self.phase = _init_step_method(step_method)
+        self.logger: logging.Logger = self.model.logger
         self.data_loader: Optional[Iterable] = None
         self.exception: Optional[BaseException] = None
         self.engine: Optional[Engine] = None
-        self.phase: str = ""
 
         self.batch: Any = None
         self.step_output: Any = None
@@ -113,33 +129,30 @@ class Engine:
     `pytorch-ignite <https://github.com/pytorch/ignite>`_.
 
     Args:
-        step_function (Callable): Function that takes ``batch, state`` and
-            returns step output.
-        model (:class:`argus.Model`): :class:`argus.Model` that uses this
-            object as an engine.
+        step_method (Callable): Method of :class:`argus.model.Model` that takes
+            ``batch, state`` and returns step output.
         **kwargs: Initial attributes of the state.
 
     Attributes:
         state (State): Stores internal and user-defined variables during
             a run of the engine.
-        step_function (Callable): Function that takes batch from data loader
-            and state returns step output.
+        step_method (Callable): Method of :class:`argus.model.Model` that takes
+            ``batch, state`` and returns step output.
         event_handlers (dict of EventEnum: list): Dictionary that stores event
             handlers.
 
     """
 
     def __init__(self,
-                 step_function: Callable,
-                 model: 'argus.model.Model',
+                 step_method: Callable,
                  **kwargs):
         self.event_handlers: Dict[
             EventEnum,
             List[Tuple[Callable, Tuple, Dict]]
         ] = defaultdict(list)
-        self.step_function = step_function
+        self.step_function = step_method
         self.state = State(
-            model=model,
+            step_method=step_method,
             engine=self,
             **kwargs
         )
