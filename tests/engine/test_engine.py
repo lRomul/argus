@@ -1,23 +1,26 @@
 import pytest
-import logging
 
 from argus.engine import State, Engine, Events, EventEnum
 from argus.model.model import _attach_callbacks
 from argus.callbacks import Callback
 
 
-def test_state_update():
-    state = State(qwerty=42)
+def test_state_update(linear_argus_model_instance):
+    state = State(qwerty=42,
+                  model=linear_argus_model_instance)
     assert state.qwerty == 42
     state.update(asdf=12)
     assert state.asdf == 12
 
 
 class TestEngineMethods:
-    def test_add_event_handler(self):
+    def test_add_event_handler(self, linear_argus_model_instance):
         def some_function():
             pass
-        engine = Engine(some_function)
+        engine = Engine(
+            some_function,
+            model=linear_argus_model_instance
+        )
         assert len(engine.event_handlers[Events.START]) == 0
         engine.add_event_handler(Events.START, some_function)
         assert len(engine.event_handlers[Events.START]) == 1
@@ -51,7 +54,7 @@ class TestEngineMethods:
         with pytest.raises(TypeError):
             engine.raise_event(None)
 
-    def test_run(self):
+    def test_run(self, linear_argus_model_instance):
         class StepStorage:
             def __init__(self):
                 self.batch_lst = []
@@ -68,8 +71,10 @@ class TestEngineMethods:
         step_storage = StepStorage()
 
         data_loader = [4, 8, 15, 16, 23, 42]
-        engine = Engine(step_storage.step_method,
-                        logger=logging.getLogger('TestEngineMethods::test_run'))
+        engine = Engine(
+            step_storage.step_method,
+            model=linear_argus_model_instance
+        )
         state = engine.run(data_loader, start_epoch=0, end_epoch=3)
 
         assert step_storage.batch_lst == data_loader * 3
@@ -106,7 +111,7 @@ class TestEngineMethods:
         assert engine.state.iteration == 0
         assert engine.state.epoch == 0
 
-    def test_custom_events(self):
+    def test_custom_events(self, linear_argus_model_instance):
         class CustomEvents(EventEnum):
             STEP_START = 'step_start'
             STEP_COMPLETE = 'step_complete'
@@ -130,7 +135,10 @@ class TestEngineMethods:
 
         data_loader = [4, 8, 15, 16, 23, 42]
         callback = CustomCallback()
-        engine = Engine(step_function)
+        engine = Engine(
+            step_function,
+            model=linear_argus_model_instance
+        )
         _attach_callbacks(engine, [callback])
         engine.run(data_loader)
         assert callback.start_storage == data_loader

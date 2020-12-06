@@ -9,7 +9,11 @@ class TestModelMethod:
     def test_train_step(self, linear_argus_model_instance, poly_batch):
         model = linear_argus_model_instance
         batch_size = poly_batch[0].shape[0]
-        output = model.train_step(poly_batch, State())
+        output = model.train_step(
+            poly_batch,
+            State(model=linear_argus_model_instance,
+                  logger=linear_argus_model_instance.logger)
+        )
 
         assert isinstance(output, dict)
         prediction = output['prediction']
@@ -24,7 +28,11 @@ class TestModelMethod:
     def test_val_step(self, linear_argus_model_instance, poly_batch):
         model = linear_argus_model_instance
         batch_size = poly_batch[0].shape[0]
-        output = model.val_step(poly_batch, State())
+        output = model.val_step(
+            poly_batch,
+            State(model=linear_argus_model_instance,
+                  logger=linear_argus_model_instance.logger)
+        )
 
         assert isinstance(output, dict)
         prediction, target = output['prediction'], output['target']

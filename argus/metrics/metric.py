@@ -1,12 +1,14 @@
 import math
 import torch
 import warnings
+from typing import Dict, Type
 
+import argus
 from argus.callbacks import Callback
 from argus.engine import State
 
 
-METRIC_REGISTRY = {}
+METRIC_REGISTRY: Dict[str, Type['argus.metrics.Metric']] = dict()
 
 
 def init_better(better: str, monitor: str) -> tuple:

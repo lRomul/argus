@@ -85,19 +85,17 @@ def load_model(file_path: Union[str, Path],
     if os.path.isfile(file_path):
         state = torch.load(file_path)
 
-        if model_name is default:
-            model_name = state['model_name']
+        if model_name is default and isinstance(model_name, Default):
+            str_model_name = state['model_name']
         else:
-            model_name = model_name
+            str_model_name = model_name
 
-        if model_name in MODEL_REGISTRY:
+        if str_model_name in MODEL_REGISTRY:
             params = state['params']
-            if device is not default:
-                device = cast_device(device)
-                device = device_to_str(device)
-                params['device'] = device
+            if not isinstance(device, Default):
+                params['device'] = device_to_str(cast_device(device))
 
-            if nn_module is not default:
+            if model_name is default and nn_module is not default:
                 if nn_module is None:
                     raise ValueError("nn_module is required attribute for argus.Model")
                 params['nn_module'] = nn_module
@@ -111,7 +109,7 @@ def load_model(file_path: Union[str, Path],
             for attribute, attribute_params in kwargs.items():
                 params[attribute] = attribute_params
 
-            model_class = MODEL_REGISTRY[model_name]
+            model_class = MODEL_REGISTRY[str_model_name]
             params = change_params_func(params)
             model = model_class(params)
             nn_state_dict = deep_to(state['nn_state_dict'], model.device)

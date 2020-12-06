@@ -79,9 +79,13 @@ def step_storage():
 
 class TestCallbacks:
     @pytest.mark.parametrize("n_epochs", [0, 1, 2, 3, 16])
-    def test_attach_callback(self, n_epochs, custom_test_callback, step_storage):
+    def test_attach_callback(self, n_epochs, custom_test_callback,
+                             step_storage, linear_argus_model_instance):
         callback = custom_test_callback
-        engine = Engine(step_storage.step_method)
+        engine = Engine(
+            step_storage.step_method,
+            model=linear_argus_model_instance
+        )
         callback.attach(engine)
         data_loader = [4, 8, 15, 16, 23, 42]
         engine.run(data_loader, start_epoch=0, end_epoch=n_epochs)
@@ -111,18 +115,21 @@ class TestCallbacks:
 
 
 class TestDecoratorCallbacks:
-    def test_on_event(self, step_storage):
+    def test_on_event(self, step_storage, linear_argus_model_instance):
         @argus.callbacks.on_event(Events.START)
         def some_function(state):
             state.special_secret = 42
 
-        engine = Engine(step_storage.step_method)
+        engine = Engine(
+            step_storage.step_method,
+            model=linear_argus_model_instance
+        )
         some_function.attach(engine)
         data_loader = [4, 8, 15, 16, 23, 42]
         state = engine.run(data_loader)
         assert state.special_secret == 42
 
-    def test_on_decorators(self, step_storage):
+    def test_on_decorators(self, step_storage, linear_argus_model_instance):
         @argus.callbacks.on_start
         def on_start_function(state):
             state.call_count = 1
@@ -158,7 +165,10 @@ class TestDecoratorCallbacks:
             state.call_count += 1
             state.on_catch_exception_flag = True
 
-        engine = Engine(step_storage.step_method)
+        engine = Engine(
+            step_storage.step_method,
+            model=linear_argus_model_instance
+        )
         _attach_callbacks(engine, [
             on_start_function,
             on_complete_function,

@@ -1,4 +1,4 @@
-from typing import Callable, Union, Any, Dict, Tuple, List, Iterable, Optional
+from typing import Callable, Union, Any, Type, Dict, Tuple, List, Iterable, Optional
 import collections
 import warnings
 import logging
@@ -10,6 +10,7 @@ from torch import nn
 from torch.optim.optimizer import Optimizer
 from torch.nn.parallel import DataParallel, DistributedDataParallel
 
+import argus
 from argus.loss import pytorch_losses
 from argus.optimizer import pytorch_optimizers
 from argus.utils import device_to_str, Identity, check_pickleble
@@ -19,7 +20,7 @@ ATTRS_BUILD_ORDER = ('nn_module', 'optimizer', 'loss', 'device', 'prediction_tra
 TRAIN_ATTRS = {'nn_module', 'optimizer', 'loss', 'device', 'prediction_transform'}
 PREDICT_ATTRS = {'nn_module', 'device', 'prediction_transform'}
 ALL_ATTRS = TRAIN_ATTRS | PREDICT_ATTRS
-MODEL_REGISTRY = {}
+MODEL_REGISTRY: Dict[str, Type['argus.model.Model']] = dict()
 
 DEFAULT_ATTRIBUTE_VALUES = {
     'nn_module': None,
@@ -31,41 +32,39 @@ DEFAULT_ATTRIBUTE_VALUES = {
 
 
 Device = Union[str, torch.device, List[Union[str, torch.device]]]
-Param = Union[dict, Tuple[str, dict]]
+Param = Union[str, dict, Tuple[str, dict]]
 AttrMeta = Union[Dict[str, Any], Any]
 
 
-def cast_optimizer(optimizer: Union[Optimizer, Callable, str]):
+def cast_optimizer(optimizer: Union[Optimizer, Callable, str]) -> Union[Optimizer, Callable]:
     if callable(optimizer):
         return optimizer
     elif isinstance(optimizer, str) and optimizer in pytorch_optimizers:
-        optimizer = getattr(torch.optim, optimizer)
-        return optimizer
+        return getattr(torch.optim, optimizer)
     raise TypeError(f"Incorrect type for optimizer {type(optimizer)}")
 
 
-def cast_nn_module(nn_module: Union[nn.Module, Callable]):
+def cast_nn_module(nn_module: Union[nn.Module, Callable]) -> Union[nn.Module, Callable]:
     if callable(nn_module):
         return nn_module
     raise TypeError(f"Incorrect type for nn_module {type(nn_module)}")
 
 
-def cast_loss(loss: Union[nn.Module, Callable, str]):
+def cast_loss(loss: Union[nn.Module, Callable, str]) -> Union[nn.Module, Callable]:
     if callable(loss):
         return loss
     elif isinstance(loss, str) and loss in pytorch_losses:
-        loss = getattr(nn.modules.loss, loss)
-        return loss
+        return getattr(nn.modules.loss, loss)
     raise TypeError(f"Incorrect type for loss {type(loss)}")
 
 
-def cast_prediction_transform(transform: Callable):
+def cast_prediction_transform(transform: Callable) -> Callable:
     if callable(transform):
         return transform
     raise TypeError(f"Incorrect type for prediction_transform: {type(transform)}")
 
 
-def cast_device(device: Device):
+def cast_device(device: Device) -> Union[torch.device, List[torch.device]]:
     if isinstance(device, torch.device):
         return device
     elif isinstance(device, (list, tuple)):
@@ -102,14 +101,19 @@ class ModelMeta(type):
         return new_class
 
 
-def choose_attribute_from_dict(attribute_meta: AttrMeta,
-                               attribute_params: Param):
+def choose_attribute_from_dict(
+        attribute_meta: AttrMeta,
+        attribute_params: Param
+) -> Tuple[Any, collections.abc.Mapping]:
     if isinstance(attribute_meta, collections.abc.Mapping):
         if isinstance(attribute_params, (list, tuple)) and len(attribute_params) == 2:
             name, params = attribute_params
             if name not in attribute_meta:
                 raise ValueError(f"Attribute '{name}' there is not in "
                                  f"attribute meta '{attribute_meta}'.")
+            if not isinstance(params, collections.abc.Mapping):
+                raise TypeError(f"Attribute params should be a dictionary, "
+                                f"not '{type(params)}'.")
         elif isinstance(attribute_params, str):
             name, params = attribute_params, dict()
         else:
@@ -119,11 +123,10 @@ def choose_attribute_from_dict(attribute_meta: AttrMeta,
         attribute = attribute_meta[name]
     else:
         attribute = attribute_meta
+        if not isinstance(attribute_params, collections.abc.Mapping):
+            raise TypeError(f"Attribute params should be a dictionary, "
+                            f"not '{type(attribute_params)}'.")
         params = attribute_params
-
-    if not isinstance(params, collections.abc.Mapping):
-        raise TypeError(f"Attribute params should be a dictionary, "
-                        f"not '{type(params)}'.")
 
     return attribute, params
 
@@ -134,8 +137,9 @@ class BuildModel(metaclass=ModelMeta):
     loss: Optional[nn.Module]
     device: torch.device
     prediction_transform: Optional[Callable]
+    _meta: Dict[str, AttrMeta]
 
-    def __init__(self, params: dict, build_order: list = ATTRS_BUILD_ORDER):
+    def __init__(self, params: dict, build_order: Iterable = ATTRS_BUILD_ORDER):
         params = copy.deepcopy(params)
         check_pickleble(params)
         self.params = params
@@ -157,35 +161,35 @@ class BuildModel(metaclass=ModelMeta):
         if nn_module_meta is None:
             raise ValueError("nn_module is required attribute for argus.Model")
 
-        nn_module, nn_module_params = choose_attribute_from_dict(nn_module_meta,
+        nn_module, params = choose_attribute_from_dict(nn_module_meta,
                                                                  nn_module_params)
         nn_module = cast_nn_module(nn_module)
-        nn_module = nn_module(**nn_module_params)
+        nn_module = nn_module(**params)
         return nn_module
 
     def build_optimizer(self, optimizer_meta: AttrMeta, optim_params: Param):
-        optimizer, optim_params = choose_attribute_from_dict(optimizer_meta,
-                                                             optim_params)
+        optimizer, params = choose_attribute_from_dict(optimizer_meta,
+                                                       optim_params)
         optimizer = cast_optimizer(optimizer)
         grad_params = (param for param in self.nn_module.parameters()
                        if param.requires_grad)
-        optimizer = optimizer(params=grad_params, **optim_params)
+        optimizer = optimizer(params=grad_params, **params)
         return optimizer
 
     def build_loss(self, loss_meta: AttrMeta, loss_params: Param):
-        loss, loss_params = choose_attribute_from_dict(loss_meta,
-                                                       loss_params)
+        loss, params = choose_attribute_from_dict(loss_meta,
+                                                  loss_params)
         loss = cast_loss(loss)
-        loss = loss(**loss_params)
+        loss = loss(**params)
         return loss
 
     def build_prediction_transform(self,
                                    transform_meta: AttrMeta,
                                    transform_params: Param):
-        transform, transform_params = choose_attribute_from_dict(transform_meta,
-                                                                 transform_params)
+        transform, params = choose_attribute_from_dict(transform_meta,
+                                                       transform_params)
         transform = cast_prediction_transform(transform)
-        prediction_transform = transform(**transform_params)
+        prediction_transform = transform(**params)
         return prediction_transform
 
     def build_device(self, device_meta: Device, device_param: Device):
@@ -247,13 +251,13 @@ class BuildModel(metaclass=ModelMeta):
                 devices.
 
         """
-        device = cast_device(device)
-        str_device = device_to_str(device)
+        torch_device = cast_device(device)
+        str_device = device_to_str(torch_device)
         nn_module = self.get_nn_module()
 
-        if isinstance(device, (list, tuple)):
+        if isinstance(torch_device, (list, tuple)):
             device_ids = []
-            for dev in device:
+            for dev in torch_device:
                 if dev.type != 'cuda':
                     raise ValueError("Non cuda device in list of devices")
                 if dev.index is None:
@@ -262,13 +266,13 @@ class BuildModel(metaclass=ModelMeta):
             if len(device_ids) != len(set(device_ids)):
                 raise ValueError("Cuda device indices must be unique")
             nn_module = DataParallel(nn_module, device_ids=device_ids)
-            device = device[0]
+            torch_device = torch_device[0]
 
-        self.nn_module = nn_module.to(device)
+        self.nn_module = nn_module.to(torch_device)
         if self.loss is not None:
-            self.loss = self.loss.to(device)
+            self.loss = self.loss.to(torch_device)
         self.params['device'] = str_device
-        self.device = device
+        self.device = torch_device
 
     def _check_attributes(self, attrs: Iterable) -> bool:
         for attr_name in attrs:

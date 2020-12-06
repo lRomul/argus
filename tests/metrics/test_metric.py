@@ -62,7 +62,7 @@ class TestMetric:
         warn = recwarn.pop()
         assert "redefined 'redefine_model' that was already" in str(warn.message)
 
-    def test_custom_metric(self, engine):
+    def test_custom_metric(self, engine, linear_argus_model_instance):
         metric = CustomMetric()
         data_loader = [4, 8, 15, 16, 23, 42]
         _attach_metrics(engine, [metric])
@@ -76,7 +76,11 @@ class TestMetric:
         assert metric.data == []
         assert metric.compute() == 0
 
-        engine = Engine(lambda batch, state: batch, phase='train')
+        engine = Engine(
+            lambda batch, state: batch,
+            model=linear_argus_model_instance,
+            phase='train'
+        )
         _attach_metrics(engine, [metric])
         state = engine.run(data_loader)
         assert metric.compute() == len(data_loader)
@@ -90,9 +94,13 @@ class TestMetric:
         engine.run(data_loader)
         assert metric.compute() == 1
 
-    def test_custom_callback_by_name(self):
+    def test_custom_callback_by_name(self, linear_argus_model_instance):
         data_loader = [4, 8, 15, 16, 23, 42]
-        engine = Engine(lambda batch, state: batch, phase='val')
+        engine = Engine(
+            lambda batch, state: batch,
+            model=linear_argus_model_instance,
+            phase='val'
+        )
         _attach_metrics(engine, ["custom_metric"])
         state = engine.run(data_loader)
         assert state.metrics == {"val_custom_metric": len(data_loader)}

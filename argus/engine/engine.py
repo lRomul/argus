@@ -1,11 +1,12 @@
 """Events, State, and Engine in the current file are highly inspired by
 pytorch-ignite (https://github.com/pytorch/ignite).
 """
-
 import logging
 from enum import Enum
 from collections import defaultdict
-from typing import Callable, Optional, Iterable, Dict, Any
+from typing import Callable, Optional, Iterable, Tuple, List, Dict, Any
+
+import argus
 
 
 class EventEnum(Enum):
@@ -46,18 +47,20 @@ class State:
     from `pytorch-ignite <https://github.com/pytorch/ignite>`_.
 
     Args:
+        model (:class:`argus.Model`): :class:`argus.Model` that uses
+            :attr:`argus.engine.State.engine` and this object as a state.
         **kwargs: Initial attributes of the state.
 
     By default, the state contains the following attributes.
 
     Attributes:
-        iteration (int, optional): Iteration, the first iteration is 0.
-        epoch (int, optional): Epoch, the first iteration is 0.
+        iteration (int): Iteration, the first iteration is 0.
+        epoch (int): Epoch, the first iteration is 0.
         model (:class:`argus.Model`): :class:`argus.Model` that uses
             :attr:`argus.engine.State.engine` and this object as a state.
         data_loader (Iterable, optional): A data passed to the
             :class:`argus.engine.Engine`.
-        logger (logging.Logger, optional): Logger.
+        logger (logging.Logger): Logger.
         exception (BaseException, optional): Catched exception.
         engine (Engine, optional): :class:`argus.engine.Engine` that uses this
             object as a state.
@@ -66,18 +69,20 @@ class State:
         batch (Any): Batch sample from a data loader on the current iteration.
         step_output (Any): Current output from `step_function` on current
             iteration.
-        metrics (dict of str: float): Dictionary with metrics values.
+        metrics (dict): Dictionary with metrics values.
         stopped (bool): Boolean indicates :class:`argus.engine.Engine` is
             stopped or not.
 
     """
 
-    def __init__(self, **kwargs):
-        self.iteration: Optional[int] = None
-        self.epoch: Optional[int] = None
-        self.model: Optional['argus.model.Model'] = None
+    def __init__(self,
+                 model: 'argus.model.Model',
+                 **kwargs):
+        self.iteration: int = 0
+        self.epoch: int = 0
+        self.model = model
+        self.logger: logging.Logger = model.logger
         self.data_loader: Optional[Iterable] = None
-        self.logger: Optional[logging.Logger] = None
         self.exception: Optional[BaseException] = None
         self.engine: Optional[Engine] = None
         self.phase: str = ""
@@ -85,7 +90,7 @@ class State:
         self.batch: Any = None
         self.step_output: Any = None
 
-        self.metrics: Dict[str, float] = dict()
+        self.metrics: Dict[str, Any] = dict()
         self.stopped: bool = True
 
         self.update(**kwargs)
@@ -110,6 +115,8 @@ class Engine:
     Args:
         step_function (Callable): Function that takes ``batch, state`` and
             returns step output.
+        model (:class:`argus.Model`): :class:`argus.Model` that uses this
+            object as an engine.
         **kwargs: Initial attributes of the state.
 
     Attributes:
@@ -122,11 +129,17 @@ class Engine:
 
     """
 
-    def __init__(self, step_function: Callable, **kwargs):
-        self.event_handlers = defaultdict(list)
+    def __init__(self,
+                 step_function: Callable,
+                 model: 'argus.model.Model',
+                 **kwargs):
+        self.event_handlers: Dict[
+            EventEnum,
+            List[Tuple[Callable, Tuple, Dict]]
+        ] = defaultdict(list)
         self.step_function = step_function
         self.state = State(
-            step_function=step_function,
+            model=model,
             engine=self,
             **kwargs
         )
