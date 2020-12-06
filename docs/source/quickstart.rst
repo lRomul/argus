@@ -6,7 +6,7 @@ Quick start
 Simple example
 --------------
 
-1. Define a PyTorch model:
+1. Define a PyTorch model.
 
 .. code-block:: python
 

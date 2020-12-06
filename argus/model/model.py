@@ -13,7 +13,7 @@ from argus.metrics.loss import Loss
 from argus.utils import deep_to, deep_detach
 
 
-def _attach_callbacks(engine, callbacks):
+def _attach_callbacks(engine: Engine, callbacks: Optional[List[Callback]]):
     if callbacks is not None:
         for callback in callbacks:
             if isinstance(callback, Callback):
@@ -24,7 +24,7 @@ def _attach_callbacks(engine, callbacks):
                 )
 
 
-def _attach_metrics(engine, metrics):
+def _attach_metrics(engine: Engine, metrics: List[Union[Metric, str]]):
     for metric in metrics:
         if isinstance(metric, str):
             if metric in METRIC_REGISTRY:
@@ -344,7 +344,8 @@ class Model(BuildModel):
         The *state_dict* is always transferred to CPU before saving.
 
         Args:
-            file_path (str): Path to the argus model file.
+            file_path (str or :class:`pathlib.Path`): Path to the argus model
+                file.
             optimizer_state (bool): Save optimizer state. Defaults to False.
 
         """

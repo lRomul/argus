@@ -3,6 +3,8 @@
 import os
 import math
 import warnings
+from typing import Union
+from pathlib import Path
 
 from argus.engine import State
 from argus.callbacks.callback import Callback
@@ -16,8 +18,8 @@ class Checkpoint(Callback):
     each epoch.
 
     Args:
-        dir_path (str, optional): Directory to save checkpoints. The
-            desired directory will be created if it does not exist.
+        dir_path (str or :class:`pathlib.Path`): Directory to save checkpoints.
+            The desired directory will be created if it does not exist.
             Defaults to ''.
         file_format (str, optional): Model saving filename format. Any
             valid value names from the model State may be used. Defaults to
@@ -54,14 +56,14 @@ class Checkpoint(Callback):
         self.save_after_exception = save_after_exception
         self.epochs_since_last_save = 0
 
-    def save_model(self, state: State, file_path):
+    def save_model(self, state: State, file_path: Union[str, Path]):
         """Save model to file.
 
         Override the method if you need custom checkpoint saving.
 
         Args:
             state (:class:`argus.engine.State`): State.
-            file_path (str): Checkpoint file path.
+            file_path (str or :class:`pathlib.Path`): Checkpoint file path.
         """
         state.model.save(file_path)
 
@@ -110,8 +112,8 @@ class MonitorCheckpoint(Checkpoint):
     metric available in the model State.
 
     Args:
-        dir_path (str, optional): Directory to save checkpoints. The
-            desired directory will be created if it does not exist.
+        dir_path (str or :class:`pathlib.Path`): Directory to save checkpoints.
+            The desired directory will be created if it does not exist.
             Defaults to ''.
         file_format (str, optional): Model saving filename format. Any
             valid value names from the model State may be used. Defaults to

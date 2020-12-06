@@ -1,4 +1,4 @@
-from typing import Callable, Union, List
+from typing import Callable, Union, Any, Dict, Tuple, List, Iterable, Optional
 import collections
 import warnings
 import logging
@@ -30,7 +30,12 @@ DEFAULT_ATTRIBUTE_VALUES = {
 }
 
 
-def cast_optimizer(optimizer):
+Device = Union[str, torch.device, List[Union[str, torch.device]]]
+Param = Union[dict, Tuple[str, dict]]
+AttrMeta = Union[Dict[str, Any], Any]
+
+
+def cast_optimizer(optimizer: Union[Optimizer, Callable, str]):
     if callable(optimizer):
         return optimizer
     elif isinstance(optimizer, str) and optimizer in pytorch_optimizers:
@@ -39,13 +44,13 @@ def cast_optimizer(optimizer):
     raise TypeError(f"Incorrect type for optimizer {type(optimizer)}")
 
 
-def cast_nn_module(nn_module):
+def cast_nn_module(nn_module: Union[nn.Module, Callable]):
     if callable(nn_module):
         return nn_module
     raise TypeError(f"Incorrect type for nn_module {type(nn_module)}")
 
 
-def cast_loss(loss):
+def cast_loss(loss: Union[nn.Module, Callable, str]):
     if callable(loss):
         return loss
     elif isinstance(loss, str) and loss in pytorch_losses:
@@ -54,13 +59,13 @@ def cast_loss(loss):
     raise TypeError(f"Incorrect type for loss {type(loss)}")
 
 
-def cast_prediction_transform(transform):
+def cast_prediction_transform(transform: Callable):
     if callable(transform):
         return transform
     raise TypeError(f"Incorrect type for prediction_transform: {type(transform)}")
 
 
-def cast_device(device):
+def cast_device(device: Device):
     if isinstance(device, torch.device):
         return device
     elif isinstance(device, (list, tuple)):
@@ -97,7 +102,8 @@ class ModelMeta(type):
         return new_class
 
 
-def choose_attribute_from_dict(attribute_meta, attribute_params):
+def choose_attribute_from_dict(attribute_meta: AttrMeta,
+                               attribute_params: Param):
     if isinstance(attribute_meta, collections.abc.Mapping):
         if isinstance(attribute_params, (list, tuple)) and len(attribute_params) == 2:
             name, params = attribute_params
@@ -124,10 +130,10 @@ def choose_attribute_from_dict(attribute_meta, attribute_params):
 
 class BuildModel(metaclass=ModelMeta):
     nn_module: nn.Module
-    optimizer: Optimizer
-    loss: nn.Module
+    optimizer: Optional[Optimizer]
+    loss: Optional[nn.Module]
     device: torch.device
-    prediction_transform: Callable
+    prediction_transform: Optional[Callable]
 
     def __init__(self, params: dict, build_order: list = ATTRS_BUILD_ORDER):
         params = copy.deepcopy(params)
@@ -147,7 +153,7 @@ class BuildModel(metaclass=ModelMeta):
 
         self.set_device(self.device)
 
-    def build_nn_module(self, nn_module_meta, nn_module_params):
+    def build_nn_module(self, nn_module_meta: AttrMeta, nn_module_params: Param):
         if nn_module_meta is None:
             raise ValueError("nn_module is required attribute for argus.Model")
 
@@ -157,7 +163,7 @@ class BuildModel(metaclass=ModelMeta):
         nn_module = nn_module(**nn_module_params)
         return nn_module
 
-    def build_optimizer(self, optimizer_meta, optim_params):
+    def build_optimizer(self, optimizer_meta: AttrMeta, optim_params: Param):
         optimizer, optim_params = choose_attribute_from_dict(optimizer_meta,
                                                              optim_params)
         optimizer = cast_optimizer(optimizer)
@@ -166,21 +172,23 @@ class BuildModel(metaclass=ModelMeta):
         optimizer = optimizer(params=grad_params, **optim_params)
         return optimizer
 
-    def build_loss(self, loss_meta, loss_params):
+    def build_loss(self, loss_meta: AttrMeta, loss_params: Param):
         loss, loss_params = choose_attribute_from_dict(loss_meta,
                                                        loss_params)
         loss = cast_loss(loss)
         loss = loss(**loss_params)
         return loss
 
-    def build_prediction_transform(self, transform_meta, transform_params):
+    def build_prediction_transform(self,
+                                   transform_meta: AttrMeta,
+                                   transform_params: Param):
         transform, transform_params = choose_attribute_from_dict(transform_meta,
                                                                  transform_params)
         transform = cast_prediction_transform(transform)
         prediction_transform = transform(**transform_params)
         return prediction_transform
 
-    def build_device(self, device_meta, device_param):
+    def build_device(self, device_meta: Device, device_param: Device):
         if device_param:
             device = device_param
         else:
@@ -213,8 +221,7 @@ class BuildModel(metaclass=ModelMeta):
         else:
             return self.nn_module
 
-    def set_device(self, device: Union[str, torch.device,
-                                       List[Union[str, torch.device]]]):
+    def set_device(self, device: Device):
         """Move nn_module and loss to the specified device.
 
         If a list of devices is passed, :class:`torch.nn.DataParallel` will be
@@ -263,7 +270,7 @@ class BuildModel(metaclass=ModelMeta):
         self.params['device'] = str_device
         self.device = device
 
-    def _check_attributes(self, attrs) -> bool:
+    def _check_attributes(self, attrs: Iterable) -> bool:
         for attr_name in attrs:
             attr_value = getattr(self, attr_name, None)
             if attr_value is None:
@@ -288,5 +295,5 @@ class BuildModel(metaclass=ModelMeta):
                 f"Not all required prediction attributes are there: {PREDICT_ATTRS}"
             )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self.__dict__)
