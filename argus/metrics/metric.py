@@ -148,7 +148,6 @@ class Metric(Callback, metaclass=MetricMeta):
 
     def reset(self):
         """Init or reset internal variables and accumulators."""
-        pass
 
     def update(self, step_output: dict):
         """Update internal variables with a provided *step_output*.
@@ -163,11 +162,9 @@ class Metric(Callback, metaclass=MetricMeta):
             }
 
         """
-        pass
 
     def compute(self):
         """Compute the custom metric and return the result."""
-        pass
 
     def epoch_start(self, state: State):
         self.reset()

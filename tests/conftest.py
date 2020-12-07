@@ -205,5 +205,3 @@ def train_state(train_engine):
 @pytest.fixture(scope='function')
 def val_state(val_engine):
     return val_engine.state
-
-

@@ -15,7 +15,6 @@ class EventEnum(Enum):
     inherit this class. Example of creating custom events you can find
     `here <https://github.com/lRomul/argus/blob/master/examples/custom_events.py>`_.
     """
-    pass
 
 
 class Events(EventEnum):
