@@ -1,7 +1,6 @@
 """Events, State, and Engine in the current file are highly inspired by
 pytorch-ignite (https://github.com/pytorch/ignite).
 """
-import re
 import logging
 from enum import Enum
 from types import MethodType
@@ -49,10 +48,9 @@ def _init_step_method(
     if isinstance(step_method, MethodType):
         model = step_method.__self__
         if isinstance(model, argus.model.Model):
-            phase = step_method.__name__
-            step_match = re.search(r'^(.*)_step$', phase)
-            if step_match is not None:
-                phase = step_match.group(1)
+            phase: str = step_method.__name__
+            if phase.endswith('_step'):
+                phase = phase[:-len('_step')]
             return step_method, model, phase
     raise TypeError("step_method must be a method of 'argus.model.Model'.")
 
@@ -80,8 +78,10 @@ class State:
         exception (BaseException, optional): Catched exception.
         engine (Engine, optional): :class:`argus.engine.Engine` that uses this
             object as a state.
-        phase (str): A phase of training ``{"", "train", "test"}`` this state
-            was created for.
+        phase (str): A phase of training this state was created for. The
+            value takes from the name of the method `step_method`. If the
+            `step_method` name ends with `_step`, the postfix will be removed.
+            For default steps of argus model values are 'train' and 'val'.
         batch (Any): Batch sample from a data loader on the current iteration.
         step_output (Any): Current output from `step_function` on current
             iteration.

@@ -268,7 +268,7 @@ class Model(BuildModel):
         _attach_metrics(val_engine, [Loss()] + metrics)
         default_logging.attach(val_engine)
         _attach_callbacks(val_engine, callbacks)
-        state = val_engine.run(val_loader, start_epoch=-1, end_epoch=0)
+        state = val_engine.run(val_loader, -1, 0)
         return state.metrics
 
     def set_lr(self, lr: Union[float, List[float]]):
