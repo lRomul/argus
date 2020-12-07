@@ -1,9 +1,9 @@
-from typing import Callable, Union, Any, Type, Dict, Tuple, List, Iterable, Optional
-import collections
-import warnings
-import logging
-import copy
 import sys
+import copy
+import logging
+import warnings
+import collections
+from typing import Callable, Union, Any, Type, Dict, Tuple, Iterable
 
 import torch
 from torch import nn
@@ -11,9 +11,10 @@ from torch.optim.optimizer import Optimizer
 from torch.nn.parallel import DataParallel, DistributedDataParallel
 
 import argus
+from argus import types
 from argus.loss import pytorch_losses
 from argus.optimizer import pytorch_optimizers
-from argus.utils import device_to_str, Identity, check_pickleble
+from argus.utils import device_to_str, Identity, check_pickleble, get_device_indices
 
 
 ATTRS_BUILD_ORDER = ('nn_module', 'optimizer', 'loss', 'device', 'prediction_transform')
@@ -29,11 +30,6 @@ DEFAULT_ATTRIBUTE_VALUES = {
     'device': torch.device('cpu'),
     'prediction_transform': Identity
 }
-
-
-Device = Union[str, torch.device, List[Union[str, torch.device]]]
-Param = Union[str, dict, Tuple[str, dict]]
-AttrMeta = Union[Dict[str, Any], Any]
 
 
 def cast_optimizer(
@@ -66,7 +62,7 @@ def cast_prediction_transform(transform: Callable) -> Callable:
     raise TypeError(f"Incorrect type for prediction_transform: {type(transform)}")
 
 
-def cast_device(device: Device) -> Union[torch.device, List[torch.device]]:
+def cast_device(device: types.InputDevices) -> types.Devices:
     if isinstance(device, torch.device):
         return device
     elif isinstance(device, (list, tuple)):
@@ -104,8 +100,8 @@ class ModelMeta(type):
 
 
 def choose_attribute_from_dict(
-        attribute_meta: AttrMeta,
-        attribute_params: Param
+        attribute_meta: types.AttrMeta,
+        attribute_params: types.Param
 ) -> Tuple[Any, collections.abc.Mapping]:
     if isinstance(attribute_meta, collections.abc.Mapping):
         if isinstance(attribute_params, (list, tuple)) and len(attribute_params) == 2:
@@ -139,7 +135,7 @@ class BuildModel(metaclass=ModelMeta):
     loss: nn.Module
     device: torch.device
     prediction_transform: Callable
-    _meta: Dict[str, AttrMeta]
+    _meta: Dict[str, types.AttrMeta]
 
     def __init__(self, params: dict, build_order: Iterable = ATTRS_BUILD_ORDER):
         params = copy.deepcopy(params)
@@ -157,9 +153,9 @@ class BuildModel(metaclass=ModelMeta):
                 attribute = attr_build_func(attribute_meta, attribute_params)
             setattr(self, attr_name, attribute)
 
-        self.set_device(self.device)
-
-    def build_nn_module(self, nn_module_meta: AttrMeta, nn_module_params: Param):
+    def build_nn_module(self,
+                        nn_module_meta: types.AttrMeta,
+                        nn_module_params: types.Param):
         if nn_module_meta is None:
             raise ValueError("nn_module is required attribute for argus.Model")
 
@@ -169,7 +165,9 @@ class BuildModel(metaclass=ModelMeta):
         nn_module = nn_module(**params)
         return nn_module
 
-    def build_optimizer(self, optimizer_meta: AttrMeta, optim_params: Param):
+    def build_optimizer(self,
+                        optimizer_meta: types.AttrMeta,
+                        optim_params: types.Param):
         optimizer, params = choose_attribute_from_dict(optimizer_meta,
                                                        optim_params)
         optimizer = cast_optimizer(optimizer)
@@ -178,7 +176,9 @@ class BuildModel(metaclass=ModelMeta):
         optimizer = optimizer(params=grad_params, **params)
         return optimizer
 
-    def build_loss(self, loss_meta: AttrMeta, loss_params: Param):
+    def build_loss(self,
+                   loss_meta: types.AttrMeta,
+                   loss_params: types.Param):
         loss, params = choose_attribute_from_dict(loss_meta,
                                                   loss_params)
         loss = cast_loss(loss)
@@ -186,20 +186,23 @@ class BuildModel(metaclass=ModelMeta):
         return loss
 
     def build_prediction_transform(self,
-                                   transform_meta: AttrMeta,
-                                   transform_params: Param):
+                                   transform_meta: types.AttrMeta,
+                                   transform_params: types.Param):
         transform, params = choose_attribute_from_dict(transform_meta,
                                                        transform_params)
         transform = cast_prediction_transform(transform)
         prediction_transform = transform(**params)
         return prediction_transform
 
-    def build_device(self, device_meta: Device, device_param: Device):
+    def build_device(self,
+                     device_meta: types.InputDevices,
+                     device_param: types.InputDevices) -> torch.device:
         if device_param:
             device = device_param
         else:
             device = device_meta
-        return cast_device(device)
+        self.set_device(cast_device(device))
+        return self.device
 
     def build_logger(self):
         formatter = logging.Formatter('[%(asctime)s][%(levelname)s]: %(message)s')
@@ -227,7 +230,7 @@ class BuildModel(metaclass=ModelMeta):
         else:
             return self.nn_module
 
-    def set_device(self, device: Device):
+    def set_device(self, device: types.InputDevices):
         """Move nn_module and loss to the specified device.
 
         If a list of devices is passed, :class:`torch.nn.DataParallel` will be
@@ -254,27 +257,29 @@ class BuildModel(metaclass=ModelMeta):
 
         """
         torch_device = cast_device(device)
-        str_device = device_to_str(torch_device)
         nn_module = self.get_nn_module()
 
         if isinstance(torch_device, (list, tuple)):
-            device_ids = []
-            for dev in torch_device:
-                if dev.type != 'cuda':
-                    raise ValueError("Non cuda device in list of devices")
-                if dev.index is None:
-                    raise ValueError("Cuda device without index in list of devices")
-                device_ids.append(dev.index)
-            if len(device_ids) != len(set(device_ids)):
-                raise ValueError("Cuda device indices must be unique")
+            device_ids = get_device_indices(torch_device)
             nn_module = DataParallel(nn_module, device_ids=device_ids)
-            torch_device = torch_device[0]
+            output_device = torch_device[0]
+        else:
+            output_device = torch_device
 
-        self.nn_module = nn_module.to(torch_device)
+        self.nn_module = nn_module.to(output_device)
         if self.loss is not None:
-            self.loss = self.loss.to(torch_device)
-        self.params['device'] = str_device
-        self.device = torch_device
+            self.loss = self.loss.to(output_device)
+        self.params['device'] = device_to_str(torch_device)
+        self.device = output_device
+
+    def get_device(self) -> types.Devices:
+        """Get device or list of devices in case of multi-GPU mode.
+
+        Returns:
+            device (str, torch.device or list of devices): A device or list of devices.
+
+        """
+        return cast_device(self.params['device'])
 
     def _check_attributes(self, attrs: Iterable) -> bool:
         for attr_name in attrs:

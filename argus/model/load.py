@@ -1,15 +1,11 @@
 import os
-from pathlib import Path
-from typing import Union, List, Tuple, Optional, Callable
+from typing import Union, Optional, Callable
 
 import torch
 
+from argus import types
 from argus.model.build import MODEL_REGISTRY, cast_device
 from argus.utils import deep_to, device_to_str, Default, default, identity
-
-
-Device = Union[str, torch.device, List[Union[str, torch.device]]]
-Param = Union[dict, Tuple[str, dict]]
 
 
 def default_change_state_dict_func(nn_state_dict: dict,
@@ -17,12 +13,12 @@ def default_change_state_dict_func(nn_state_dict: dict,
     return nn_state_dict, optimizer_state_dict
 
 
-def load_model(file_path: Union[str, Path],
-               nn_module: Union[Default, Param] = default,
-               optimizer: Union[Default, None, Param] = default,
-               loss: Union[Default, None, Param] = default,
-               prediction_transform: Union[Default, None, Param] = default,
-               device: Union[Default, Device] = default,
+def load_model(file_path: types.Path,
+               nn_module: Union[Default, types.Param] = default,
+               optimizer: Union[Default, None, types.Param] = default,
+               loss: Union[Default, None, types.Param] = default,
+               prediction_transform: Union[Default, None, types.Param] = default,
+               device: Union[Default, types.InputDevices] = default,
                change_params_func: Callable = identity,
                change_state_dict_func: Callable = default_change_state_dict_func,
                model_name: Union[Default, str] = default,

@@ -2,6 +2,9 @@ import torch
 import collections
 from functools import partial
 from tempfile import TemporaryFile
+from typing import List, Union, Type, Set
+
+from argus import types
 
 
 class Default:
@@ -49,7 +52,7 @@ def deep_detach(input):
         return input
 
 
-def deep_chunk(input, chunks, dim=0):
+def deep_chunk(input, chunks: int, dim: int = 0):
     partial_deep_chunk = partial(deep_chunk, chunks=chunks, dim=dim)
     if torch.is_tensor(input):
         return torch.chunk(input, chunks, dim=dim)
@@ -63,14 +66,14 @@ def deep_chunk(input, chunks, dim=0):
         return [input for _ in range(chunks)]
 
 
-def device_to_str(device):
+def device_to_str(device: 'types.Devices') -> Union[str, List[str]]:
     if isinstance(device, (list, tuple)):
         return [str(d) for d in device]
     else:
         return str(device)
 
 
-def inheritors(cls):
+def inheritors(cls: Type) -> Set[Type]:
     subclasses = set()
     cls_list = [cls]
     while cls_list:
@@ -87,7 +90,20 @@ def check_pickleble(obj):
         torch.save(obj, file)
 
 
-class AverageMeter(object):
+def get_device_indices(devices: List[torch.device]) -> List[int]:
+    device_ids = []
+    for dev in devices:
+        if dev.type != 'cuda':
+            raise ValueError("Non CUDA device in list of devices")
+        if dev.index is None:
+            raise ValueError("CUDA device without index in list of devices")
+        device_ids.append(dev.index)
+    if len(device_ids) != len(set(device_ids)):
+        raise ValueError("CUDA device indices must be unique")
+    return device_ids
+
+
+class AverageMeter:
     """Computes and stores the average by Welford's algorithm"""
 
     def __init__(self):
@@ -97,6 +113,6 @@ class AverageMeter(object):
         self.average = 0
         self.count = 0
 
-    def update(self, value, n=1):
+    def update(self, value, n: int = 1):
         self.count += n
         self.average += (value - self.average) / self.count

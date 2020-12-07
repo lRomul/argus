@@ -1,9 +1,9 @@
 import numbers
-from pathlib import Path
-from typing import Iterable, Optional, List, Union, Dict
+from typing import Iterable, Optional, Union, Dict, List
 
 import torch
 
+from argus import types
 from argus.model.build import BuildModel
 from argus.engine import Engine, State
 from argus.callbacks import Callback, on_epoch_complete
@@ -13,18 +13,20 @@ from argus.metrics.loss import Loss
 from argus.utils import deep_to, deep_detach
 
 
-def attach_callbacks(engine: Engine, callbacks: Optional[List[Callback]]):
-    if callbacks is not None:
-        for callback in callbacks:
-            if isinstance(callback, Callback):
-                callback.attach(engine)
-            else:
-                raise TypeError(
-                    f"Expected callback type {Callback}, got {type(callback)}"
-                )
+def attach_callbacks(engine: Engine, callbacks: Optional[types.Callbacks]):
+    if callbacks is None:
+        return
+    for callback in callbacks:
+        if isinstance(callback, Callback):
+            callback.attach(engine)
+        else:
+            raise TypeError(f"Expected callback type {Callback}, "
+                            f"got {type(callback)}")
 
 
-def attach_metrics(engine: Engine, metrics: List[Union[Metric, str]]):
+def attach_metrics(engine: Engine, metrics: Optional[types.Metrics]):
+    if metrics is None:
+        return
     for metric in metrics:
         if isinstance(metric, str):
             if metric in METRIC_REGISTRY:
@@ -34,9 +36,8 @@ def attach_metrics(engine: Engine, metrics: List[Union[Metric, str]]):
         if isinstance(metric, Metric):
             metric.attach(engine)
         else:
-            raise TypeError(
-                f"Expected metric type {Metric} or str, got {type(metric)}"
-            )
+            raise TypeError(f"Expected metric type {Metric} or str, "
+                            f"got {type(metric)}")
 
 
 class Model(BuildModel):
@@ -47,7 +48,10 @@ class Model(BuildModel):
         optimizer (torch.optim.Optimizer): Optimizer as
             :class:`torch.optim.Optimizer`.
         loss (torch.nn.Module): Loss function as :class:`torch.nn.Module`.
-        device: (torch.device): device as :class:`torch.torch.device`.
+        device (torch.device): device as :class:`torch.torch.device`.
+            The attribute stores a device location of output in the case of
+            multi-GPU mode. To get all devices use
+            :meth:`argus.model.Model.get_device` method.
         prediction_transform (Callable): postprocessing function of predictions
             as :class:`Callable` function or object.
 
@@ -189,10 +193,10 @@ class Model(BuildModel):
             train_loader: Iterable,
             val_loader: Optional[Iterable] = None,
             num_epochs: int = 1,
-            metrics: Optional[List[Union[Metric, str]]] = None,
+            metrics: types.Metrics = None,
             metrics_on_train: bool = False,
-            callbacks: Optional[List[Callback]] = None,
-            val_callbacks: Optional[List[Callback]] = None):
+            callbacks: Optional[types.Callbacks] = None,
+            val_callbacks: Optional[types.Callbacks] = None):
         """Train the argus model.
 
         The method attaches metrics and callbacks to the train and validation
@@ -246,8 +250,8 @@ class Model(BuildModel):
 
     def validate(self,
                  val_loader: Iterable,
-                 metrics: Optional[List[Metric]] = None,
-                 callbacks: Optional[List[Callback]] = None) -> Dict[str, float]:
+                 metrics: Optional[types.Metrics] = None,
+                 callbacks: Optional[types.Callbacks] = None) -> Dict[str, float]:
         """Perform a validation.
 
         Args:
@@ -327,7 +331,7 @@ class Model(BuildModel):
             return lrs[0]
         return lrs
 
-    def save(self, file_path: Union[str, Path], optimizer_state: bool = False):
+    def save(self, file_path: types.Path, optimizer_state: bool = False):
         """Save the argus model into a file.
 
         The argus model is saved as a dict::
