@@ -13,7 +13,7 @@ from argus.metrics.loss import Loss
 from argus.utils import deep_to, deep_detach
 
 
-def attach_callbacks(engine: Engine, callbacks: Optional[types.Callbacks]):
+def attach_callbacks(engine: Engine, callbacks: Optional[List[Callback]]):
     if callbacks is None:
         return
     for callback in callbacks:
@@ -24,7 +24,7 @@ def attach_callbacks(engine: Engine, callbacks: Optional[types.Callbacks]):
                             f"got {type(callback)}")
 
 
-def attach_metrics(engine: Engine, metrics: Optional[types.Metrics]):
+def attach_metrics(engine: Engine, metrics: Optional[List[Union[Metric, str]]]):
     if metrics is None:
         return
     for metric in metrics:
@@ -193,10 +193,10 @@ class Model(BuildModel):
             train_loader: Iterable,
             val_loader: Optional[Iterable] = None,
             num_epochs: int = 1,
-            metrics: types.Metrics = None,
+            metrics: List[Union[Metric, str]] = None,
             metrics_on_train: bool = False,
-            callbacks: Optional[types.Callbacks] = None,
-            val_callbacks: Optional[types.Callbacks] = None):
+            callbacks: Optional[List[Callback]] = None,
+            val_callbacks: Optional[List[Callback]] = None):
         """Train the argus model.
 
         The method attaches metrics and callbacks to the train and validation
@@ -250,8 +250,8 @@ class Model(BuildModel):
 
     def validate(self,
                  val_loader: Iterable,
-                 metrics: Optional[types.Metrics] = None,
-                 callbacks: Optional[types.Callbacks] = None) -> Dict[str, float]:
+                 metrics: Optional[List[Union[Metric, str]]] = None,
+                 callbacks: Optional[List[Callback]] = None) -> Dict[str, float]:
         """Perform a validation.
 
         Args:

@@ -8,15 +8,15 @@ from argus import types
 
 
 class Default:
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "default"
 
 
 class Identity:
-    def __call__(self, x):
+    def __call__(self, x: types.TVar) -> types.TVar:
         return x
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Identity()"
 
 
@@ -66,14 +66,14 @@ def deep_chunk(input, chunks: int, dim: int = 0):
         return [input for _ in range(chunks)]
 
 
-def device_to_str(device: 'types.Devices') -> Union[str, List[str]]:
+def device_to_str(device: types.Devices) -> Union[str, List[str]]:
     if isinstance(device, (list, tuple)):
         return [str(d) for d in device]
     else:
         return str(device)
 
 
-def inheritors(cls: Type) -> Set[Type]:
+def inheritors(cls: Type[types.TVar]) -> Set[Type[types.TVar]]:
     subclasses = set()
     cls_list = [cls]
     while cls_list:
