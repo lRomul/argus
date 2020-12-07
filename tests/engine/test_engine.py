@@ -2,8 +2,8 @@ import pytest
 
 import argus
 from argus.engine import State, Engine, Events, EventEnum
-from argus.engine.engine import _init_step_method
-from argus.model.model import _attach_callbacks
+from argus.engine.engine import init_step_method
+from argus.model.model import attach_callbacks
 from argus.callbacks import Callback
 
 
@@ -18,30 +18,30 @@ def test_state_update(linear_argus_model_instance):
 def test_init_step_method(test_engine):
     state = test_engine.state
     train_step = state.model.train_step
-    step_method, model, phase = _init_step_method(train_step)
+    step_method, model, phase = init_step_method(train_step)
     assert phase == 'train'
     assert model is state.model
     assert step_method is train_step
 
     val_step = state.model.val_step
-    step_method, model, phase = _init_step_method(val_step)
+    step_method, model, phase = init_step_method(val_step)
     assert phase == 'val'
     assert model is state.model
     assert step_method is val_step
 
     test_step = state.model.test_step
-    step_method, model, phase = _init_step_method(test_step)
+    step_method, model, phase = init_step_method(test_step)
     assert phase == 'test'
     assert model is state.model
     assert step_method is test_step
 
-    _, _, phase = _init_step_method(state.model.get_lr)
+    _, _, phase = init_step_method(state.model.get_lr)
     assert phase == 'get_lr'
 
     with pytest.raises(TypeError):
-        _init_step_method(lambda x: x)
+        init_step_method(lambda x: x)
     with pytest.raises(TypeError):
-        _init_step_method(state.update)
+        init_step_method(state.update)
 
 
 class TestEngineMethods:
@@ -159,7 +159,7 @@ class TestEngineMethods:
         data_loader = [4, 8, 15, 16, 23, 42]
         callback = CustomCallback()
         engine = Engine(model.count_step)
-        _attach_callbacks(engine, [callback])
+        attach_callbacks(engine, [callback])
         engine.run(data_loader)
         assert callback.start_storage == data_loader
         assert callback.end_storage == [d + 1 for d in data_loader]

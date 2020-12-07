@@ -3,7 +3,7 @@ import pytest
 
 import argus
 from argus.metrics.metric import Metric, init_better
-from argus.model.model import _attach_metrics
+from argus.model.model import attach_metrics
 
 
 class CustomMetric(Metric):
@@ -64,9 +64,9 @@ class TestMetric:
     def test_custom_metric(self, test_engine):
         metric = CustomMetric()
         data_loader = [4, 8, 15, 16, 23, 42]
-        _attach_metrics(test_engine, [metric])
+        attach_metrics(test_engine, [metric])
         with pytest.raises(TypeError):
-            _attach_metrics(test_engine, [None])
+            attach_metrics(test_engine, [None])
         state = test_engine.run(data_loader)
         assert metric.data == data_loader
         assert metric.compute() == len(data_loader)
@@ -85,12 +85,12 @@ class TestMetric:
 
     def test_custom_callback_by_name(self, test_engine):
         data_loader = [4, 8, 15, 16, 23, 42]
-        _attach_metrics(test_engine, ["custom_metric"])
+        attach_metrics(test_engine, ["custom_metric"])
         state = test_engine.run(data_loader)
         assert state.metrics == {"test_custom_metric": len(data_loader)}
 
         with pytest.raises(ValueError):
-            _attach_metrics(test_engine, ["qwerty"])
+            attach_metrics(test_engine, ["qwerty"])
 
     def test_just_for_coverage(self):
         metric = Metric()

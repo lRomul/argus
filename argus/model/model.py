@@ -13,7 +13,7 @@ from argus.metrics.loss import Loss
 from argus.utils import deep_to, deep_detach
 
 
-def _attach_callbacks(engine: Engine, callbacks: Optional[List[Callback]]):
+def attach_callbacks(engine: Engine, callbacks: Optional[List[Callback]]):
     if callbacks is not None:
         for callback in callbacks:
             if isinstance(callback, Callback):
@@ -24,7 +24,7 @@ def _attach_callbacks(engine: Engine, callbacks: Optional[List[Callback]]):
                 )
 
 
-def _attach_metrics(engine: Engine, metrics: List[Union[Metric, str]]):
+def attach_metrics(engine: Engine, metrics: List[Union[Metric, str]]):
     for metric in metrics:
         if isinstance(metric, str):
             if metric in METRIC_REGISTRY:
@@ -223,15 +223,15 @@ class Model(BuildModel):
 
         train_engine = Engine(self.train_step)
         train_metrics = [Loss()] + metrics if metrics_on_train else [Loss()]
-        _attach_metrics(train_engine, train_metrics)
+        attach_metrics(train_engine, train_metrics)
         default_logging.attach(train_engine)
 
         if val_loader is not None:
             self.validate(val_loader, metrics, val_callbacks)
             val_engine = Engine(self.val_step)
-            _attach_metrics(val_engine, [Loss()] + metrics)
+            attach_metrics(val_engine, [Loss()] + metrics)
             default_logging.attach(val_engine)
-            _attach_callbacks(val_engine, val_callbacks)
+            attach_callbacks(val_engine, val_callbacks)
 
             @on_epoch_complete
             def validation_epoch(train_state, val_engine, val_loader):
@@ -241,7 +241,7 @@ class Model(BuildModel):
 
             validation_epoch.attach(train_engine, val_engine, val_loader)
 
-        _attach_callbacks(train_engine, callbacks)
+        attach_callbacks(train_engine, callbacks)
         train_engine.run(train_loader, 0, num_epochs)
 
     def validate(self,
@@ -265,9 +265,9 @@ class Model(BuildModel):
         self._check_train_ready()
         metrics = [] if metrics is None else metrics
         val_engine = Engine(self.val_step)
-        _attach_metrics(val_engine, [Loss()] + metrics)
+        attach_metrics(val_engine, [Loss()] + metrics)
         default_logging.attach(val_engine)
-        _attach_callbacks(val_engine, callbacks)
+        attach_callbacks(val_engine, callbacks)
         state = val_engine.run(val_loader, -1, 0)
         return state.metrics
 

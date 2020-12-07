@@ -41,7 +41,7 @@ class Events(EventEnum):
     CATCH_EXCEPTION = "catch_exception"
 
 
-def _init_step_method(
+def init_step_method(
         step_method: Callable
 ) -> Tuple[Callable, 'argus.model.Model', str]:
     if isinstance(step_method, MethodType):
@@ -95,7 +95,7 @@ class State:
                  **kwargs):
         self.iteration: int = 0
         self.epoch: int = 0
-        self.step_method, self.model, self.phase = _init_step_method(step_method)
+        self.step_method, self.model, self.phase = init_step_method(step_method)
         self.logger: logging.Logger = self.model.logger
         self.data_loader: Optional[Iterable] = None
         self.exception: Optional[BaseException] = None

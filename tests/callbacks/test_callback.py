@@ -3,7 +3,7 @@ import pytest
 
 import argus
 from argus.engine import Engine, Events, EventEnum
-from argus.model.model import _attach_callbacks
+from argus.model.model import attach_callbacks
 from argus.callbacks import Callback
 
 
@@ -108,9 +108,9 @@ class TestCallbacks:
 
     def test_attach_not_a_callback(self, test_engine):
         with pytest.raises(TypeError):
-            _attach_callbacks(test_engine, [None])
+            attach_callbacks(test_engine, [None])
         with pytest.raises(TypeError):
-            _attach_callbacks(test_engine, [test_engine])
+            attach_callbacks(test_engine, [test_engine])
 
 
 class TestDecoratorCallbacks:
@@ -165,7 +165,7 @@ class TestDecoratorCallbacks:
             step_storage.step_method,
             model=linear_argus_model_instance
         )
-        _attach_callbacks(engine, [
+        attach_callbacks(engine, [
             on_start_function,
             on_complete_function,
             on_epoch_start_function,
