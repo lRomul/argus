@@ -49,11 +49,10 @@ def _init_step_method(
     if isinstance(step_method, MethodType):
         model = step_method.__self__
         if isinstance(model, argus.model.Model):
-            phase_match = re.search(r'^(.*)_step$', step_method.__name__)
-            if phase_match is None:
-                phase = ""
-            else:
-                phase = phase_match.group(1)
+            phase = step_method.__name__
+            step_match = re.search(r'^(.*)_step$', phase)
+            if step_match is not None:
+                phase = step_match.group(1)
             return step_method, model, phase
     raise TypeError("step_method must be a method of 'argus.model.Model'.")
 

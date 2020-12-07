@@ -19,30 +19,19 @@ def _format_lr_to_str(lr, precision=5):
 
 
 @on_epoch_complete
-def metrics_logging(state: State, train=False, print_epoch=True):
-    if train:
-        epoch_name = 'Train'
-        prefix = 'train_'
-    else:
-        epoch_name = 'Validation'
-        prefix = 'val_'
+def default_logging(state: State):
+    message = f"{state.phase} - epoch: {state.epoch}"
 
-    if print_epoch:
-        train_epoch = state.epoch
-        message = [f"{epoch_name} - Epoch: {train_epoch}"]
-    else:
-        message = [epoch_name]
-
-    if train:
+    if state.phase == 'train':
         lr = state.model.get_lr()
         lr = _format_lr_to_str(lr)
-        message.append(f'LR: {lr}')
+        message += f', lr: {lr}'
 
+    prefix = f"{state.phase}_" if state.phase else ''
     for metric_name, metric_value in state.metrics.items():
-        if not metric_name.startswith(prefix):
-            continue
-        message.append(f"{metric_name}: {metric_value:.7g}")
-    state.logger.info(", ".join(message))
+        if metric_name.startswith(prefix):
+            message += f", {metric_name}: {metric_value:.7g}"
+    state.logger.info(message)
 
 
 class LoggingToFile(Callback):

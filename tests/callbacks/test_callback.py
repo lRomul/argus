@@ -101,16 +101,16 @@ class TestCallbacks:
         assert step_storage.state is engine.state if n_epochs \
             else step_storage.state is None
 
-    def test_attach_non_callable_handler(self, custom_test_callback, engine):
+    def test_attach_non_callable_handler(self, custom_test_callback, test_engine):
         custom_test_callback.start = 'no_a_method_or_function'
         with pytest.raises(TypeError):
-            custom_test_callback.attach(engine)
+            custom_test_callback.attach(test_engine)
 
-    def test_attach_not_a_callback(self, engine):
+    def test_attach_not_a_callback(self, test_engine):
         with pytest.raises(TypeError):
-            _attach_callbacks(engine, [None])
+            _attach_callbacks(test_engine, [None])
         with pytest.raises(TypeError):
-            _attach_callbacks(engine, [engine])
+            _attach_callbacks(test_engine, [test_engine])
 
 
 class TestDecoratorCallbacks:

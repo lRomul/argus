@@ -34,31 +34,31 @@ def check_checkpoint(path, engine, epoch, val_loss,
 
 
 class TestCheckpoints:
-    def test_checkpoint(self, tmpdir, engine):
-        model = engine.state.model
+    def test_checkpoint(self, tmpdir, test_engine):
+        model = test_engine.state.model
         path = Path(tmpdir.join("path/to/checkpoints/"))
         checkpoint = Checkpoint(dir_path=path, max_saves=None, period=1,
                                 file_format='model-{epoch:03d}-{val_loss:.6f}.pth',
                                 save_after_exception=True)
-        checkpoint.attach(engine)
-        checkpoint.start(engine.state)
+        checkpoint.attach(test_engine)
+        checkpoint.start(test_engine.state)
 
-        checkpoint_step_epoch(checkpoint, engine, 12, 0.42)
-        assert check_checkpoint(path, engine, 12, 0.42)
+        checkpoint_step_epoch(checkpoint, test_engine, 12, 0.42)
+        assert check_checkpoint(path, test_engine, 12, 0.42)
 
-        engine.state.epoch = 24
-        engine.state.metrics = {'val_loss': 0.12}
-        checkpoint_step_epoch(checkpoint, engine, 24, 0.12)
-        assert check_checkpoint(path, engine, 24, 0.12)
+        test_engine.state.epoch = 24
+        test_engine.state.metrics = {'val_loss': 0.12}
+        checkpoint_step_epoch(checkpoint, test_engine, 24, 0.12)
+        assert check_checkpoint(path, test_engine, 24, 0.12)
 
         nn.init.xavier_uniform_(model.nn_module.fc.weight)
-        checkpoint.catch_exception(engine.state)
-        assert check_checkpoint(path, engine, None, None,
+        checkpoint.catch_exception(test_engine.state)
+        assert check_checkpoint(path, test_engine, None, None,
                                 file_format='model-after-exception.pth')
 
         assert len(list(path.glob('*.pth'))) == 3
 
-    def test_checkpoint_exceptions(self, tmpdir, engine, recwarn):
+    def test_checkpoint_exceptions(self, tmpdir, test_engine, recwarn):
         path = Path(tmpdir.join("path/to/exception_checkpoints/"))
         with pytest.raises(ValueError):
             Checkpoint(dir_path=path, max_saves=-3)
@@ -73,41 +73,41 @@ class TestCheckpoints:
             MonitorCheckpoint(dir_path=path, monitor='qwerty')
 
         checkpoint = MonitorCheckpoint(dir_path=path, monitor='train_loss')
-        checkpoint.attach(engine)
+        checkpoint.attach(test_engine)
         with pytest.raises(ValueError):
-            checkpoint.epoch_complete(engine.state)
+            checkpoint.epoch_complete(test_engine.state)
 
     @pytest.mark.parametrize('max_saves', [None, 1, 3, 12])
-    def test_max_saves(self, tmpdir, engine, max_saves):
+    def test_max_saves(self, tmpdir, test_engine, max_saves):
         path = Path(tmpdir.join("path/to/max_saves_checkpoints/"))
         checkpoint = Checkpoint(dir_path=path, max_saves=max_saves, period=1,
                                 file_format='model-{epoch:03d}-{val_loss:.6f}.pth')
-        checkpoint.attach(engine)
-        checkpoint.start(engine.state)
+        checkpoint.attach(test_engine)
+        checkpoint.start(test_engine.state)
 
         num_epochs = 29
         for epoch in range(1, num_epochs + 1):
-            checkpoint_step_epoch(checkpoint, engine, epoch, 1 / epoch)
-            check_checkpoint(path, engine, epoch, 1 / epoch)
+            checkpoint_step_epoch(checkpoint, test_engine, epoch, 1 / epoch)
+            check_checkpoint(path, test_engine, epoch, 1 / epoch)
 
         assert len(list(path.glob('*.pth'))) == max_saves \
             if max_saves is not None else num_epochs
 
-    def test_monitor_checkpoint(self, tmpdir, engine):
+    def test_monitor_checkpoint(self, tmpdir, test_engine):
         path = Path(tmpdir.join("path/to/monitor_checkpoints/"))
         checkpoint = MonitorCheckpoint(dir_path=path, max_saves=3, monitor='val_loss')
-        checkpoint.attach(engine)
-        checkpoint.start(engine.state)
+        checkpoint.attach(test_engine)
+        checkpoint.start(test_engine.state)
 
         decreasing_seq = list(range(30))[::-1]
         for i in range(1, len(decreasing_seq), 2):
             decreasing_seq[i] = 100
 
         for epoch, val_loss in enumerate(decreasing_seq, 1):
-            checkpoint_step_epoch(checkpoint, engine, epoch, val_loss)
+            checkpoint_step_epoch(checkpoint, test_engine, epoch, val_loss)
             expected_path = path / f'model-{epoch:03d}-{val_loss:.6f}.pth'
             if val_loss != 100:
-                assert check_checkpoint(path, engine, epoch, val_loss)
+                assert check_checkpoint(path, test_engine, epoch, val_loss)
             else:
                 assert not expected_path.exists()
 

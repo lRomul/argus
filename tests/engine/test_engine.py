@@ -15,8 +15,8 @@ def test_state_update(linear_argus_model_instance):
     assert state.asdf == 12
 
 
-def test_init_step_method(engine):
-    state = engine.state
+def test_init_step_method(test_engine):
+    state = test_engine.state
     train_step = state.model.train_step
     step_method, model, phase = _init_step_method(train_step)
     assert phase == 'train'
@@ -36,7 +36,7 @@ def test_init_step_method(engine):
     assert step_method is test_step
 
     _, _, phase = _init_step_method(state.model.get_lr)
-    assert phase == ''
+    assert phase == 'get_lr'
 
     with pytest.raises(TypeError):
         _init_step_method(lambda x: x)
@@ -45,19 +45,19 @@ def test_init_step_method(engine):
 
 
 class TestEngineMethods:
-    def test_add_event_handler(self, engine):
+    def test_add_event_handler(self, test_engine):
         def some_function():
             pass
-        assert len(engine.event_handlers[Events.START]) == 0
-        engine.add_event_handler(Events.START, some_function)
-        assert len(engine.event_handlers[Events.START]) == 1
-        assert engine.event_handlers[Events.START][0][0] is some_function
+        assert len(test_engine.event_handlers[Events.START]) == 0
+        test_engine.add_event_handler(Events.START, some_function)
+        assert len(test_engine.event_handlers[Events.START]) == 1
+        assert test_engine.event_handlers[Events.START][0][0] is some_function
 
         with pytest.raises(TypeError):
-            engine.add_event_handler(42, some_function)
+            test_engine.add_event_handler(42, some_function)
 
     @pytest.mark.parametrize("event", [e for e in Events])
-    def test_raise_event(self, event, engine):
+    def test_raise_event(self, event, test_engine):
         class CallArgsStorage:
             def __init__(self):
                 self.state = None
@@ -70,23 +70,23 @@ class TestEngineMethods:
                 self.kwargs = kwargs
 
         call_args_storage = CallArgsStorage()
-        assert len(engine.event_handlers[event]) == 0
-        engine.add_event_handler(event, call_args_storage,
-                                 4, 8, 15, 16, 23, 42, qwerty="qwerty")
-        engine.raise_event(event)
+        assert len(test_engine.event_handlers[event]) == 0
+        test_engine.add_event_handler(event, call_args_storage,
+                                      4, 8, 15, 16, 23, 42, qwerty="qwerty")
+        test_engine.raise_event(event)
 
         assert call_args_storage.args == (4, 8, 15, 16, 23, 42)
         assert call_args_storage.kwargs == {"qwerty": "qwerty"}
 
         with pytest.raises(TypeError):
-            engine.raise_event(None)
+            test_engine.raise_event(None)
 
-    def test_run(self, engine):
-        storage_model = engine.state.model
+    def test_run(self, test_engine):
+        storage_model = test_engine.state.model
         storage_model.reset()
 
         data_loader = [4, 8, 15, 16, 23, 42]
-        state = engine.run(data_loader, start_epoch=0, end_epoch=3)
+        state = test_engine.run(data_loader, start_epoch=0, end_epoch=3)
 
         assert storage_model.batch_lst == data_loader * 3
         assert state.epoch == 3
@@ -96,15 +96,15 @@ class TestEngineMethods:
             state.stopped = True
 
         storage_model.reset()
-        engine.add_event_handler(Events.EPOCH_COMPLETE, stop_function)
-        state = engine.run(data_loader, start_epoch=0, end_epoch=3)
+        test_engine.add_event_handler(Events.EPOCH_COMPLETE, stop_function)
+        state = test_engine.run(data_loader, start_epoch=0, end_epoch=3)
         assert storage_model.batch_lst == data_loader
         assert state.epoch == 1
         assert state.iteration == len(data_loader)
 
         storage_model.reset()
-        engine.add_event_handler(Events.ITERATION_COMPLETE, stop_function)
-        state = engine.run(data_loader, start_epoch=0, end_epoch=3)
+        test_engine.add_event_handler(Events.ITERATION_COMPLETE, stop_function)
+        state = test_engine.run(data_loader, start_epoch=0, end_epoch=3)
         assert storage_model.batch_lst == [data_loader[0]]
         assert state.iteration == 0
 
@@ -115,12 +115,12 @@ class TestEngineMethods:
             raise CustomException
 
         storage_model.reset()
-        engine.add_event_handler(Events.START, exception_function)
+        test_engine.add_event_handler(Events.START, exception_function)
         with pytest.raises(CustomException):
-            engine.run(data_loader, start_epoch=0, end_epoch=3)
+            test_engine.run(data_loader, start_epoch=0, end_epoch=3)
         assert storage_model.batch_lst == []
-        assert engine.state.iteration == 0
-        assert engine.state.epoch == 0
+        assert test_engine.state.iteration == 0
+        assert test_engine.state.epoch == 0
 
     def test_custom_events(self, linear_net_class):
         class CustomEvents(EventEnum):

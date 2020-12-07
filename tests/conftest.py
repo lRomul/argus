@@ -178,10 +178,32 @@ def one_dim_num_sequence(request):
 
 
 @pytest.fixture(scope='function')
-def engine(linear_argus_model_instance):
+def test_engine(linear_argus_model_instance):
     return Engine(linear_argus_model_instance.test_step)
 
 
 @pytest.fixture(scope='function')
-def state(engine):
-    return engine.state
+def train_engine(linear_argus_model_instance):
+    return Engine(linear_argus_model_instance.train_step)
+
+
+@pytest.fixture(scope='function')
+def val_engine(linear_argus_model_instance):
+    return Engine(linear_argus_model_instance.val_step)
+
+
+@pytest.fixture(scope='function')
+def test_state(test_engine):
+    return test_engine.state
+
+
+@pytest.fixture(scope='function')
+def train_state(train_engine):
+    return train_engine.state
+
+
+@pytest.fixture(scope='function')
+def val_state(val_engine):
+    return val_engine.state
+
+

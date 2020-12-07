@@ -7,7 +7,7 @@ import torch
 from argus.model.build import BuildModel
 from argus.engine import Engine, State
 from argus.callbacks import Callback, on_epoch_complete
-from argus.callbacks.logging import metrics_logging
+from argus.callbacks.logging import default_logging
 from argus.metrics.metric import Metric, METRIC_REGISTRY
 from argus.metrics.loss import Loss
 from argus.utils import deep_to, deep_detach
@@ -224,12 +224,13 @@ class Model(BuildModel):
         train_engine = Engine(self.train_step)
         train_metrics = [Loss()] + metrics if metrics_on_train else [Loss()]
         _attach_metrics(train_engine, train_metrics)
-        metrics_logging.attach(train_engine, train=True)
+        default_logging.attach(train_engine)
 
         if val_loader is not None:
             self.validate(val_loader, metrics, val_callbacks)
             val_engine = Engine(self.val_step)
             _attach_metrics(val_engine, [Loss()] + metrics)
+            default_logging.attach(val_engine)
             _attach_callbacks(val_engine, val_callbacks)
 
             @on_epoch_complete
@@ -239,7 +240,6 @@ class Model(BuildModel):
                 train_state.metrics.update(val_state.metrics)
 
             validation_epoch.attach(train_engine, val_engine, val_loader)
-            metrics_logging.attach(train_engine, train=False)
 
         _attach_callbacks(train_engine, callbacks)
         train_engine.run(train_loader, 0, num_epochs)
@@ -266,9 +266,10 @@ class Model(BuildModel):
         metrics = [] if metrics is None else metrics
         val_engine = Engine(self.val_step)
         _attach_metrics(val_engine, [Loss()] + metrics)
+        default_logging.attach(val_engine)
         _attach_callbacks(val_engine, callbacks)
-        metrics_logging.attach(val_engine, train=False, print_epoch=False)
-        return val_engine.run(val_loader).metrics
+        state = val_engine.run(val_loader, start_epoch=-1, end_epoch=0)
+        return state.metrics
 
     def set_lr(self, lr: Union[float, List[float]]):
         """Set the learning rate for the optimizer.

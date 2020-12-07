@@ -4,7 +4,6 @@ import pytest
 import argus
 from argus.metrics.metric import Metric, init_better
 from argus.model.model import _attach_metrics
-from argus.engine import Engine
 
 
 class CustomMetric(Metric):
@@ -62,13 +61,13 @@ class TestMetric:
         warn = recwarn.pop()
         assert "redefined 'redefine_model' that was already" in str(warn.message)
 
-    def test_custom_metric(self, engine):
+    def test_custom_metric(self, test_engine):
         metric = CustomMetric()
         data_loader = [4, 8, 15, 16, 23, 42]
-        _attach_metrics(engine, [metric])
+        _attach_metrics(test_engine, [metric])
         with pytest.raises(TypeError):
-            _attach_metrics(engine, [None])
-        state = engine.run(data_loader)
+            _attach_metrics(test_engine, [None])
+        state = test_engine.run(data_loader)
         assert metric.data == data_loader
         assert metric.compute() == len(data_loader)
         assert state.metrics == {"test_custom_metric": len(data_loader)}
@@ -80,18 +79,18 @@ class TestMetric:
         def stop_on_first_iteration(state):
             state.stopped = True
 
-        stop_on_first_iteration.attach(engine)
-        engine.run(data_loader)
+        stop_on_first_iteration.attach(test_engine)
+        test_engine.run(data_loader)
         assert metric.compute() == 1
 
-    def test_custom_callback_by_name(self, engine):
+    def test_custom_callback_by_name(self, test_engine):
         data_loader = [4, 8, 15, 16, 23, 42]
-        _attach_metrics(engine, ["custom_metric"])
-        state = engine.run(data_loader)
+        _attach_metrics(test_engine, ["custom_metric"])
+        state = test_engine.run(data_loader)
         assert state.metrics == {"test_custom_metric": len(data_loader)}
 
         with pytest.raises(ValueError):
-            _attach_metrics(engine, ["qwerty"])
+            _attach_metrics(test_engine, ["qwerty"])
 
     def test_just_for_coverage(self):
         metric = Metric()
