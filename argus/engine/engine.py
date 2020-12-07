@@ -83,7 +83,7 @@ class State:
             `step_method` name ends with `_step`, the postfix will be removed.
             For default steps of argus model values are 'train' and 'val'.
         batch (Any): Batch sample from a data loader on the current iteration.
-        step_output (Any): Current output from `step_function` on current
+        step_output (Any): Current output from `step_method` on current
             iteration.
         metrics (dict): Dictionary with metrics values.
         stopped (bool): Boolean indicates :class:`argus.engine.Engine` is
@@ -92,7 +92,7 @@ class State:
     """
 
     def __init__(self,
-                 step_method: Callable,
+                 step_method: Callable[[Any, 'argus.engine.State'], Any],
                  **kwargs):
         self.iteration: int = 0
         self.epoch: int = 0
@@ -123,7 +123,7 @@ class State:
 
 
 class Engine:
-    """Runs ``step_function`` over each batch of a data loader with triggering
+    """Runs ``step_method`` over each batch of a data loader with triggering
     event handlers. The class is highly inspired by the Engine from
     `pytorch-ignite <https://github.com/pytorch/ignite>`_.
 
@@ -143,13 +143,13 @@ class Engine:
     """
 
     def __init__(self,
-                 step_method: Callable,
+                 step_method: Callable[[Any, State], Any],
                  **kwargs):
         self.event_handlers: Dict[
             EventEnum,
             List[Tuple[Callable, Tuple, Dict]]
         ] = defaultdict(list)
-        self.step_function = step_method
+        self.step_method = step_method
         self.state = State(
             step_method=step_method,
             engine=self,
@@ -188,7 +188,7 @@ class Engine:
                 handler(self.state, *args, **kwargs)
 
     def run(self, data_loader: Iterable, start_epoch=0, end_epoch=1) -> State:
-        """Run ``step_function`` on each batch from data loader
+        """Run ``step_method`` on each batch from data loader
         ``end_epoch - start_epoch`` times.
 
         Args:
@@ -216,7 +216,7 @@ class Engine:
                 for batch in data_loader:
                     self.state.batch = batch
                     self.raise_event(Events.ITERATION_START)
-                    self.state.step_output = self.step_function(batch, self.state)
+                    self.state.step_output = self.step_method(batch, self.state)
                     self.raise_event(Events.ITERATION_COMPLETE)
                     self.state.step_output = None
                     if self.state.stopped:

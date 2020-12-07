@@ -135,10 +135,10 @@ def choose_attribute_from_dict(
 
 class BuildModel(metaclass=ModelMeta):
     nn_module: nn.Module
-    optimizer: Optional[Optimizer]
-    loss: Optional[nn.Module]
+    optimizer: Optimizer
+    loss: nn.Module
     device: torch.device
-    prediction_transform: Optional[Callable]
+    prediction_transform: Callable
     _meta: Dict[str, AttrMeta]
 
     def __init__(self, params: dict, build_order: Iterable = ATTRS_BUILD_ORDER):

@@ -245,7 +245,7 @@ class Model(BuildModel):
         train_engine.run(train_loader, 0, num_epochs)
 
     def validate(self,
-                 val_loader: Optional[Iterable],
+                 val_loader: Iterable,
                  metrics: Optional[List[Metric]] = None,
                  callbacks: Optional[List[Callback]] = None) -> Dict[str, float]:
         """Perform a validation.
