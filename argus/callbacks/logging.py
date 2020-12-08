@@ -4,8 +4,9 @@ import os
 import csv
 import logging
 from datetime import datetime
-from typing import Union, List
+from typing import Optional, Union, List, IO
 
+from argus import types
 from argus.engine import State
 from argus.callbacks.callback import Callback, on_epoch_complete
 
@@ -54,15 +55,16 @@ class LoggingToFile(Callback):
 
     """
 
-    def __init__(self, file_path,
-                 create_dir=True,
-                 formatter='[%(asctime)s][%(levelname)s]: %(message)s',
-                 append=False):
+    def __init__(self,
+                 file_path: types.Path,
+                 create_dir: bool = True,
+                 formatter: str = '[%(asctime)s][%(levelname)s]: %(message)s',
+                 append: bool = False):
         self.file_path = file_path
         self.create_dir = create_dir
         self.formatter = logging.Formatter(formatter)
         self.append = append
-        self.file_handler = None
+        self.file_handler: Optional[logging.FileHandler] = None
 
     def start(self, state: State):
         if self.create_dir:
@@ -77,7 +79,8 @@ class LoggingToFile(Callback):
         state.logger.addHandler(self.file_handler)
 
     def complete(self, state: State):
-        state.logger.removeHandler(self.file_handler)
+        if self.file_handler is not None:
+            state.logger.removeHandler(self.file_handler)
 
     def catch_exception(self, state: State):
         self.complete(state)
@@ -102,16 +105,17 @@ class LoggingToCSV(Callback):
 
     """
 
-    def __init__(self, file_path,
-                 create_dir=True,
-                 separator=',',
-                 write_header=True,
-                 append=False):
+    def __init__(self,
+                 file_path: types.Path,
+                 create_dir: bool = True,
+                 separator: str = ',',
+                 write_header: bool = True,
+                 append: bool = False):
         self.file_path = file_path
         self.separator = separator
         self.write_header = write_header
         self.append = append
-        self.csv_file = None
+        self.csv_file: Optional[IO] = None
         self.create_dir = create_dir
 
     def start(self, state: State):
@@ -128,6 +132,8 @@ class LoggingToCSV(Callback):
         self.csv_file = open(self.file_path, file_mode, newline='')
 
     def epoch_complete(self, state: State):
+        if self.csv_file is None:
+            return
         lr = state.model.get_lr()
         fields = {
             'time': str(datetime.now()),

@@ -30,15 +30,14 @@ class EarlyStopping(Callback):
     """
 
     def __init__(self,
-                 monitor='val_loss',
-                 patience=1,
-                 better='auto'):
+                 monitor: str = 'val_loss',
+                 patience: int = 1,
+                 better: str = 'auto'):
         self.monitor = monitor
         self.patience = patience
         self.better, self.better_comp, self.best_value = init_better(
             better, monitor)
-
-        self.wait = 0
+        self.wait: int = 0
 
     def start(self, state: State):
         self.wait = 0

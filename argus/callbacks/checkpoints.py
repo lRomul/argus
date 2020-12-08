@@ -3,9 +3,9 @@
 import os
 import math
 import warnings
-from typing import Union
-from pathlib import Path
+from typing import Optional, List
 
+from argus import types
 from argus.engine import State
 from argus.callbacks.callback import Callback
 from argus.metrics.metric import init_better
@@ -35,18 +35,18 @@ class Checkpoint(Callback):
     """
 
     def __init__(self,
-                 dir_path='',
-                 file_format='model-{epoch:03d}-{train_loss:.6f}.pth',
-                 max_saves=None,
-                 period=1,
-                 save_after_exception=False):
+                 dir_path: types.Path = '',
+                 file_format: str = 'model-{epoch:03d}-{train_loss:.6f}.pth',
+                 max_saves: Optional[int] = None,
+                 period: int = 1,
+                 save_after_exception: bool = False):
         if not (max_saves is None or max_saves > 0):
             raise ValueError("max_saves should be positive or 'None'")
 
         self.dir_path = dir_path
         self.file_format = file_format
         self.max_saves = max_saves
-        self.saved_files_paths = []
+        self.saved_files_paths: List[types.Path] = []
         if self.dir_path:
             if not os.path.exists(dir_path):
                 os.makedirs(dir_path)
@@ -54,9 +54,9 @@ class Checkpoint(Callback):
                 warnings.warn(f"Directory '{dir_path}' already exists")
         self.period = period
         self.save_after_exception = save_after_exception
-        self.epochs_since_last_save = 0
+        self.epochs_since_last_save: int = 0
 
-    def save_model(self, state: State, file_path: Union[str, Path]):
+    def save_model(self, state: State, file_path: types.Path):
         """Save model to file.
 
         Override the method if you need custom checkpoint saving.
@@ -137,12 +137,12 @@ class MonitorCheckpoint(Checkpoint):
     """
 
     def __init__(self,
-                 dir_path='',
-                 file_format='model-{epoch:03d}-{monitor:.6f}.pth',
-                 max_saves=None,
-                 save_after_exception=False,
-                 monitor='val_loss',
-                 better='auto'):
+                 dir_path: types.Path = '',
+                 file_format: str = 'model-{epoch:03d}-{monitor:.6f}.pth',
+                 max_saves: Optional[int] = None,
+                 save_after_exception: bool = False,
+                 monitor: str = 'val_loss',
+                 better: str = 'auto'):
         if not monitor.startswith('val_') and not monitor.startswith('train_'):
             raise ValueError("monitor should be prepended with 'val_' or 'train_'")
 
