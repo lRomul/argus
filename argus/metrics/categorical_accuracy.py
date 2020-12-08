@@ -23,7 +23,7 @@ class CategoricalAccuracy(Metric):
         self.correct += torch.sum(correct).item()
         self.count += correct.shape[0]
 
-    def compute(self):
+    def compute(self) -> float:
         if self.count == 0:
             raise RuntimeError('Must be at least one example for computation')
         return self.correct / self.count

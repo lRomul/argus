@@ -3,7 +3,7 @@ from torch.optim.optimizer import Optimizer
 from argus.utils import inheritors
 
 
-def _is_pytorch_optimizer(optimizer) -> bool:
+def _is_pytorch_optimizer(optimizer: Type) -> bool:
     if not optimizer.__module__.startswith('torch.optim'):
         return False
     elif optimizer.__module__.startswith('torch.optim._multi_tensor'):

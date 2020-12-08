@@ -186,7 +186,8 @@ class Engine:
             for handler, args, kwargs in self.event_handlers[event]:
                 handler(self.state, *args, **kwargs)
 
-    def run(self, data_loader: Iterable, start_epoch=0, end_epoch=1) -> State:
+    def run(self, data_loader: Iterable,
+            start_epoch: int = 0, end_epoch: int = 1) -> State:
         """Run ``step_method`` on each batch from data loader
         ``end_epoch - start_epoch`` times.
 

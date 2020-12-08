@@ -3,7 +3,7 @@ from torch.nn.modules.loss import _Loss
 from argus.utils import inheritors
 
 
-def _is_pytorch_loss(loss) -> bool:
+def _is_pytorch_loss(loss: Type) -> bool:
     if not loss.__module__.startswith('torch.nn.modules.loss'):
         return False
     elif loss.__name__.startswith('_'):  # filter _WeightedLoss

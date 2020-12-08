@@ -25,6 +25,33 @@ identity = Identity()
 
 
 def deep_to(input, *args, **kwarg):
+    """Recursively performs dtype and/or device conversion for
+    tensors and nn modules.
+
+    Args:
+        input: Any input with tensors, tuples, lists, dicts, and other objects.
+        *args: args arguments to :meth:`torch.Tensor.to`.
+        **kwargs: kwargs arguments to :meth:`torch.Tensor.to`.
+
+    Example:
+
+        ::
+
+            >>> x = [torch.ones(4, 2, device='cuda:1'), {'target': torch.zeros(4, dtype=torch.uint8)}]
+            >>> x
+            [tensor([[1., 1.],
+                     [1., 1.],
+                     [1., 1.],
+                     [1., 1.]], device='cuda:1'),
+             {'target': tensor([0, 0, 0, 0], dtype=torch.uint8)}]
+            >>> deep_detach(x)
+            [tensor([[1., 1.],
+                     [1., 1.],
+                     [1., 1.],
+                     [1., 1.]], device='cuda:0', dtype=torch.float16),
+             {'target': tensor([0., 0., 0., 0.], device='cuda:0', dtype=torch.float16)}]
+
+    """
     if torch.is_tensor(input):
         return input.to(*args, **kwarg)
     elif isinstance(input, str):
@@ -40,6 +67,31 @@ def deep_to(input, *args, **kwarg):
 
 
 def deep_detach(input):
+    """Returns new tensors, detached from the current graph without gradient
+    requirement. Recursively performs :meth:`torch.Tensor.detach`.
+
+    Args:
+        input: Any input with tensors, tuples, lists, dicts, and other objects.
+
+    Example:
+
+        ::
+
+            >>> x = [torch.ones(4, 2), {'target': torch.zeros(4, requires_grad=True)}]
+            >>> x
+            [tensor([[1., 1.],
+                     [1., 1.],
+                     [1., 1.],
+                     [1., 1.]]),
+             {'target': tensor([0., 0., 0., 0.], requires_grad=True)}]
+            >>> deep_detach(x)
+            [tensor([[1., 1.],
+                     [1., 1.],
+                     [1., 1.],
+                     [1., 1.]]),
+             {'target': tensor([0., 0., 0., 0.])}]
+
+    """
     if torch.is_tensor(input):
         return input.detach()
     elif isinstance(input, str):
@@ -53,6 +105,34 @@ def deep_detach(input):
 
 
 def deep_chunk(input, chunks: int, dim: int = 0):
+    """Slices tensors into approximately equal chunks. Duplicates references to
+    objects that are not tensors. Recursively performs :func:`torch.chunk`.
+
+    Args:
+        input: Any input with tensors, tuples, lists, dicts, and other objects.
+        chunks (int): Number of chunks to return.
+        dim (int): Dimension along which to split the tensor.
+
+    Example:
+
+        ::
+
+            >>> x = [torch.ones(4, 2), {'target': torch.zeros(4), 'weights': torch.ones(4)}]
+            >>> x
+            [tensor([[1., 1.],
+                     [1., 1.],
+                     [1., 1.],
+                     [1., 1.]]),
+             {'target': tensor([0., 0., 0., 0.]), 'weights': tensor([1., 1., 1., 1.])}]
+            >>> deep_chunk(x, 2, 0)
+            [[tensor([[1., 1.],
+                      [1., 1.]]),
+              {'target': tensor([0., 0.]), 'weights': tensor([1., 1.])}],
+             [tensor([[1., 1.],
+                      [1., 1.]]),
+              {'target': tensor([0., 0.]), 'weights': tensor([1., 1.])}]]
+
+    """
     partial_deep_chunk = partial(deep_chunk, chunks=chunks, dim=dim)
     if torch.is_tensor(input):
         return torch.chunk(input, chunks, dim=dim)
@@ -107,13 +187,13 @@ class AverageMeter:
     """Computes and stores the average by Welford's algorithm"""
 
     def __init__(self):
-        self.average: float = 0
+        self.average = 0
         self.count: int = 0
 
     def reset(self):
         self.average = 0
         self.count = 0
 
-    def update(self, value: float, n: int = 1):
+    def update(self, value, n: int = 1):
         self.count += n
         self.average += (value - self.average) / self.count
