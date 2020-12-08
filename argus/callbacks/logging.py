@@ -4,18 +4,20 @@ import os
 import csv
 import logging
 from datetime import datetime
+from typing import Union, List
 
 from argus.engine import State
 from argus.callbacks.callback import Callback, on_epoch_complete
 
 
-def _format_lr_to_str(lr, precision=5):
+def _format_lr_to_str(lr: Union[float, List[float]],
+                      precision: int = 5) -> str:
     if isinstance(lr, (list, tuple)):
-        lr = [f'{l:.{precision}g}' for l in lr]
-        lr = "[" + ", ".join(lr) + "]"
+        str_lrs = [f'{l:.{precision}g}' for l in lr]
+        str_lr = "[" + ", ".join(str_lrs) + "]"
     else:
-        lr = f'{lr:.{precision}g}'
-    return lr
+        str_lr = f'{lr:.{precision}g}'
+    return str_lr
 
 
 @on_epoch_complete
@@ -24,8 +26,7 @@ def default_logging(state: State):
 
     if state.phase == 'train':
         lr = state.model.get_lr()
-        lr = _format_lr_to_str(lr)
-        message += f', lr: {lr}'
+        message += f', lr: {_format_lr_to_str(lr)}'
 
     prefix = f"{state.phase}_" if state.phase else ''
     for metric_name, metric_value in state.metrics.items():

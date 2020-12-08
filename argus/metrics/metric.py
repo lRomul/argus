@@ -1,7 +1,7 @@
 import math
 import torch
 import warnings
-from typing import Optional, Union, List, Dict, Type
+from typing import Optional, Callable, Union, Tuple, List, Dict, Type
 
 import argus
 from argus.callbacks import Callback
@@ -11,7 +11,7 @@ from argus.engine import State, Engine
 METRIC_REGISTRY: Dict[str, Type['argus.metrics.Metric']] = dict()
 
 
-def init_better(better: str, monitor: str) -> tuple:
+def init_better(better: str, monitor: str) -> Tuple[str, Callable, float]:
     if better not in ['min', 'max', 'auto']:
         raise ValueError(f"Unknown better option '{better}'")
 
