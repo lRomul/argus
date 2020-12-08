@@ -9,6 +9,7 @@ from argus.callbacks.callback import (
     on_iteration_start,
     on_iteration_complete,
     on_catch_exception,
+    attach_callbacks
 )
 
 from argus.callbacks.checkpoints import (

@@ -1,6 +1,5 @@
-import pytest
-
 import torch
+import pytest
 
 from argus import Model
 from argus.model.build import (

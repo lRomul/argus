@@ -2,9 +2,9 @@ import torch
 import pytest
 
 import argus
-from argus.engine import Engine, Events, EventEnum
-from argus.model.model import attach_callbacks
 from argus.callbacks import Callback
+from argus.callbacks import attach_callbacks
+from argus.engine import Engine, Events, EventEnum
 
 
 class CustomEvents(EventEnum):

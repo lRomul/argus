@@ -1,8 +1,8 @@
-import pytest
 import torch
+import pytest
 
-from argus.metrics import CategoricalAccuracy
 from argus.callbacks import Callback
+from argus.metrics import CategoricalAccuracy
 
 
 @pytest.mark.parametrize("batch_size, n_classes, n_iterations",

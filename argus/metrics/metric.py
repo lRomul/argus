@@ -1,11 +1,11 @@
 import math
 import torch
 import warnings
-from typing import Dict, Type
+from typing import Optional, Union, List, Dict, Type
 
 import argus
 from argus.callbacks import Callback
-from argus.engine import State
+from argus.engine import State, Engine
 
 
 METRIC_REGISTRY: Dict[str, Type['argus.metrics.Metric']] = dict()
@@ -181,3 +181,19 @@ class Metric(Callback, metaclass=MetricMeta):
             score = self.compute()
         name_prefix = f"{state.phase}_" if state.phase else ''
         state.metrics[name_prefix + self.name] = score
+
+
+def attach_metrics(engine: Engine, metrics: Optional[List[Union[Metric, str]]]):
+    if metrics is None:
+        return
+    for metric in metrics:
+        if isinstance(metric, str):
+            if metric in METRIC_REGISTRY:
+                metric = METRIC_REGISTRY[metric]()
+            else:
+                raise ValueError(f"Metric '{metric}' not found in scope")
+        if isinstance(metric, Metric):
+            metric.attach(engine)
+        else:
+            raise TypeError(f"Expected metric type {Metric} or str, "
+                            f"got {type(metric)}")

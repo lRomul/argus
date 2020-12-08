@@ -1,8 +1,8 @@
 """Base class for Callbacks.
 """
 
-from typing import Callable
 from types import FunctionType, MethodType
+from typing import Optional, Callable, List
 
 from argus.utils import inheritors
 from argus.engine import Engine, Events, EventEnum
@@ -127,3 +127,14 @@ def on_iteration_complete(func: Callable):
 
 def on_catch_exception(func: Callable):
     return FunctionCallback(Events.CATCH_EXCEPTION, func)
+
+
+def attach_callbacks(engine: Engine, callbacks: Optional[List[Callback]]):
+    if callbacks is None:
+        return
+    for callback in callbacks:
+        if isinstance(callback, Callback):
+            callback.attach(engine)
+        else:
+            raise TypeError(f"Expected callback type {Callback}, "
+                            f"got {type(callback)}")

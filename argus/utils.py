@@ -107,12 +107,13 @@ class AverageMeter:
     """Computes and stores the average by Welford's algorithm"""
 
     def __init__(self):
-        self.reset()
+        self.average: float = 0
+        self.count: int = 0
 
     def reset(self):
         self.average = 0
         self.count = 0
 
-    def update(self, value, n: int = 1):
+    def update(self, value: float, n: int = 1):
         self.count += n
         self.average += (value - self.average) / self.count

@@ -227,12 +227,13 @@ class TestBuildModelMethod:
         assert not isinstance(model.get_nn_module(), nn.parallel.DataParallel)
         assert model.get_nn_module() is nn_module
 
-    def test_set_device(self, linear_argus_model_instance, monkeypatch):
+    def test_get_set_device(self, linear_argus_model_instance, monkeypatch):
         model = linear_argus_model_instance
         model.loss = None
 
         model.set_device('cpu')
         assert model.device == torch.device('cpu')
+        assert model.get_device() == torch.device('cpu')
 
         class MockDataParallel:
             def __init__(self, nn_module, device_ids):
@@ -259,6 +260,7 @@ class TestBuildModelMethod:
         assert model.device == devices[0]
         assert model.nn_module.device == devices[0]
         assert model.nn_module.device_ids == [0, 1]
+        assert model.get_device() == devices
 
     def test_check_attributes(self, linear_argus_model_instance):
         model = linear_argus_model_instance

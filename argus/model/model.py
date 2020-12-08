@@ -3,41 +3,15 @@ from typing import Iterable, Optional, Union, Dict, List
 
 import torch
 
+import argus
 from argus import types
 from argus.model.build import BuildModel
 from argus.engine import Engine, State
-from argus.callbacks import Callback, on_epoch_complete
+from argus.callbacks import Callback, attach_callbacks
 from argus.callbacks.logging import default_logging
-from argus.metrics.metric import Metric, METRIC_REGISTRY
+from argus.metrics.metric import Metric, attach_metrics
 from argus.metrics.loss import Loss
 from argus.utils import deep_to, deep_detach
-
-
-def attach_callbacks(engine: Engine, callbacks: Optional[List[Callback]]):
-    if callbacks is None:
-        return
-    for callback in callbacks:
-        if isinstance(callback, Callback):
-            callback.attach(engine)
-        else:
-            raise TypeError(f"Expected callback type {Callback}, "
-                            f"got {type(callback)}")
-
-
-def attach_metrics(engine: Engine, metrics: Optional[List[Union[Metric, str]]]):
-    if metrics is None:
-        return
-    for metric in metrics:
-        if isinstance(metric, str):
-            if metric in METRIC_REGISTRY:
-                metric = METRIC_REGISTRY[metric]()
-            else:
-                raise ValueError(f"Metric '{metric}' not found in scope")
-        if isinstance(metric, Metric):
-            metric.attach(engine)
-        else:
-            raise TypeError(f"Expected metric type {Metric} or str, "
-                            f"got {type(metric)}")
 
 
 class Model(BuildModel):
@@ -237,7 +211,7 @@ class Model(BuildModel):
             default_logging.attach(val_engine)
             attach_callbacks(val_engine, val_callbacks)
 
-            @on_epoch_complete
+            @argus.callbacks.on_epoch_complete
             def validation_epoch(train_state, val_engine, val_loader):
                 epoch = train_state.epoch
                 val_state = val_engine.run(val_loader, epoch, epoch + 1)

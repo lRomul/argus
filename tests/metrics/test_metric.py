@@ -2,8 +2,8 @@ import math
 import pytest
 
 import argus
+from argus.metrics import attach_metrics
 from argus.metrics.metric import Metric, init_better
-from argus.model.model import attach_metrics
 
 
 class CustomMetric(Metric):
@@ -82,6 +82,10 @@ class TestMetric:
         stop_on_first_iteration.attach(test_engine)
         test_engine.run(data_loader)
         assert metric.compute() == 1
+
+    def test_attach_none(self, test_engine):
+        attach_metrics(test_engine, None)
+        assert not test_engine.event_handlers
 
     def test_custom_callback_by_name(self, test_engine):
         data_loader = [4, 8, 15, 16, 23, 42]
