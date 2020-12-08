@@ -126,6 +126,7 @@ def test_logging_to_csv(tmpdir, test_state, separator):
     path = str(tmpdir.join("path/to/logs/log.csv"))
     logging_to_csv = LoggingToCSV(path, separator=separator, create_dir=True,
                                   write_header=True, append=False)
+    logging_to_csv.epoch_complete(test_state)
     logging_to_csv.start(test_state)
 
     test_state.epoch = 1

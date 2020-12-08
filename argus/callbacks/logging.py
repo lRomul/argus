@@ -119,11 +119,7 @@ class LoggingToCSV(Callback):
         self.create_dir = create_dir
 
     def start(self, state: State):
-        if self.append:
-            file_mode = 'a'
-        else:
-            file_mode = 'w'
-
+        file_mode = 'a' if self.append else 'w'
         if self.create_dir:
             dir_path = os.path.dirname(self.file_path)
             if dir_path:

@@ -150,6 +150,44 @@ PyTorch losses and optimizers can be selected by a string with a class name.
 
 Argus allows managing different combinations of pipelines.
 
+.. code-block:: python
+
+    class MoreFlexModel(Model):
+        nn_module = {
+            'net': Net,
+            'resnet18': resnet18
+        }
+        optimizer = {
+            'SGD': torch.optim.SGD,
+            'adam_w': torch.optim.AdamW
+        }
+        loss = {
+            'BCE': nn.BCEWithLogitsLoss,
+            'cross_entropy': nn.CrossEntropyLoss,
+            'nll': nn.NLLLoss
+        }
+        prediction_transform = {
+            'sigmoid': nn.Sigmoid,
+            'Softmax': nn.Softmax
+        }
+
+
+    params = {
+        'nn_module': ('resnet18', {
+            'pretrained': False,
+            'num_classes': 1
+        }),
+        'optimizer': ('adam_w', {
+            'lr': 0.01,
+            'weight_decay': 0.042
+        }),
+        'loss': ('BCE', {'reduction': 'sum'}),
+        'prediction_transform': 'sigmoid',
+        'device': 'cuda'
+    }
+
+    model = MoreFlexModel(params)
+
 If you need more flexibility you can:
 
 * Override methods of :class:`argus.model.Model`. For example :meth:`argus.model.Model.train_step` and :meth:`argus.model.Model.val_step`.
