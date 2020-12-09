@@ -46,7 +46,7 @@ If you want to get the latest version of the code before it is released on PyPI 
    examples
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Modules
 
    model

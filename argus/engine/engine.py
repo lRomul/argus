@@ -162,7 +162,8 @@ class Engine:
             event (EventEnum): An event that will be associated with the
                 handler.
             handler (Callable): A callable handler that will be executed on
-                the event.
+                the event. The handler should take
+                :class:`argus.engine.State` as the first argument.
             *args: optional args arguments to be passed to the handler.
             **kwargs: optional kwargs arguments to be passed to the handler.
 
