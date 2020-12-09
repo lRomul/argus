@@ -2,25 +2,16 @@
 
 ## Basic examples
 
-* MNIST example.
-    ```bash
-    python mnist.py --device cuda
-    ```
-    
-* MNIST VAE example. 
-    ```bash
-    python mnist_vae.py --device cuda
-    ```
-  
-* CIFAR example. 
-    ```bash
-    python cifar_simple.py --device cuda
-    ```
+* Quick start [quickstart.ipynb](quickstart.ipynb).
+* MNIST example [mnist.py](mnist.py).    
+* MNIST VAE example [mnist_vae.py](mnist_vae.py).
+* CIFAR example [cifar_simple.py](cifar_simple.py). 
+* Model loading [load_model.py](load_model.py).
 
 Advanced examples
 -----------------
 
-* Advanced CIFAR with DPP, mixed precision and gradient accumulation.
+* Advanced CIFAR with DPP, mixed precision and gradient accumulation [cifar_advanced.py](cifar_advanced.py).
 
     Single GPU training:
 
@@ -40,6 +31,7 @@ Advanced examples
     ./cifar_advanced.sh 2 --batch_size 128 --lr 0.0005 --amp --iter_size 2
     ```
     
+* Custom callback events [custom_events.py](custom_events.py).
 * Custom build methods for creation of model parts [custom_build_methods.py](custom_build_methods.py).
 
 Kaggle solutions

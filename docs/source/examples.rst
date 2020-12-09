@@ -6,9 +6,11 @@ You can find examples `here <https://github.com/lRomul/argus/blob/master/example
 Basic examples
 --------------
 
+* `Quick start. <https://github.com/lRomul/argus/blob/master/examples/quickstart.ipynb>`_
 * `MNIST example. <https://github.com/lRomul/argus/blob/master/examples/mnist.py>`_
 * `MNIST VAE example. <https://github.com/lRomul/argus/blob/master/examples/mnist_vae.py>`_
 * `CIFAR example. <https://github.com/lRomul/argus/blob/master/examples/cifar_simple.py>`_
+* `Model loading. <https://github.com/lRomul/argus/blob/master/examples/load_model.py>`_
 
 Advanced examples
 -----------------
@@ -33,6 +35,7 @@ Advanced examples
 
         ./cifar_advanced.sh 2 --batch_size 128 --lr 0.0005 --amp --iter_size 2
 
+* `Custom callback events. <https://github.com/lRomul/argus/blob/master/examples/custom_events.py>`_
 * `Custom build methods for creation of model parts. <https://github.com/lRomul/argus/blob/master/examples/custom_build_methods.py>`_
 
 Kaggle solutions
