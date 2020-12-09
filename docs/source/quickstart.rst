@@ -38,9 +38,9 @@ or function that returns object (:class:`torch.nn.Module` for loss and nn_module
 
 .. code-block:: python
 
-    from argus import Model
+    import argus
 
-    class MnistModel(Model):
+    class MnistModel(argus.Model):
         nn_module = Net
         optimizer = torch.optim.SGD
         loss = torch.nn.CrossEntropyLoss
@@ -81,6 +81,7 @@ Loss will be created without any arguments ``torch.nn.CrossEntropyLoss()``. The 
 
 
 5. Define some callbacks and start training the model for 50 epochs.
+As metrics, you can use instances of classes inherit from :class:`argus.metrics.Metric` or they names :attr:`argus.metrics.Metric.name`.
 
 .. code-block:: python
 
@@ -95,7 +96,7 @@ Loss will be created without any arguments ``torch.nn.CrossEntropyLoss()``. The 
     model.fit(train_loader,
               val_loader=val_loader,
               num_epochs=50,
-              metrics=['accuracy'],
+              metrics=['accuracy'],  # or [argus.metrics.CategoricalAccuracy()]
               callbacks=callbacks)
 
 6. Load the model from the best checkpoint.
@@ -103,14 +104,12 @@ Loss will be created without any arguments ``torch.nn.CrossEntropyLoss()``. The 
 .. code-block:: python
 
     from pathlib import Path
-    from argus import load_model
 
-    del model
     model_path = Path("mnist/").glob("*.pth")
     model_path = sorted(model_path)[-1]
     print(f"Load model: {model_path}")
-    model = load_model(model_path)
-    print(model)
+    loaded_model = argus.load_model(model_path)
+    print(loaded_model)
 
 More flexibility
 ----------------
@@ -123,7 +122,7 @@ necessary to define them in the argus model.
 
     from torchvision.models import resnet18
 
-    class FlexModel(Model):
+    class FlexModel(argus.Model):
         nn_module = {
             'net': Net,
             'resnet18': resnet18
@@ -148,11 +147,11 @@ PyTorch losses and optimizers can be selected by a string with a class name.
     model = FlexModel(params)
 
 
-Argus allows managing different combinations of pipelines.
+Argus allows managing different parts combinations of a pipeline.
 
 .. code-block:: python
 
-    class MoreFlexModel(Model):
+    class MoreFlexModel(argus.Model):
         nn_module = {
             'net': Net,
             'resnet18': resnet18

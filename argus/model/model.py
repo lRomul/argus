@@ -18,7 +18,8 @@ class Model(BuildModel):
     """Argus model is an abstraction of a trainer/predictor that uses:
 
     Attributes:
-        nn_module (torch.nn.Module): PyTorch model as :class:`torch.nn.Module`.
+        nn_module (torch.nn.Module): PyTorch neural network as
+            :class:`torch.nn.Module`.
         optimizer (torch.optim.Optimizer): Optimizer as
             :class:`torch.optim.Optimizer`.
         loss (torch.nn.Module): Loss function as :class:`torch.nn.Module`.
@@ -351,8 +352,7 @@ class Model(BuildModel):
                 ensuring that the input tensor shape and type match the model.
 
         Returns:
-            torch.Tensor or other type: Predictions as the result of the
-                prediction_transform application.
+            torch.Tensor or other type: Predictions as the result of the prediction_transform application.
 
         """
         self._check_predict_ready()

@@ -10,7 +10,7 @@
        _\/\\\_______\/\\\_\/\\\______\//\\\_\//\\\\\\\\\\\\/___\///\\\\\\\\\/___\///\\\\\\\\\\\/
         _\///________\///__\///________\///___\////////////_______\/////////_______\///////////_
 
-Argus is a lightweight flexible library for training neural networks in PyTorch.
+Argus is a lightweight library for training neural networks in PyTorch.
 
 Project info
 ------------

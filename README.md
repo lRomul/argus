@@ -17,7 +17,7 @@ __/\\\/////////\\\_\/\\\_____\/\\\____/\\\_____________\/\\\_______\/\\\__\//\\\
 [![codecov](https://codecov.io/gh/lRomul/argus/branch/master/graph/badge.svg)](https://codecov.io/gh/lRomul/argus)
 [![Downloads](https://pepy.tech/badge/pytorch-argus)](https://pepy.tech/project/pytorch-argus)
 
-Argus is a lightweight flexible library for training neural networks in PyTorch.
+Argus is a lightweight library for training neural networks in PyTorch.
 
 ## Documentation
 
@@ -51,7 +51,7 @@ from torchvision.transforms import Compose, ToTensor, Normalize
 
 import timm
 
-from argus import Model
+import argus
 from argus.callbacks import MonitorCheckpoint, EarlyStopping, ReduceLROnPlateau
 
 
@@ -68,7 +68,7 @@ def get_data_loaders(batch_size):
     return train_loader, val_loader
 
 
-class TimmModel(Model):
+class TimmModel(argus.Model):
     nn_module = timm.create_model
 
 
