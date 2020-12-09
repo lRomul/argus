@@ -184,6 +184,14 @@ class Metric(Callback, metaclass=MetricMeta):
 
 
 def attach_metrics(engine: Engine, metrics: Optional[List[Union[Metric, str]]]):
+    """Attaches metrics to the :class:`argus.engine.Engine`. Finds the metric
+    in the registry if it's a string.
+
+        Args:
+            engine (Engine): The engine to which metrics will be attached.
+            metrics (list of metrics or str, optional): List of metrics.
+
+    """
     if metrics is None:
         return
     for metric in metrics:

@@ -3,8 +3,8 @@ argus.utils
 
 .. currentmodule:: argus.utils
 
-deep conversion
----------------
+Deep conversions
+----------------
 
 .. autofunction:: deep_to
 

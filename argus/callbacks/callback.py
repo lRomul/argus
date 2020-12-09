@@ -153,7 +153,7 @@ def on_start(func: Callable) -> FunctionCallback:
         .. code-block:: python
 
             import argus
-            from argus.engine import Events, State
+            from argus.engine import State
 
             @argus.callbacks.on_start
             def start_callback(state: State):
@@ -217,6 +217,13 @@ def on_catch_exception(func: Callable) -> FunctionCallback:
 
 
 def attach_callbacks(engine: Engine, callbacks: Optional[List[Callback]]):
+    """Attaches callbacks to the :class:`argus.engine.Engine`.
+
+        Args:
+            engine (Engine): The engine to which callbacks will be attached.
+            callbacks (list of callbacks, optional): List of callbacks.
+
+    """
     if callbacks is None:
         return
     for callback in callbacks:
