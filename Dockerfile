@@ -17,8 +17,8 @@ RUN pip3 install --no-cache-dir numpy==1.19.4
 
 # Install PyTorch
 RUN pip3 install --no-cache-dir \
-    torch==1.7.0+cu110 \
-    torchvision==0.8.1+cu110 \
+    torch==1.7.1+cu110 \
+    torchvision==0.8.2+cu110 \
     -f https://download.pytorch.org/whl/torch_stable.html
 
 # Install Apex
