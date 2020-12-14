@@ -183,7 +183,7 @@ class Model(BuildModel):
                 Defaults to `None`.
             num_epochs (int, optional): Number of training epochs to
                 run. Defaults to 1.
-            metrics (list of :class:`argus.metrics.Metric`, optional):
+            metrics (list of :class:`argus.metrics.Metric` or str, optional):
                 List of metrics to evaluate. By default, the metrics are
                 evaluated on the validation data (if any) only.
                 Defaults to `None`.
@@ -231,7 +231,7 @@ class Model(BuildModel):
 
         Args:
             val_loader (Iterable): The validation data loader.
-            metrics (list of :class:`argus.metrics.Metric`, optional):
+            metrics (list of :class:`argus.metrics.Metric` or str, optional):
                 List of metrics to evaluate with the data. Defaults to `None`.
             callbacks (list of :class:`argus.callbacks.Callback`, optional):
                 List of callbacks to be attached to the validation process.
@@ -294,7 +294,7 @@ class Model(BuildModel):
         parameter groups.
 
         Returns:
-            (float or a list of floats): The learning rate value or a list of
+            float or a list of float: The learning rate value or a list of
             individual parameter groups learning rate values.
 
         """
@@ -352,7 +352,8 @@ class Model(BuildModel):
                 ensuring that the input tensor shape and type match the model.
 
         Returns:
-            torch.Tensor or other type: Predictions as the result of the prediction_transform application.
+            torch.Tensor or other type: Predictions as the result of the
+            prediction_transform application.
 
         """
         self._check_predict_ready()

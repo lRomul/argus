@@ -199,7 +199,7 @@ class Engine:
             end_epoch (int): One above the largest epoch number.
 
         Returns:
-            state (State): An engine state.
+            State: An engine state.
 
         """
         self.state.update(data_loader=data_loader,

@@ -221,7 +221,8 @@ def attach_callbacks(engine: Engine, callbacks: Optional[List[Callback]]):
 
         Args:
             engine (Engine): The engine to which callbacks will be attached.
-            callbacks (list of callbacks, optional): List of callbacks.
+            callbacks (list of :class:`argus.callbacks.Callback`, optional):
+                List of callbacks.
 
     """
     if callbacks is None:

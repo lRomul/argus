@@ -98,7 +98,7 @@ class MultiStepLR(LRScheduler):
     Multiply learning rate by a given factor on each epoch from a given list.
 
     Args:
-        milestones (list of ints): List of epochs number to perform lr step.
+        milestones (list of int): List of epochs number to perform lr step.
         gamma (float, optional): Multiplicative factor. Defaults to 0.1.
         last_epoch (int): The index of last epoch. Default: -1.
         step_on_iteration (bool): Step on each training iteration rather than each epoch.
@@ -201,7 +201,7 @@ class ReduceLROnPlateau(LRScheduler):
             Defaults to 'rel'.
         cooldown (int, optional): Number of epochs to wait before resuming
             normal operation after lr has been updated. Defaults to 0.
-        min_lr (float or list of floats, optional): Min learning rate.
+        min_lr (float or list of float, optional): Min learning rate.
             Defaults to 0.
         eps (float, optional): Min significant learning rate update.
             Defaults to 1e-8.
@@ -241,8 +241,8 @@ class CyclicLR(LRScheduler):
     learning rate policy.
 
     Args:
-        base_lr (float or list of floats): Initial learning rate.
-        max_lr (float or list of floats): Max learning rate.
+        base_lr (float or list of float): Initial learning rate.
+        max_lr (float or list of float): Max learning rate.
         step_size_up (int, optional): Increase phase duration in epochs or iterations.
             Defaults to 2000.
         step_size_down (int, optional): Decrease phase duration in epochs or iterations.
@@ -258,10 +258,10 @@ class CyclicLR(LRScheduler):
         cycle_momentum (bool, optional): Momentum is cycled inversely
             to learning rate between 'base_momentum' and 'max_momentum'.
             Defaults to True.
-        base_momentum (float or list of floats, optional): Lower momentum
+        base_momentum (float or list of float, optional): Lower momentum
             boundaries in the cycle for each parameter group.
             Defaults to 0.8.
-        max_momentum (float or list of floats, optional): Upper momentum
+        max_momentum (float or list of float, optional): Upper momentum
             boundaries in the cycle for each parameter group.
             Defaults to 0.9.
         last_epoch (int): The index of last epoch. Default: -1.
@@ -377,7 +377,7 @@ class OneCycleLR(LRScheduler):
     than the initial learning rate.
 
     Args:
-        max_lr (float or list of floats): Upper learning rate boundaries in the
+        max_lr (float or list of float): Upper learning rate boundaries in the
             cycle for each parameter group.
         total_steps (int): The total number of steps in the cycle. Note that
             if a value is not provided here, then it must be inferred by
@@ -401,12 +401,12 @@ class OneCycleLR(LRScheduler):
         cycle_momentum (bool): If ``True``, momentum is cycled inversely
             to learning rate between 'base_momentum' and 'max_momentum'.
             Defaults to True.
-        base_momentum (float or list of floats): Lower momentum boundaries in
+        base_momentum (float or list of float): Lower momentum boundaries in
             the cycle for each parameter group. Note that momentum is cycled
             inversely to learning rate; at the peak of a cycle, momentum is
             'base_momentum' and learning rate is 'max_lr'.
             Defaults to 0.85.
-        max_momentum (float or list of floats): Upper momentum boundaries in
+        max_momentum (float or list of float): Upper momentum boundaries in
             the cycle for each parameter group. Functionally,
             it defines the cycle amplitude (max_momentum - base_momentum).
             Note that momentum is cycled inversely

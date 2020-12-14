@@ -189,7 +189,8 @@ def attach_metrics(engine: Engine, metrics: Optional[List[Union[Metric, str]]]):
 
         Args:
             engine (Engine): The engine to which metrics will be attached.
-            metrics (list of metrics or str, optional): List of metrics.
+            metrics (list of :class:`argus.metrics.Metric` or str, optional):
+                List of metrics.
 
     """
     if metrics is None:

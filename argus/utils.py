@@ -2,7 +2,7 @@ import torch
 import collections
 from functools import partial
 from tempfile import TemporaryFile
-from typing import List, Union, Type, Set
+from typing import List, Union, Type, Set, Any
 
 from argus import types
 
@@ -24,7 +24,7 @@ default = Default()
 identity = Identity()
 
 
-def deep_to(input, *args, **kwarg):
+def deep_to(input: Any, *args, **kwarg) -> Any:
     """Recursively performs dtype and/or device conversion for
     tensors and nn modules.
 
@@ -32,6 +32,9 @@ def deep_to(input, *args, **kwarg):
         input: Any input with tensors, tuples, lists, dicts, and other objects.
         *args: args arguments to :meth:`torch.Tensor.to`.
         **kwargs: kwargs arguments to :meth:`torch.Tensor.to`.
+
+    Returns:
+        Any: Output with converted tensors.
 
     Example:
 
@@ -66,12 +69,15 @@ def deep_to(input, *args, **kwarg):
         return input
 
 
-def deep_detach(input):
+def deep_detach(input: Any) -> Any:
     """Returns new tensors, detached from the current graph without gradient
     requirement. Recursively performs :meth:`torch.Tensor.detach`.
 
     Args:
         input: Any input with tensors, tuples, lists, dicts, and other objects.
+
+    Returns:
+        Any: Output with detached tensors.
 
     Example:
 
@@ -104,7 +110,7 @@ def deep_detach(input):
         return input
 
 
-def deep_chunk(input, chunks: int, dim: int = 0):
+def deep_chunk(input: Any, chunks: int, dim: int = 0) -> List[Any]:
     """Slices tensors into approximately equal chunks. Duplicates references to
     objects that are not tensors. Recursively performs :func:`torch.chunk`.
 
@@ -112,6 +118,9 @@ def deep_chunk(input, chunks: int, dim: int = 0):
         input: Any input with tensors, tuples, lists, dicts, and other objects.
         chunks (int): Number of chunks to return.
         dim (int): Dimension along which to split the tensor.
+
+    Returns:
+        list of Any: List length `chunks` with sliced tensors.
 
     Example:
 

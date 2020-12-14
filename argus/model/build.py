@@ -222,7 +222,7 @@ class BuildModel(metaclass=ModelMeta):
         :class:`torch.nn.parallel.DistributedDataParallel`.
 
         Returns:
-            nn.Module: nn_module
+            :class:`torch.nn.Module`: nn_module without DP and DDP.
 
         """
         if isinstance(self.nn_module, (DataParallel, DistributedDataParallel)):
@@ -276,7 +276,8 @@ class BuildModel(metaclass=ModelMeta):
         """Get device or list of devices in case of multi-GPU mode.
 
         Returns:
-            device (str, torch.device or list of devices): A device or list of devices.
+            torch.device or list of torch.device: A device or list of
+            devices.
 
         """
         return cast_device(self.params['device'])
