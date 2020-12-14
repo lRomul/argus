@@ -31,6 +31,7 @@ class Checkpoint(Callback):
             checkpoint saves. Defaults to 1.
         save_after_exception (bool, optional): Save the model checkpoint
             after an exception occurs. Defaults to False.
+        optimizer_state (bool): Save optimizer state. Defaults to False.
 
     """
 
@@ -39,7 +40,8 @@ class Checkpoint(Callback):
                  file_format: str = 'model-{epoch:03d}-{train_loss:.6f}.pth',
                  max_saves: Optional[int] = None,
                  period: int = 1,
-                 save_after_exception: bool = False):
+                 save_after_exception: bool = False,
+                 optimizer_state: bool = False):
         if not (max_saves is None or max_saves > 0):
             raise ValueError("max_saves should be positive or 'None'")
 
@@ -54,6 +56,7 @@ class Checkpoint(Callback):
                 warnings.warn(f"Directory '{dir_path}' already exists")
         self.period = period
         self.save_after_exception = save_after_exception
+        self.optimizer_state = optimizer_state
         self.epochs_since_last_save: int = 0
 
     def save_model(self, state: State, file_path: types.Path):
@@ -65,7 +68,7 @@ class Checkpoint(Callback):
             state (:class:`argus.engine.State`): State.
             file_path (str or :class:`pathlib.Path`): Checkpoint file path.
         """
-        state.model.save(file_path)
+        state.model.save(file_path, optimizer_state=self.optimizer_state)
 
     def _format_file_path(self, state: State):
         format_state = {'epoch': state.epoch, **state.metrics}
@@ -123,6 +126,7 @@ class MonitorCheckpoint(Checkpoint):
             None.
         save_after_exception (bool, optional): Save the model checkpoint
             after an exception occurs. Defaults to False.
+        optimizer_state (bool): Save optimizer state. Defaults to False.
         monitor (str, optional): Metric name to monitor. It should be
             prepended with *val_* for the metric value on validation data
             and *train_* for the metric value on the date from the train
@@ -141,6 +145,7 @@ class MonitorCheckpoint(Checkpoint):
                  file_format: str = 'model-{epoch:03d}-{monitor:.6f}.pth',
                  max_saves: Optional[int] = None,
                  save_after_exception: bool = False,
+                 optimizer_state: bool = False,
                  monitor: str = 'val_loss',
                  better: str = 'auto'):
         if not monitor.startswith('val_') and not monitor.startswith('train_'):
@@ -150,7 +155,8 @@ class MonitorCheckpoint(Checkpoint):
                          file_format=file_format,
                          max_saves=max_saves,
                          period=1,
-                         save_after_exception=save_after_exception)
+                         save_after_exception=save_after_exception,
+                         optimizer_state=optimizer_state)
         self.monitor = monitor
         self.better, self.better_comp, self.best_value = init_better(
             better, monitor)

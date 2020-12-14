@@ -8,6 +8,11 @@ from argus import load_model
 from argus.callbacks import Checkpoint, MonitorCheckpoint
 
 
+@pytest.fixture(scope='function', params=[False, True])
+def optimizer_state(request):
+    return request.param
+
+
 def checkpoint_step_epoch(checkpoint, engine, epoch, val_loss):
     engine.state.epoch = epoch
     engine.state.metrics = {'val_loss': val_loss}
@@ -24,37 +29,50 @@ def check_weights(model, loaded_model):
 
 
 def check_checkpoint(path, engine, epoch, val_loss,
-                     file_format='model-{epoch:03d}-{val_loss:.6f}.pth'):
+                     file_format='model-{epoch:03d}-{val_loss:.6f}.pth',
+                     optimizer_state=False):
     expected_path = path / file_format.format(epoch=epoch, val_loss=val_loss)
     assert expected_path.exists()
     loaded_model = load_model(expected_path)
     assert loaded_model.params == engine.state.model.params
     assert check_weights(engine.state.model, loaded_model)
+
+    loaded_state = torch.load(expected_path)
+    if optimizer_state:
+        assert set(loaded_state.keys()) == {'model_name', 'params',
+                                            'nn_state_dict', 'optimizer_state_dict'}
+    else:
+        assert set(loaded_state.keys()) == {'model_name', 'params', 'nn_state_dict'}
+
     return True
 
 
 class TestCheckpoints:
-    def test_checkpoint(self, tmpdir, test_engine):
+    def test_checkpoint(self, tmpdir, test_engine, optimizer_state):
         model = test_engine.state.model
         path = Path(tmpdir.join("path/to/checkpoints/"))
         checkpoint = Checkpoint(dir_path=path, max_saves=None, period=1,
                                 file_format='model-{epoch:03d}-{val_loss:.6f}.pth',
-                                save_after_exception=True)
+                                save_after_exception=True,
+                                optimizer_state=optimizer_state)
         checkpoint.attach(test_engine)
         checkpoint.start(test_engine.state)
 
         checkpoint_step_epoch(checkpoint, test_engine, 12, 0.42)
-        assert check_checkpoint(path, test_engine, 12, 0.42)
+        assert check_checkpoint(path, test_engine, 12, 0.42,
+                                optimizer_state=optimizer_state)
 
         test_engine.state.epoch = 24
         test_engine.state.metrics = {'val_loss': 0.12}
         checkpoint_step_epoch(checkpoint, test_engine, 24, 0.12)
-        assert check_checkpoint(path, test_engine, 24, 0.12)
+        assert check_checkpoint(path, test_engine, 24, 0.12,
+                                optimizer_state=optimizer_state)
 
         nn.init.xavier_uniform_(model.nn_module.fc.weight)
         checkpoint.catch_exception(test_engine.state)
         assert check_checkpoint(path, test_engine, None, None,
-                                file_format='model-after-exception.pth')
+                                file_format='model-after-exception.pth',
+                                optimizer_state=optimizer_state)
 
         assert len(list(path.glob('*.pth'))) == 3
 
@@ -93,9 +111,10 @@ class TestCheckpoints:
         assert len(list(path.glob('*.pth'))) == max_saves \
             if max_saves is not None else num_epochs
 
-    def test_monitor_checkpoint(self, tmpdir, test_engine):
+    def test_monitor_checkpoint(self, tmpdir, test_engine, optimizer_state):
         path = Path(tmpdir.join("path/to/monitor_checkpoints/"))
-        checkpoint = MonitorCheckpoint(dir_path=path, max_saves=3, monitor='val_loss')
+        checkpoint = MonitorCheckpoint(dir_path=path, max_saves=3, monitor='val_loss',
+                                       optimizer_state=optimizer_state)
         checkpoint.attach(test_engine)
         checkpoint.start(test_engine.state)
 
@@ -107,7 +126,8 @@ class TestCheckpoints:
             checkpoint_step_epoch(checkpoint, test_engine, epoch, val_loss)
             expected_path = path / f'model-{epoch:03d}-{val_loss:.6f}.pth'
             if val_loss != 100:
-                assert check_checkpoint(path, test_engine, epoch, val_loss)
+                assert check_checkpoint(path, test_engine, epoch, val_loss,
+                                        optimizer_state=optimizer_state)
             else:
                 assert not expected_path.exists()
 
