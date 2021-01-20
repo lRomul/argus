@@ -47,7 +47,7 @@ def deep_to(input: Any, *args, **kwarg) -> Any:
                      [1., 1.],
                      [1., 1.]], device='cuda:1'),
              {'target': tensor([0, 0, 0, 0], dtype=torch.uint8)}]
-            >>> deep_detach(x)
+            >>> deep_to(x, 'cuda:0', dtype=torch.float16)
             [tensor([[1., 1.],
                      [1., 1.],
                      [1., 1.],
@@ -111,13 +111,13 @@ def deep_detach(input: Any) -> Any:
 
 
 def deep_chunk(input: Any, chunks: int, dim: int = 0) -> List[Any]:
-    """Slices tensors into approximately equal chunks. Duplicates references to
+    """Slice tensors into approximately equal chunks. Duplicates references to
     objects that are not tensors. Recursively performs :func:`torch.chunk`.
 
     Args:
         input: Any input with tensors, tuples, lists, dicts, and other objects.
         chunks (int): Number of chunks to return.
-        dim (int): Dimension along which to split the tensor.
+        dim (int): Dimension along which to split the tensors. Defaults to 0.
 
     Returns:
         list of Any: List length `chunks` with sliced tensors.

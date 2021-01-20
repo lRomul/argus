@@ -30,7 +30,7 @@ def load_model(file_path: types.Path,
 
     Args:
         file_path (str or :class:`pathlib.Path`): Path to the file to load.
-        device (str, torch.device or list of devices, optional): Device for the model.
+        device (str, torch.device or list of devices, optional): The model device.
         nn_module (dict, tuple or str, optional): Params of the nn_module to
             replace params in the state.
         optimizer (None, dict, tuple or str, optional): Params of the optimizer to
@@ -65,10 +65,10 @@ def load_model(file_path: types.Path,
 
             # restarting python...
 
-            # ArgusModel class must be in scope at this moment
+            # ArgusModel class must be already in the scope
             model = argus.load_model(model_path, device="cuda:0")
 
-        More options how to use load_model you can find
+        You can find more options how to use load_model
         `here <https://github.com/lRomul/argus/blob/master/examples/load_model.py>`_.
 
     Raises:
@@ -93,7 +93,8 @@ def load_model(file_path: types.Path,
 
             if nn_module is not default:
                 if nn_module is None:
-                    raise ValueError("nn_module is required attribute for argus.Model")
+                    raise ValueError(
+                        "nn_module is a required attribute for argus.Model")
                 params['nn_module'] = nn_module
             if optimizer is not default:
                 params['optimizer'] = optimizer
@@ -111,7 +112,8 @@ def load_model(file_path: types.Path,
             nn_state_dict = deep_to(state['nn_state_dict'], model.device)
             optimizer_state_dict = None
             if 'optimizer_state_dict' in state:
-                optimizer_state_dict = deep_to(state['optimizer_state_dict'], model.device)
+                optimizer_state_dict = deep_to(
+                    state['optimizer_state_dict'], model.device)
             nn_state_dict, optimizer_state_dict = change_state_dict_func(nn_state_dict,
                                                                          optimizer_state_dict)
 

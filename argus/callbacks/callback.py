@@ -21,10 +21,10 @@ class Callback:
 
     * ``start``: triggered when the training is started.
     * ``complete``: triggered when the training is completed.
-    * ``epoch_start``: triggered when the epoch is started.
-    * ``epoch_complete``: triggered when the epoch is ended.
+    * ``epoch_start``: triggered when an epoch is started.
+    * ``epoch_complete``: triggered when an epoch is ended.
     * ``iteration_start``: triggered when an iteration is started.
-    * ``iteration_complete``: triggered when the iteration is ended.
+    * ``iteration_complete``: triggered when an iteration is ended.
     * ``catch_exception``: triggered on catching of an exception.
 
     Example:
@@ -82,11 +82,12 @@ class Callback:
                     if isinstance(handler, (FunctionType, MethodType)):
                         engine.add_event_handler(event, handler)
                     else:
-                        raise TypeError(f"Attribute {event.value} is not callable.")
+                        raise TypeError(
+                            f"Attribute {event.value} is not callable.")
 
 
 class FunctionCallback(Callback):
-    """Callback class for executing single function.
+    """Callback class for executing a single function.
 
     Args:
         event (EventEnum): An event that will be associated with the
@@ -114,7 +115,7 @@ class FunctionCallback(Callback):
 
 
 def on_event(event: EventEnum) -> Callable:
-    """Decorator for creating callback from function. The function will be
+    """Decorator for creating a callback from a function. The function will be
     executed when the event is triggered. The function should take
     :class:`argus.engine.State` as the first argument.
 
@@ -144,7 +145,7 @@ def on_event(event: EventEnum) -> Callable:
 
 
 def on_start(func: Callable) -> FunctionCallback:
-    """Decorator for creating callback from function. The function will be
+    """Decorator for creating a callback from a function. The function will be
     executed when the `Events.START` is triggered. The function should take
     :class:`argus.engine.State` as the first argument.
 
@@ -169,7 +170,7 @@ def on_start(func: Callable) -> FunctionCallback:
 
 
 def on_complete(func: Callable) -> FunctionCallback:
-    """Decorator for creating callback from function. The function will be
+    """Decorator for creating a callback from a function. The function will be
     executed when the ``Events.COMPLETE`` is triggered. The function should
     take :class:`argus.engine.State` as the first argument.
     """
@@ -177,7 +178,7 @@ def on_complete(func: Callable) -> FunctionCallback:
 
 
 def on_epoch_start(func: Callable) -> FunctionCallback:
-    """Decorator for creating callback from function. The function will be
+    """Decorator for creating a callback from a function. The function will be
     executed when the ``Events.EPOCH_START`` is triggered. The function should
     take :class:`argus.engine.State` as the first argument.
     """
@@ -185,7 +186,7 @@ def on_epoch_start(func: Callable) -> FunctionCallback:
 
 
 def on_epoch_complete(func: Callable) -> FunctionCallback:
-    """Decorator for creating callback from function. The function will be
+    """Decorator for creating a callback from a function. The function will be
     executed when the ``Events.EPOCH_COMPLETE`` is triggered. The function
     should take :class:`argus.engine.State` as the first argument.
     """
@@ -193,7 +194,7 @@ def on_epoch_complete(func: Callable) -> FunctionCallback:
 
 
 def on_iteration_start(func: Callable) -> FunctionCallback:
-    """Decorator for creating callback from function. The function will be
+    """Decorator for creating a callback from a function. The function will be
     executed when the ``Events.ITERATION_START`` is triggered. The function
     should take :class:`argus.engine.State` as the first argument.
     """
@@ -201,7 +202,7 @@ def on_iteration_start(func: Callable) -> FunctionCallback:
 
 
 def on_iteration_complete(func: Callable) -> FunctionCallback:
-    """Decorator for creating callback from function. The function will be
+    """Decorator for creating a callback from a function. The function will be
     executed when the ``Events.ITERATION_COMPLETE`` is triggered. The function
     should take :class:`argus.engine.State` as the first argument.
     """
@@ -209,7 +210,7 @@ def on_iteration_complete(func: Callable) -> FunctionCallback:
 
 
 def on_catch_exception(func: Callable) -> FunctionCallback:
-    """Decorator for creating callback from function. The function will be
+    """Decorator for creating a callback from a function. The function will be
     executed when the ``Events.CATCH_EXCEPTION`` is triggered. The function
     should take :class:`argus.engine.State` as the first argument.
     """
@@ -217,7 +218,7 @@ def on_catch_exception(func: Callable) -> FunctionCallback:
 
 
 def attach_callbacks(engine: Engine, callbacks: Optional[List[Callback]]):
-    """Attaches callbacks to the :class:`argus.engine.Engine`.
+    """Attach callbacks to the :class:`argus.engine.Engine`.
 
         Args:
             engine (Engine): The engine to which callbacks will be attached.
