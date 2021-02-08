@@ -29,7 +29,7 @@ Advanced examples
 
         ./cifar_advanced.sh 2 --batch_size 128 --lr 0.0005
 
-    DDP training with Apex mixed precision and gradient accumulation:
+    DDP training with mixed precision and gradient accumulation:
 
     .. code:: bash
 
