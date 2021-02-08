@@ -114,8 +114,9 @@ def load_model(file_path: types.Path,
             if 'optimizer_state_dict' in state:
                 optimizer_state_dict = deep_to(
                     state['optimizer_state_dict'], model.device)
-            nn_state_dict, optimizer_state_dict = change_state_dict_func(nn_state_dict,
-                                                                         optimizer_state_dict)
+            nn_state_dict, optimizer_state_dict = change_state_dict_func(
+                nn_state_dict, optimizer_state_dict
+            )
 
             model.get_nn_module().load_state_dict(nn_state_dict)
             if model.optimizer is not None and optimizer_state_dict is not None:

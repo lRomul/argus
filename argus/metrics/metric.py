@@ -25,10 +25,16 @@ def init_better(better: str, monitor: str) -> Tuple[str, Callable, float]:
         better = METRIC_REGISTRY[metric_name].better
 
     if better == 'min':
-        better_comp = lambda a, b: a < b
+        def _less(a, b):
+            return a < b
+
+        better_comp = _less
         best_value = math.inf
     else:  # better == 'max':
-        better_comp = lambda a, b: a > b
+        def _greater(a, b):
+            return a > b
+
+        better_comp = _greater
         best_value = -math.inf
 
     return better, better_comp, best_value
@@ -40,9 +46,11 @@ class MetricMeta(type):
         metric_name = attrs['name']
         if metric_name:
             if metric_name in METRIC_REGISTRY:
-                current_class = f"<class '{attrs['__module__']}.{attrs['__qualname__']}'>"
+                current_class = (f"<class '{attrs['__module__']}."
+                                 f"{attrs['__qualname__']}'>")
                 warnings.warn(f"{current_class} redefined '{metric_name}' "
-                              f"that was already registered by {METRIC_REGISTRY[metric_name]}")
+                              "that was already registered by "
+                              f"{METRIC_REGISTRY[metric_name]}")
             METRIC_REGISTRY[metric_name] = new_class
         return new_class
 
@@ -126,7 +134,7 @@ class Metric(Callback, metaclass=MetricMeta):
         .. code-block:: python
 
             callbacks = [
-                MonitorCheckpoint(dir_path='mnist', monitor='val_map_at_k', better='auto')
+                MonitorCheckpoint(dir_path='mnist', monitor='val_map_at_k')
             ]
 
             model.fit(train_loader,

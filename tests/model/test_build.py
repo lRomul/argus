@@ -167,7 +167,7 @@ class TestBuild:
         class BuildModel8(Model):
             nn_module = linear_net_class
 
-        class BuildModel8(Model):
+        class BuildModel8(Model):  # noqa: F811
             nn_module = linear_net_class
 
         assert len(recwarn) == 1

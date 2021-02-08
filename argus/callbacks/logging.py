@@ -14,7 +14,7 @@ from argus.callbacks.callback import Callback, on_epoch_complete
 def _format_lr_to_str(lr: Union[float, List[float]],
                       precision: int = 5) -> str:
     if isinstance(lr, (list, tuple)):
-        str_lrs = [f'{l:.{precision}g}' for l in lr]
+        str_lrs = [f'{_lr:.{precision}g}' for _lr in lr]
         str_lr = "[" + ", ".join(str_lrs) + "]"
     else:
         str_lr = f'{lr:.{precision}g}'

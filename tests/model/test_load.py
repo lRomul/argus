@@ -47,8 +47,10 @@ class TestLoadModel:
             assert check_weights(model, loaded_model)
 
         if optimizer_state:
-            assert torch.all(loaded_model.optimizer.state_dict()['state'][0]['momentum_buffer']
-                             == model.optimizer.state_dict()['state'][0]['momentum_buffer'])
+            assert torch.all(
+                loaded_model.optimizer.state_dict()['state'][0]['momentum_buffer']
+                == model.optimizer.state_dict()['state'][0]['momentum_buffer']
+            )
         else:
             assert loaded_model.optimizer.state_dict()['state'] == {}
 

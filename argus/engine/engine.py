@@ -169,7 +169,7 @@ class Engine:
 
         """
         if not isinstance(event, EventEnum):
-            raise TypeError(f"Event should be 'argus.engine.EventEnum' enum")
+            raise TypeError("Event should be 'argus.engine.EventEnum' enum")
 
         self.event_handlers[event].append((handler, args, kwargs))
 
@@ -181,7 +181,7 @@ class Engine:
 
         """
         if not isinstance(event, EventEnum):
-            raise TypeError(f"Event should be 'argus.engine.EventEnum' enum")
+            raise TypeError("Event should be 'argus.engine.EventEnum' enum")
 
         if event in self.event_handlers:
             for handler, args, kwargs in self.event_handlers[event]:

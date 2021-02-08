@@ -153,8 +153,7 @@ class Model(BuildModel):
         """
         self.eval()
         with torch.no_grad():
-            input, target = deep_to(
-                batch, device=self.device, non_blocking=True)
+            input, target = deep_to(batch, device=self.device, non_blocking=True)
             prediction = self.nn_module(input)
             loss = self.loss(prediction, target)
             prediction = self.prediction_transform(prediction)

@@ -40,7 +40,8 @@ def deep_to(input: Any, *args, **kwarg) -> Any:
 
         ::
 
-            >>> x = [torch.ones(4, 2, device='cuda:1'), {'target': torch.zeros(4, dtype=torch.uint8)}]
+            >>> x = [torch.ones(4, 2, device='cuda:1'),
+            ...      {'target': torch.zeros(4, dtype=torch.uint8)}]
             >>> x
             [tensor([[1., 1.],
                      [1., 1.],
@@ -83,7 +84,8 @@ def deep_detach(input: Any) -> Any:
 
         ::
 
-            >>> x = [torch.ones(4, 2), {'target': torch.zeros(4, requires_grad=True)}]
+            >>> x = [torch.ones(4, 2),
+            ...      {'target': torch.zeros(4, requires_grad=True)}]
             >>> x
             [tensor([[1., 1.],
                      [1., 1.],
@@ -126,7 +128,8 @@ def deep_chunk(input: Any, chunks: int, dim: int = 0) -> List[Any]:
 
         ::
 
-            >>> x = [torch.ones(4, 2), {'target': torch.zeros(4), 'weights': torch.ones(4)}]
+            >>> x = [torch.ones(4, 2),
+            ...      {'target': torch.zeros(4), 'weights': torch.ones(4)}]
             >>> x
             [tensor([[1., 1.],
                      [1., 1.],

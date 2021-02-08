@@ -25,7 +25,8 @@ setup(
     author='Ruslan Baikulov',
     author_email='ruslan1123@gmail.com',
     url='https://github.com/lRomul/argus',
-    description='Argus is a lightweight library for training neural networks in PyTorch.',
+    description='Argus is a lightweight library for '
+                'training neural networks in PyTorch.',
     long_description=read('README.md'),
     long_description_content_type='text/markdown',
     license='MIT',

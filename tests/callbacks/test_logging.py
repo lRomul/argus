@@ -43,7 +43,8 @@ def test_train_default_logging(train_state):
     train_state.metrics = {"train_loss": 0.01, "train_accuracy": 0.42}
     train_state.epoch = 42
     default_logging.handler(state=train_state)
-    assert train_state.logger.message == 'train - epoch: 42, lr: 0.01, train_loss: 0.01, train_accuracy: 0.42'
+    assert (train_state.logger.message
+            == 'train - epoch: 42, lr: 0.01, train_loss: 0.01, train_accuracy: 0.42')
 
 
 def test_val_default_logging(val_state):
@@ -56,7 +57,8 @@ def test_val_default_logging(val_state):
     val_state.metrics = {"val_loss": 0.01, "val_accuracy": 0.42}
     val_state.epoch = 12
     default_logging.handler(state=val_state)
-    assert val_state.logger.message == 'val - epoch: 12, val_loss: 0.01, val_accuracy: 0.42'
+    assert (val_state.logger.message
+            == 'val - epoch: 12, val_loss: 0.01, val_accuracy: 0.42')
 
 
 def test_logging_to_file(tmpdir, train_state):

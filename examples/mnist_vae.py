@@ -121,7 +121,8 @@ class Reconstruction(Callback):
 
 if __name__ == "__main__":
     args = parse_arguments()
-    train_loader, val_loader = get_data_loaders(args.train_batch_size, args.val_batch_size)
+    train_loader, val_loader = get_data_loaders(args.train_batch_size,
+                                                args.val_batch_size)
 
     params = {
         'optimizer': ('Adam', {'lr': args.lr}),
