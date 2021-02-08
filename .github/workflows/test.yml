@@ -27,7 +27,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r tests/requirements.txt
           pip install torch==1.7.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+      - name: Check code style
+        run: flake8
       - name: Test
-        run: pytest --cov=argus
+        run: pytest
       - name: Upload coverage
         uses: codecov/codecov-action@v1
