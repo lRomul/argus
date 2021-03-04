@@ -132,10 +132,9 @@ class CifarModel(argus.Model):
             with torch.cuda.amp.autocast(enabled=self.amp):
                 prediction = self.nn_module(input)
                 loss = self.loss(prediction, target)
+                loss = loss / self.iter_size
 
             if self.amp:
-                # https://pytorch.org/docs/stable/notes/amp_examples.html#gradient-accumulation
-                loss = loss / self.iter_size
                 self.scaler.scale(loss).backward()
             else:
                 loss.backward()
