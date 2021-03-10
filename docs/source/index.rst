@@ -12,12 +12,6 @@
 
 Argus is a lightweight library for training neural networks in PyTorch.
 
-Project info
-============
-
-* GitHub repository: https://github.com/lRomul/argus
-* License: MIT
-
 Installation
 ============
 
@@ -41,7 +35,7 @@ Documentation
 =============
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    quickstart
    examples
