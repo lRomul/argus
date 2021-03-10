@@ -1,27 +1,13 @@
-argus.callbacks
-===============
+Base callback
+=============
 
 .. currentmodule:: argus.callbacks
-
-Callbacks
----------
-
-.. toctree::
-   :maxdepth: 2
-
-   ./callbacks/checkpoints
-   ./callbacks/early_stopping
-   ./callbacks/lr_schedulers
-   ./callbacks/logging
-
-Base callback
--------------
 
 .. autoclass:: Callback
    :members:
 
 Decorator callbacks
--------------------
+===================
 
 .. autofunction:: on_event
 

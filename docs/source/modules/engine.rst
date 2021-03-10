@@ -1,5 +1,5 @@
-argus.engine
-============
+Engine
+======
 
 .. currentmodule:: argus.engine
 

@@ -1,5 +1,5 @@
-argus.utils
-===========
+Utils
+=====
 
 .. currentmodule:: argus.utils
 

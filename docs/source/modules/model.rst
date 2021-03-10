@@ -1,5 +1,5 @@
-argus.model
-===========
+Model
+=====
 
 .. currentmodule:: argus.model
 

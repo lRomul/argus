@@ -1,5 +1,5 @@
-argus.metrics
-=============
+Metrics
+=======
 
 Base metric
 -----------
