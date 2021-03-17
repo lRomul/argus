@@ -39,6 +39,7 @@ Kaggle solutions
 
 * [1st place solution for Freesound Audio Tagging 2019 (mel-spectrograms, mixed precision)](https://github.com/lRomul/argus-freesound)
 * [14th place solution for TGS Salt Identification Challenge (segmentation, MeanTeacher)](https://github.com/lRomul/argus-tgs-salt)
+* [22nd place solution for RANZCR CLiP - Catheter and Line Position Challenge (DDP, EMA, mixed precision, pseudo labels)](https://github.com/lRomul/ranzcr-clip)
 * [50th place solution for Quick, Draw! Doodle Recognition Challenge (gradient accumulation, training on 50M images)](https://github.com/lRomul/argus-quick-draw)
 * [66th place solution for Kaggle Airbus Ship Detection Challenge (instance segmentation)](https://github.com/OniroAI/Universal-segmentation-baseline-Kaggle-Airbus-Ship-Detection)
 * [Solution for Humpback Whale Identification (metric learning: arcface, center loss)](https://github.com/lRomul/argus-humpback-whale)
