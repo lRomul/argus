@@ -31,7 +31,7 @@ Documentation
 
    quickstart
    examples
-   modules/index
+   api_reference/index
 
 Why this name, Argus?
 =====================
