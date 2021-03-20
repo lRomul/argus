@@ -11,7 +11,7 @@ Requirements:
 
 * torch>=1.1.0
 
-You can use pip to install argus:
+You can use pip to install Argus:
 
 .. code:: bash
 
@@ -32,3 +32,11 @@ Documentation
    quickstart
    examples
    modules/index
+
+Why this name, Argus?
+=====================
+
+The library name is a reference to a planet from World of Warcraft.
+Argus is the original homeworld of the eredar (a race of supremely talented magic-wielders), now located within the Twisting Nether.
+It was once described as a utopian world whose inhabitants were both vastly intelligent and highly gifted in magic.
+It has since been twisted by demonic, chaotic energies and became the stronghold and homeworld of the Burning Legion.
