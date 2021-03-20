@@ -76,6 +76,7 @@ exclude_patterns = []
 # a list of builtin themes.
 #
 html_theme = 'pydata_sphinx_theme'
+html_logo = "../../assets/logo/argus_logo.png"
 
 html_theme_options = {
     "github_url": "https://github.com/lRomul/argus",
