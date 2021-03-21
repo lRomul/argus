@@ -122,6 +122,17 @@ class TestEngineMethods:
         assert test_engine.state.iteration == 0
         assert test_engine.state.epoch == 0
 
+    def test_phase_states(self, linear_argus_model_instance):
+        phase_states = dict()
+        train_engine = Engine(linear_argus_model_instance.train_step,
+                              phase_states=phase_states)
+        val_engine = Engine(linear_argus_model_instance.val_step,
+                            phase_states=phase_states)
+        assert train_engine.state.phase_states['train'] is train_engine.state
+        assert train_engine.state.phase_states['val'] is val_engine.state
+        assert val_engine.state.phase_states['train'] is train_engine.state
+        assert val_engine.state.phase_states['val'] is val_engine.state
+
     def test_custom_events(self, linear_net_class):
         class CustomEvents(EventEnum):
             STEP_START = 'step_start'
