@@ -7,7 +7,7 @@
 ![Test](https://github.com/lRomul/argus/workflows/Test/badge.svg)
 [![CodeFactor](https://www.codefactor.io/repository/github/lromul/argus/badge)](https://www.codefactor.io/repository/github/lromul/argus)
 [![codecov](https://codecov.io/gh/lRomul/argus/branch/master/graph/badge.svg)](https://codecov.io/gh/lRomul/argus)
-[![Downloads](https://pepy.tech/badge/pytorch-argus)](https://pepy.tech/project/pytorch-argus)
+[![Downloads](https://static.pepy.tech/personalized-badge/pytorch-argus?period=total&units=international_system&left_color=grey&right_color=brightgreen&left_text=Downloads)](https://pepy.tech/project/pytorch-argus)
 
 </div>
 
