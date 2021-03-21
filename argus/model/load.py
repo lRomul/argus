@@ -13,12 +13,20 @@ def default_change_state_dict_func(nn_state_dict: dict,
     return nn_state_dict, optimizer_state_dict
 
 
+def default_state_load_func(file_path: types.Path):
+    if os.path.isfile(file_path):
+        return torch.load(file_path)
+    else:
+        raise FileNotFoundError(f"No state found at {file_path}")
+
+
 def load_model(file_path: types.Path,
                nn_module: Union[Default, types.Param] = default,
                optimizer: Union[Default, None, types.Param] = default,
                loss: Union[Default, None, types.Param] = default,
                prediction_transform: Union[Default, None, types.Param] = default,
                device: Union[Default, types.InputDevices] = default,
+               state_load_func: Callable = default_state_load_func,
                change_params_func: Callable = identity,
                change_state_dict_func: Callable = default_change_state_dict_func,
                model_name: Union[Default, str] = default,
@@ -43,6 +51,7 @@ def load_model(file_path: types.Path,
             prediction_transform to replace params in the state.
             prediction_transform is not created in the loaded model if it is
             set to `None`.
+        state_load_func(function, optional): Function for loading state from file path.
         change_params_func (function, optional): Function for modification of
             the loaded params. It takes params from the loaded state as an
             input and outputs params to use during the model creation.
@@ -78,52 +87,48 @@ def load_model(file_path: types.Path,
 
     """
 
-    if os.path.isfile(file_path):
-        state = torch.load(file_path)
-
-        if isinstance(model_name, Default):
-            str_model_name = state['model_name']
-        else:
-            str_model_name = model_name
-
-        if str_model_name in MODEL_REGISTRY:
-            params = state['params']
-            if not isinstance(device, Default):
-                params['device'] = device_to_str(cast_device(device))
-
-            if nn_module is not default:
-                if nn_module is None:
-                    raise ValueError(
-                        "nn_module is a required attribute for argus.Model")
-                params['nn_module'] = nn_module
-            if optimizer is not default:
-                params['optimizer'] = optimizer
-            if loss is not default:
-                params['loss'] = loss
-            if prediction_transform is not default:
-                params['prediction_transform'] = prediction_transform
-
-            for attribute, attribute_params in kwargs.items():
-                params[attribute] = attribute_params
-
-            model_class = MODEL_REGISTRY[str_model_name]
-            params = change_params_func(params)
-            model = model_class(params)
-            nn_state_dict = deep_to(state['nn_state_dict'], model.device)
-            optimizer_state_dict = None
-            if 'optimizer_state_dict' in state:
-                optimizer_state_dict = deep_to(
-                    state['optimizer_state_dict'], model.device)
-            nn_state_dict, optimizer_state_dict = change_state_dict_func(
-                nn_state_dict, optimizer_state_dict
-            )
-
-            model.get_nn_module().load_state_dict(nn_state_dict)
-            if model.optimizer is not None and optimizer_state_dict is not None:
-                model.optimizer.load_state_dict(optimizer_state_dict)
-            model.eval()
-            return model
-        else:
-            raise ImportError(f"Model '{model_name}' not found in scope")
+    state = state_load_func(file_path)
+    if isinstance(model_name, Default):
+        str_model_name = state['model_name']
     else:
-        raise FileNotFoundError(f"No state found at {file_path}")
+        str_model_name = model_name
+
+    if str_model_name in MODEL_REGISTRY:
+        params = state['params']
+        if not isinstance(device, Default):
+            params['device'] = device_to_str(cast_device(device))
+
+        if nn_module is not default:
+            if nn_module is None:
+                raise ValueError(
+                    "nn_module is a required attribute for argus.Model")
+            params['nn_module'] = nn_module
+        if optimizer is not default:
+            params['optimizer'] = optimizer
+        if loss is not default:
+            params['loss'] = loss
+        if prediction_transform is not default:
+            params['prediction_transform'] = prediction_transform
+
+        for attribute, attribute_params in kwargs.items():
+            params[attribute] = attribute_params
+
+        model_class = MODEL_REGISTRY[str_model_name]
+        params = change_params_func(params)
+        model = model_class(params)
+        nn_state_dict = deep_to(state['nn_state_dict'], model.device)
+        optimizer_state_dict = None
+        if 'optimizer_state_dict' in state:
+            optimizer_state_dict = deep_to(
+                state['optimizer_state_dict'], model.device)
+        nn_state_dict, optimizer_state_dict = change_state_dict_func(
+            nn_state_dict, optimizer_state_dict
+        )
+
+        model.get_nn_module().load_state_dict(nn_state_dict)
+        if model.optimizer is not None and optimizer_state_dict is not None:
+            model.optimizer.load_state_dict(optimizer_state_dict)
+        model.eval()
+        return model
+    else:
+        raise ImportError(f"Model '{model_name}' not found in scope")

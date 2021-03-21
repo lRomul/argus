@@ -1,4 +1,5 @@
 import pytest
+from pathlib import Path
 
 import torch
 from torch import nn
@@ -132,6 +133,23 @@ class TestLoadModel:
 
         with pytest.raises(ImportError):
             load_model(path, model_name='Qwerty')
+
+    def test_state_load_func(self, saved_argus_model):
+        def custom_state_load_func(file_path):
+            file_path = Path(file_path) / 'model.pth'
+            return torch.load(file_path)
+
+        optimizer_state, path, model = saved_argus_model
+        loaded_model = load_model(Path(path).parent,
+                                  device='cpu',
+                                  state_load_func=custom_state_load_func)
+
+        assert loaded_model.params == model.params
+        assert check_weights(model, loaded_model)
+        assert isinstance(loaded_model.loss, model.loss.__class__)
+        assert isinstance(loaded_model.optimizer, model.optimizer.__class__)
+        assert isinstance(loaded_model.prediction_transform,
+                          model.prediction_transform.__class__)
 
     def test_change_state_dict_func(self, saved_argus_model):
         optimizer_state, path, model = saved_argus_model
