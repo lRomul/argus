@@ -198,15 +198,15 @@ class Model(BuildModel):
         """
         self._check_train_ready()
         metrics = [] if metrics is None else metrics
+        phase_states = dict()
 
-        train_engine = Engine(self.train_step)
+        train_engine = Engine(self.train_step, phase_states=phase_states)
         train_metrics = [Loss()] + metrics if metrics_on_train else [Loss()]
         attach_metrics(train_engine, train_metrics)
         default_logging.attach(train_engine)
 
         if val_loader is not None:
-            self.validate(val_loader, metrics, val_callbacks)
-            val_engine = Engine(self.val_step)
+            val_engine = Engine(self.val_step, phase_states=phase_states)
             attach_metrics(val_engine, [Loss()] + metrics)
             default_logging.attach(val_engine)
             attach_callbacks(val_engine, val_callbacks)
@@ -218,6 +218,7 @@ class Model(BuildModel):
                 train_state.metrics.update(val_state.metrics)
 
             validation_epoch.attach(train_engine, val_engine, val_loader)
+            val_engine.run(val_loader, -1, 0)
 
         attach_callbacks(train_engine, callbacks)
         train_engine.run(train_loader, 0, num_epochs)
@@ -242,7 +243,8 @@ class Model(BuildModel):
         """
         self._check_train_ready()
         metrics = [] if metrics is None else metrics
-        val_engine = Engine(self.val_step)
+        phase_states = dict()
+        val_engine = Engine(self.val_step, phase_states=phase_states)
         attach_metrics(val_engine, [Loss()] + metrics)
         default_logging.attach(val_engine)
         attach_callbacks(val_engine, callbacks)

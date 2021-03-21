@@ -62,6 +62,10 @@ class State:
     Args:
         step_method (Callable): Method of :class:`argus.model.Model` that takes
             ``batch, state`` and returns step output.
+        engine (Engine, optional): :class:`argus.engine.Engine` that uses this
+            object as a state.
+        phase_states (dict, optional): Dictionary with states for each
+            training phase.
         **kwargs: Initial attributes of the state.
 
     By default, the state contains the following attributes.
@@ -81,6 +85,8 @@ class State:
             value takes from the name of the method `step_method`. If the
             `step_method` name ends with `_step`, the postfix will be removed.
             For default steps of argus model values are 'train' and 'val'.
+        phase_states (dict, optional): Dictionary with states for each
+            training phase.
         batch (Any): Batch sample from a data loader on the current iteration.
         step_output (Any): Current output from `step_method` on current
             iteration.
@@ -92,14 +98,19 @@ class State:
 
     def __init__(self,
                  step_method: Callable[[Any, 'argus.engine.State'], Any],
+                 engine: Optional['argus.engine.Engine'] = None,
+                 phase_states: Optional[Dict[str, 'argus.engine.State']] = None,
                  **kwargs):
         self.iteration: int = 0
         self.epoch: int = 0
         self.step_method, self.model, self.phase = init_step_method(step_method)
+        if phase_states is not None:
+            phase_states[self.phase] = self
+        self.phase_states = phase_states
         self.logger: logging.Logger = self.model.logger
         self.data_loader: Optional[Iterable] = None
         self.exception: Optional[BaseException] = None
-        self.engine: Optional[Engine] = None
+        self.engine: Optional[Engine] = engine
 
         self.batch: Any = None
         self.step_output: Any = None
@@ -129,6 +140,8 @@ class Engine:
     Args:
         step_method (Callable): Method of :class:`argus.model.Model` that takes
             ``batch, state`` and returns step output.
+        phase_states (dict, optional): Dictionary with states for each
+            training phase.
         **kwargs: Initial attributes of the state.
 
     Attributes:
@@ -143,6 +156,7 @@ class Engine:
 
     def __init__(self,
                  step_method: Callable[[Any, State], Any],
+                 phase_states: Optional[Dict[str, State]] = None,
                  **kwargs):
         self.event_handlers: Dict[
             EventEnum,
@@ -152,6 +166,7 @@ class Engine:
         self.state = State(
             step_method=step_method,
             engine=self,
+            phase_states=phase_states,
             **kwargs
         )
 
