@@ -49,7 +49,7 @@ setup(
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Software Development',
         'Topic :: Software Development :: Libraries',
-        'Topic :: Software Development :: Libraries :: Python modules',
+        'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     install_requires=read('requirements.txt').split(),
 )
