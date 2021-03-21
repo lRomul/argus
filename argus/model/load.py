@@ -38,7 +38,6 @@ def load_model(file_path: types.Path,
 
     Args:
         file_path (str or :class:`pathlib.Path`): Path to the file to load.
-        device (str, torch.device or list of devices, optional): The model device.
         nn_module (dict, tuple or str, optional): Params of the nn_module to
             replace params in the state.
         optimizer (None, dict, tuple or str, optional): Params of the optimizer to
@@ -51,7 +50,8 @@ def load_model(file_path: types.Path,
             prediction_transform to replace params in the state.
             prediction_transform is not created in the loaded model if it is
             set to `None`.
-        state_load_func(function, optional): Function for loading state from file path.
+        device (str, torch.device or list of devices, optional): The model device.
+        state_load_func (function, optional): Function for loading state from file path.
         change_params_func (function, optional): Function for modification of
             the loaded params. It takes params from the loaded state as an
             input and outputs params to use during the model creation.
