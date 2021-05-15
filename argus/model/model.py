@@ -365,10 +365,9 @@ class Model(BuildModel):
             prediction = self.prediction_transform(prediction)
             return prediction
 
-    def train(self):
+    def train(self, mode: bool = True):
         """Set the nn_module into train mode."""
-        if not self.nn_module.training:
-            self.nn_module.train()
+        self.nn_module.train(mode)
 
     def eval(self):
         """Set the nn_module into eval mode."""
