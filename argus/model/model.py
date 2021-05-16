@@ -366,7 +366,12 @@ class Model(BuildModel):
             return prediction
 
     def train(self, mode: bool = True):
-        """Set the nn_module into train mode."""
+        """Set the nn_module into train mode.
+
+        Args:
+            mode (bool): whether to set training mode (``True``) or evaluation
+                         mode (``False``). Default: ``True``.
+        """
         self.nn_module.train(mode)
 
     def eval(self):
