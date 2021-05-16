@@ -52,6 +52,24 @@ class TestModelMethod:
         assert not model.nn_module.training
         model.train()
         assert model.nn_module.training
+        model.train(False)
+        assert not model.nn_module.training
+        model.train(True)
+        assert model.nn_module.training
+        
+        # Check that no "toogle" behavior after enabling already enabled mode
+        model.train(True)
+        assert model.nn_module.training
+        model.train()
+        assert model.nn_module.training
+        model.eval()
+        assert not model.nn_module.training
+        model.eval()
+        assert not model.nn_module.training
+        model.train(False)
+        assert not model.nn_module.training
+        
+        
 
     def test_fit_train_loader(self,
                               get_batch_function,
