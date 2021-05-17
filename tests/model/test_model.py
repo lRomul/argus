@@ -68,8 +68,6 @@ class TestModelMethod:
         assert not model.nn_module.training
         model.train(False)
         assert not model.nn_module.training
-        
-        
 
     def test_fit_train_loader(self,
                               get_batch_function,
