@@ -56,7 +56,7 @@ class TestModelMethod:
         assert not model.nn_module.training
         model.train(True)
         assert model.nn_module.training
-        
+
         # Check that no "toogle" behavior after enabling already enabled mode
         model.train(True)
         assert model.nn_module.training
