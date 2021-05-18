@@ -369,12 +369,11 @@ class Model(BuildModel):
         """Set the nn_module into train mode.
 
         Args:
-            mode (bool): whether to set training mode (``True``) or evaluation
-                         mode (``False``). Default: ``True``.
+            mode (bool): Set train mode, otherwise eval mode. Defaults to True.
         """
-        self.nn_module.train(mode)
+        if self.nn_module.training != mode:
+            self.nn_module.train(mode)
 
     def eval(self):
         """Set the nn_module into eval mode."""
-        if self.nn_module.training:
-            self.nn_module.eval()
+        self.train(mode=False)
