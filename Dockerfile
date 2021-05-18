@@ -10,8 +10,8 @@ RUN apt-get update &&\
     sysstat libtcmalloc-minimal4 pkgconf autoconf libtool \
     python3 python3-pip python3-dev python3-setuptools \
     libsm6 libxext6 libxrender-dev &&\
-    ln -s /usr/bin/python3 /usr/bin/python &&\
-    ln -s /usr/bin/pip3 /usr/bin/pip &&\
+    ln -sf /usr/bin/python3 /usr/bin/python &&\
+    ln -sf /usr/bin/pip3 /usr/bin/pip &&\
     apt-get clean &&\
     apt-get autoremove &&\
     rm -rf /var/lib/apt/lists/* &&\
