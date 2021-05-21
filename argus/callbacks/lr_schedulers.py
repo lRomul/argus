@@ -67,7 +67,7 @@ class LambdaLR(LRScheduler):
 class StepLR(LRScheduler):
     """StepLR scheduler.
 
-    Multiply learning rate by a given factor with a given period.
+    Decays the learning rate of each parameter group by gamma every step_size epochs.
 
     Args:
         step_size (int): Period of learning rate update in epochs.
@@ -95,7 +95,8 @@ class StepLR(LRScheduler):
 class MultiStepLR(LRScheduler):
     """MultiStepLR scheduler.
 
-    Multiply learning rate by a given factor on each epoch from a given list.
+    Decays the learning rate of each parameter group by gamma once the number of epoch
+    reaches one of the milestones.
 
     Args:
         milestones (list of int): List of epochs number to perform lr step.
@@ -121,9 +122,9 @@ class MultiStepLR(LRScheduler):
 
 
 class ExponentialLR(LRScheduler):
-    """MultiStepLR scheduler.
+    """ExponentialLR scheduler.
 
-    Multiply learning rate by a given factor on each epoch.
+    Decays the learning rate of each parameter group by gamma every epoch.
 
     Args:
         gamma (float, optional): Multiplicative factor. Defaults to 0.1.
