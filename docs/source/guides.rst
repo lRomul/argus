@@ -3,6 +3,9 @@ Guides
 
 The guides provide an in-depth overview of how the argus framework works and how one could customize it for specific needs.
 
+
+.. _train_and_val_steps:
+
 Train and val steps
 -------------------
 
@@ -52,5 +55,66 @@ For example, one may change the `train_step` to utilize `mixed precision <https:
 or to apply a batch accumulation technique.
 It is convenient to use the original implementation as a reference.
 
-*Note:* :meth:`argus.model.Model.train_step` and :meth:`argus.model.Model.val_step` are independent of each other.
-Customization of either function does not lead to alternation of the second one.
+**Example**
+
+A simple model example shows how to modify the `train_step` to employ automatic mixed precision training.
+
+.. code-block:: python
+
+    import torch
+    import torchvision
+    from argus import Model
+    from argus.utils import deep_to, deep_detach
+
+
+    class AMPModel(Model):
+        nn_module = torchvision.models.resnet18
+        loss = torch.nn.CrossEntropyLoss
+        optimizer = torch.optim.SGD
+
+        def __init__(self, params):
+            super().__init__(params)
+            self.scaler = torch.cuda.amp.GradScaler()
+
+        def train_step(self, batch, state) -> dict:
+            self.train()
+            self.optimizer.zero_grad()
+            input, target = deep_to(batch, device=self.device, non_blocking=True)
+            # Custom part of a train step
+            with torch.cuda.amp.autocast(enabled=True):
+                prediction = self.nn_module(input)
+                loss = self.loss(prediction, target)
+
+            self.scaler.scale(loss).backward()
+            self.scaler.step(self.optimizer)
+            self.scaler.update()
+            # End of the custom code
+
+            prediction = deep_detach(prediction)
+            target = deep_detach(target)
+            prediction = self.prediction_transform(prediction)
+            return {
+                'prediction': prediction,
+                'target': target,
+                'loss': loss.item()
+            }
+
+    params = {
+        'nn_module': {'num_classes': 10},
+        'optimizer': {'lr': 0.001},
+        'device': 'cuda:0'
+    }
+    model = AMPModel(params)
+
+The code creates a model, which allows training ResNet18 on a 10-class image
+classification task with AMP.
+
+For details on mixed precision training see PyTorch 
+`tutorials <https://pytorch.org/docs/stable/notes/amp_examples.html>`_.
+More Argus `train_step` and `val_step` customization cases could be found in :doc:`examples`.
+
+
+.. note::
+  :meth:`argus.model.Model.train_step` and :meth:`argus.model.Model.val_step` are
+  independent of each other. Customization of either function does not lead to
+  alternation of the second one.
