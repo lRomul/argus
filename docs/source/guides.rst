@@ -118,3 +118,77 @@ More Argus `train_step` and `val_step` customization cases could be found in :do
   :meth:`argus.model.Model.train_step` and :meth:`argus.model.Model.val_step` are
   independent of each other. Customization of either function does not lead to
   alternation of the second one.
+
+
+.. _advanced_model_loading:
+
+Advanced model loading
+----------------------
+
+An argus model could be saved with :meth:`argus.model.Model.save` or with help of an
+:class:`argus.callbacks.Callback`, such as :class:`argus.callbacks.Checkpoint` or :class:`argus.callbacks.MonitorCheckpoint`.
+
+:func:`argus.model.load_model` provides flexible interface to load a saved argus model.
+The simplest user case is allows to load a model with saved parameters and components.
+
+.. code:: python
+
+    from argus import load_model
+
+    # Argus model class should correspond to the model file to load.
+    import ArgusModelClass
+
+
+    model = load_model('/path/to/model/file')
+
+However, the model loading process may require customizations; some cases are provided below.
+
+1. Load the model to a specified device.
+    Just provide the desired device name or a list of devices.
+
+    .. code:: python
+
+        # Load the model to cuda:0 device
+        model = load_model('/path/to/model/file', device='cuda:0')
+
+    The feature is helpful if one wants to load the model to a specific device for training or inference
+    and also to load the model on a machine that does not have the device, which was specified before the
+    model file was saved. For example, if the model was saved with ``device=='cuda:1'``,
+    while the target machine is equipped with the only GPU, so, ``device=='cuda:0'`` is the only valid option.
+
+    .. note::
+
+        The feature allows to set the device for :class:`torch.nn.Module` model components only, i.e. ``nn_module`` and ``loss``.
+        However, one should explicitly set the device for other device-dependent components, such as a
+        ``prediction_transform`` requiring a device specification. See details in the cases below.
+
+
+2. Load only some of the model components.
+    It is possible to exclude ``loss``, ``optimizer`` or ``prediction_transform`` at
+    the model load time if one or more components are not required. For example,
+    it could be helpful for inference or if the component's code is not available.
+    It is necessary to set the appropriate arguments to ``None`` to do this.
+
+    .. code:: python
+
+        # Load the model without optimizer and loss
+        model = load_model('/path/to/model/file', loss=None, optimizer=None)
+
+3. Alternate a model component parameters.
+    ``nn_module``, ``loss``, ``optimizer`` or ``prediction_transform`` parameters could
+    be customized during the model loading. Appropriate arguments should be set to parameters dicts to do this.
+
+    .. code:: python
+
+        # The prediction transform class of the model should accept `device` argument on creation
+
+        # Load the model to 'cuda:1' device and also set the prediction_transform
+        # to the correct device
+        my_device = 'cuda:1'
+        model = load_model('/path/to/model/file', prediction_transform={'device': my_device},
+                           device=my_device)
+
+.. seealso::
+    * For more information see the :func:`argus.model.load_model` documentation.
+    * More real-world examples of how to use `load_model` are available
+      `here <https://github.com/lRomul/argus/blob/master/examples/load_model.py>`_.
