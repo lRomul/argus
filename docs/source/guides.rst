@@ -3,6 +3,9 @@ Guides
 
 The guides provide an in-depth overview of how the argus framework works and how one could customize it for specific needs.
 
+.. toctree::
+    :maxdepth: 2
+
 
 .. _train_and_val_steps:
 
