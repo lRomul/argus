@@ -30,6 +30,7 @@ Documentation
    :maxdepth: 2
 
    quickstart
+   guides
    examples
    api_reference/index
 

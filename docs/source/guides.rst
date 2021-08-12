@@ -47,8 +47,8 @@ The return value of `train_step`, as well as `val_step`, is a dictionary with th
 * **"loss"** - The loss function value, obtained as *loss.item()*.
 
 The output structure above is good to know because it is used as a
-:class:`argus.callbacks.Callback` input and it needs to be parsed in the case of
-a custom Callback.
+:class:`argus.metrics.Metric` input and it needs to be parsed in the case of
+a custom metric.
 
 Customization
 ^^^^^^^^^^^^^
@@ -101,6 +101,7 @@ A simple model example shows how to modify the `train_step` to employ automatic 
                 'target': target,
                 'loss': loss.item()
             }
+
 
     params = {
         'nn_module': {'num_classes': 10},
