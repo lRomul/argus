@@ -187,8 +187,10 @@ Argus allows managing different parts combinations of a pipeline.
 
     model = MoreFlexModel(params)
 
-If you need more flexibility you can:
+.. seealso::
+    If you need more flexibility you can:
 
-* Override methods of :class:`argus.model.Model`. For example :meth:`argus.model.Model.train_step` and :meth:`argus.model.Model.val_step`.
-* Create custom :class:`argus.callbacks.Callback`.
-* Use custom :class:`argus.metrics.Metric`.
+    * Override methods of :class:`argus.model.Model`. For example, :meth:`argus.model.Model.train_step`
+      and :meth:`argus.model.Model.val_step`. See :ref:`train_and_val_steps` guide for details.
+    * Create a custom :class:`argus.callbacks.Callback`.
+    * Use a custom :class:`argus.metrics.Metric`.
