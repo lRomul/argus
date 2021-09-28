@@ -17,13 +17,13 @@ RUN apt-get update &&\
     rm -rf /var/lib/apt/lists/* &&\
     rm -rf /var/cache/apt/archives/*
 
-RUN pip3 install --no-cache-dir numpy==1.21.1
+RUN pip3 install --no-cache-dir numpy==1.21.2
 
 # Install PyTorch
 RUN pip3 install --no-cache-dir \
-    torch==1.9.0+cu111 \
-    torchvision==0.10.0+cu111 \
-    torchaudio==0.9.0 \
+    torch==1.9.1+cu111 \
+    torchvision==0.10.1+cu111 \
+    torchaudio==0.9.1 \
     -f https://download.pytorch.org/whl/torch_stable.html
 
 # Docs requirements
