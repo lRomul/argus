@@ -11,6 +11,7 @@ Basic examples
 * `MNIST VAE example. <https://github.com/lRomul/argus/blob/master/examples/mnist_vae.py>`_
 * `CIFAR example. <https://github.com/lRomul/argus/blob/master/examples/cifar_simple.py>`_
 * `Model loading. <https://github.com/lRomul/argus/blob/master/examples/load_model.py>`_
+* `Sequential LR scheduler. <https://github.com/lRomul/argus/blob/master/examples/sequential_lr_scheduler.py>`_
 
 Advanced examples
 -----------------
