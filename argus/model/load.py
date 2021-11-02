@@ -7,6 +7,8 @@ from argus import types
 from argus.model.build import MODEL_REGISTRY, cast_device
 from argus.utils import deep_to, device_to_str, Default, default, identity
 
+__all__ = ["load_model"]
+
 
 def default_change_state_dict_func(nn_state_dict: dict,
                                    optimizer_state_dict: Optional[dict] = None):

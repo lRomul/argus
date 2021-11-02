@@ -1,6 +1,8 @@
 from argus.metrics.metric import Metric
 from argus.utils import AverageMeter
 
+__all__ = ["Loss"]
+
 
 class Loss(Metric):
     """Accumulates the average of a loss function. By default used by

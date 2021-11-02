@@ -10,6 +10,8 @@ from argus.engine import State
 from argus.callbacks.callback import Callback
 from argus.metrics.metric import init_better
 
+__all__ = ["Checkpoint", "MonitorCheckpoint"]
+
 
 class Checkpoint(Callback):
     """Save the model with a given period.

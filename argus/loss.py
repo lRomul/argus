@@ -2,6 +2,8 @@ from typing import Dict, Type
 from torch.nn.modules.loss import _Loss
 from argus.utils import inheritors
 
+__all__ = ["get_pytorch_losses", "pytorch_losses"]
+
 
 def _is_pytorch_loss(loss: Type) -> bool:
     if not loss.__module__.startswith('torch.nn.modules.loss'):

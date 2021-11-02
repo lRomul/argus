@@ -9,7 +9,7 @@ from argus.callbacks.callback import (
     on_iteration_start,
     on_iteration_complete,
     on_catch_exception,
-    attach_callbacks
+    attach_callbacks,
 )
 
 from argus.callbacks.checkpoints import (
@@ -21,6 +21,7 @@ from argus.callbacks.logging import LoggingToFile, LoggingToCSV
 from argus.callbacks.early_stopping import EarlyStopping
 
 from argus.callbacks.lr_schedulers import (
+    LRScheduler,
     LambdaLR,
     StepLR,
     MultiStepLR,

@@ -2,6 +2,8 @@ from typing import Dict, Type
 from torch.optim.optimizer import Optimizer
 from argus.utils import inheritors
 
+__all__ = ["get_pytorch_optimizers", "pytorch_optimizers"]
+
 
 def _is_pytorch_optimizer(optimizer: Type) -> bool:
     if not optimizer.__module__.startswith('torch.optim'):

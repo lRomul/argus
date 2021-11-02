@@ -6,6 +6,8 @@ from argus.engine import State
 from argus.callbacks.callback import Callback
 from argus.metrics.metric import init_better
 
+__all__ = ["EarlyStopping"]
+
 
 class EarlyStopping(Callback):
     """Stop the model training after its metric has stopped improving.

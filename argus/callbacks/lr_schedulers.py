@@ -12,6 +12,20 @@ from argus.engine import State
 from argus.callbacks.callback import Callback
 from argus.metrics.metric import init_better
 
+__all__ = [
+    "LRScheduler",
+    "LambdaLR",
+    "StepLR",
+    "MultiStepLR",
+    "ExponentialLR",
+    "CosineAnnealingLR",
+    "ReduceLROnPlateau",
+    "CyclicLR",
+    "CosineAnnealingWarmRestarts",
+    "MultiplicativeLR",
+    "OneCycleLR",
+]
+
 
 class LRScheduler(Callback):
     def __init__(self,

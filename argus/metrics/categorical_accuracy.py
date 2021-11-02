@@ -2,6 +2,8 @@ import torch
 
 from argus.metrics.metric import Metric
 
+__all__ = ["CategoricalAccuracy"]
+
 
 class CategoricalAccuracy(Metric):
     """Calculates the accuracy for multiclass classification."""

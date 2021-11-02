@@ -13,6 +13,8 @@ from argus.metrics.metric import Metric, attach_metrics
 from argus.metrics.loss import Loss
 from argus.utils import deep_to, deep_detach
 
+__all__ = ["Model"]
+
 
 class Model(BuildModel):
     """Argus model is an abstraction of a trainer/predictor that uses:
