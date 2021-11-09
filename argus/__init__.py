@@ -4,4 +4,4 @@ import argus.callbacks
 import argus.metrics
 import argus.types
 
-__version__ = '0.2.1'
+__version__ = '1.0.0'
