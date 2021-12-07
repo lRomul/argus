@@ -7,8 +7,8 @@ import torch.distributed as dist
 from torch.nn import SyncBatchNorm
 from torch.utils.data import DataLoader, DistributedSampler
 from torch.nn.parallel import DistributedDataParallel
-from torchvision import transforms
 from torchvision.datasets import CIFAR10
+from torchvision import transforms
 
 import timm
 
@@ -116,11 +116,9 @@ class CifarModel(argus.Model):
 
     def __init__(self, params):
         super().__init__(params)
-        self.iter_size = (1 if 'iter_size' not in self.params
-                          else int(self.params['iter_size']))
-        self.amp = (False if 'amp' not in self.params
-                    else bool(self.params['amp']))
-        self.scaler = torch.cuda.amp.GradScaler() if self.amp else None
+        self.iter_size = params.get('iter_size', 1)
+        self.amp = params.get('amp', False)
+        self.grad_scaler = torch.cuda.amp.GradScaler(enabled=self.amp)
 
     def train_step(self, batch, state) -> dict:
         self.train()
@@ -134,16 +132,10 @@ class CifarModel(argus.Model):
                 loss = self.loss(prediction, target)
                 loss = loss / self.iter_size
 
-            if self.amp:
-                self.scaler.scale(loss).backward()
-            else:
-                loss.backward()
+            self.grad_scaler.scale(loss).backward()
 
-        if self.amp:
-            self.scaler.step(self.optimizer)
-            self.scaler.update()
-        else:
-            self.optimizer.step()
+        self.grad_scaler.step(self.optimizer)
+        self.grad_scaler.update()
 
         prediction = deep_detach(prediction)
         target = deep_detach(target)
