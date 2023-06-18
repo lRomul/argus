@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.8, 3.9, 3.10]
       fail-fast: false
 
     steps:
@@ -29,10 +29,10 @@ jobs:
           pip install -r tests/requirements.txt
       - name: Install CPU PyTorch
         if: ${{ matrix.os != 'macos-latest' }}
-        run: pip install torch==1.10.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+        run: pip3 install torch==2.0.1 --index-url https://download.pytorch.org/whl/cpu
       - name: Install PyTorch on macOS
         if: ${{ matrix.os == 'macos-latest' }}
-        run: pip install torch==1.10.0
+        run: pip3 install torch==2.0.1
       - name: Check code style
         run: flake8
       - name: Test

@@ -65,7 +65,7 @@ class TestLrSchedulers:
                              step_on_iteration=step_on_iteration)
         lambda_lr.attach(test_engine)
         lambda_lr.start(test_engine.state)
-        assert isinstance(lambda_lr.scheduler, lr_scheduler._LRScheduler)
+        assert isinstance(lambda_lr.scheduler, lr_scheduler.LambdaLR)
         assert lambda_lr.scheduler.lr_lambdas[0](1) == 0.95 ** 1
         assert lambda_lr.step_on_iteration == step_on_iteration
 
