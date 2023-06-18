@@ -15,8 +15,6 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /var/cache/apt/archives/*
 
-RUN pip3 install --no-cache-dir numpy==1.25.0
-
 # Install PyTorch
 RUN pip3 install --no-cache-dir \
     torch==2.0.1 \
