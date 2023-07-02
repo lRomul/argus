@@ -125,14 +125,15 @@ class CifarModel(argus.Model):
         self.optimizer.zero_grad()
 
         # Gradient accumulation
+        loss_value = 0
         for i, chunk_batch in enumerate(deep_chunk(batch, self.iter_size)):
             input, target = deep_to(chunk_batch, self.device, non_blocking=True)
             with torch.cuda.amp.autocast(enabled=self.amp):
                 prediction = self.nn_module(input)
                 loss = self.loss(prediction, target)
                 loss = loss / self.iter_size
-
             self.grad_scaler.scale(loss).backward()
+            loss_value += loss.item()
 
         self.grad_scaler.step(self.optimizer)
         self.grad_scaler.update()
@@ -143,7 +144,7 @@ class CifarModel(argus.Model):
         return {
             'prediction': prediction,
             'target': target,
-            'loss': loss.item()
+            'loss': loss_value
         }
 
 
