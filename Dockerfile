@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+FROM nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04
 
 ENV LANG C.UTF-8
 ENV DEBIAN_FRONTEND noninteractive
@@ -17,10 +17,9 @@ RUN apt-get update && \
 
 # Install PyTorch
 RUN pip3 install --no-cache-dir \
-    torch==2.0.1 \
-    torchvision==0.15.2 \
-    torchaudio==2.0.2 \
-    --index-url https://download.pytorch.org/whl/cu118
+    torch==2.1.2 \
+    torchvision==0.16.2 \
+    torchaudio==2.1.2
 
 # Docs requirements
 COPY ./docs/requirements.txt /docs_requirements.txt
