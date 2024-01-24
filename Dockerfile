@@ -2,7 +2,11 @@ FROM nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04
 
 ENV LANG C.UTF-8
 ENV DEBIAN_FRONTEND noninteractive
+ENV DEB_PYTHON_INSTALL_LAYOUT=deb_system
 ENV NVIDIA_DRIVER_CAPABILITIES video,compute,utility
+ENV PYTHONPATH $PYTHONPATH:/workdir
+
+WORKDIR /workdir
 
 RUN apt-get update && \
     apt-get -y install \
@@ -21,17 +25,6 @@ RUN pip3 install --no-cache-dir \
     torchvision==0.16.2 \
     torchaudio==2.1.2
 
-# Docs requirements
-COPY ./docs/requirements.txt /docs_requirements.txt
-RUN pip3 install --no-cache-dir -r /docs_requirements.txt
-
-# Tests requirements
-COPY ./tests/requirements.txt /tests_requirements.txt
-RUN pip3 install --no-cache-dir -r /tests_requirements.txt
-
-# Examples requirements
-COPY ./examples/requirements.txt /examples_requirements.txt
-RUN pip3 install --no-cache-dir -r /examples_requirements.txt
-
-ENV PYTHONPATH $PYTHONPATH:/workdir
-WORKDIR /workdir
+# Install requirements
+COPY ./ ./
+RUN pip3 install -e .[tests,docs,examples]
