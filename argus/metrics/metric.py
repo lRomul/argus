@@ -10,7 +10,7 @@ from argus.engine import State, Engine
 
 METRIC_REGISTRY: Dict[str, Type['argus.metrics.Metric']] = dict()
 
-__all__ = ["Metric", "attach_metrics"]
+__all__ = ["init_better", "Metric", "attach_metrics"]
 
 
 def init_better(better: str, monitor: str) -> Tuple[str, Callable, float]:
