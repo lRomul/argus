@@ -1,6 +1,3 @@
-import pytest
-from distutils.version import LooseVersion
-
 import torch
 
 from argus.optimizer import get_pytorch_optimizers, _is_pytorch_optimizer
@@ -19,8 +16,6 @@ def test_is_pytorch_optimizer():
     assert not _is_pytorch_optimizer(torch.nn.BCELoss)
 
 
-@pytest.mark.skipif(LooseVersion(torch.__version__) < LooseVersion("1.7.0"),
-                    reason="Requires torch==1.7.0 or higher")
 def test_is_multi_tensor_optimizer():
     from torch.optim import _multi_tensor
     assert not _is_pytorch_optimizer(_multi_tensor.SGD)

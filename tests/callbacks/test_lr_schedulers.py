@@ -1,8 +1,6 @@
 import pytest
 from collections import Counter
-from distutils.version import LooseVersion
 
-import torch
 from torch.optim import lr_scheduler
 from torch.optim.optimizer import Optimizer
 
@@ -104,9 +102,7 @@ class TestLrSchedulers:
         assert cosine_annealing_lr.scheduler.T_max == 10
         assert cosine_annealing_lr.scheduler.eta_min == 0
 
-    @pytest.mark.skipif(LooseVersion(torch.__version__) < LooseVersion("1.4.0"),
-                        reason="Requires torch==1.4.0 or higher")
-    def test_multiplicative_lr(self, test_engine, step_on_iteration, monkeypatch):
+    def test_multiplicative_lr(self, test_engine, step_on_iteration):
         multiplicative_lr = MultiplicativeLR(lambda epoch: 0.95,
                                              step_on_iteration=step_on_iteration)
         multiplicative_lr.attach(test_engine)
@@ -115,25 +111,13 @@ class TestLrSchedulers:
         assert multiplicative_lr.scheduler.lr_lambdas[0](1) == 0.95
         assert multiplicative_lr.step_on_iteration == step_on_iteration
 
-        from argus.callbacks.lr_schedulers import torch
-        monkeypatch.setattr(torch, "__version__", '1.3.0')
-        with pytest.raises(ImportError):
-            MultiplicativeLR(lambda epoch: 0.95)
-
-    @pytest.mark.skipif(LooseVersion(torch.__version__) < LooseVersion("1.3.0"),
-                        reason="Requires torch==1.3.0 or higher")
-    def test_one_cycle_lr(self, test_engine, monkeypatch):
+    def test_one_cycle_lr(self, test_engine):
         one_cycle_lr = OneCycleLR(max_lr=0.01, steps_per_epoch=1000, epochs=10)
         one_cycle_lr.attach(test_engine)
         one_cycle_lr.start(test_engine.state)
         assert isinstance(one_cycle_lr.scheduler, lr_scheduler.OneCycleLR)
         assert one_cycle_lr.scheduler.total_steps == 10000
         assert one_cycle_lr.step_on_iteration
-
-        from argus.callbacks.lr_schedulers import torch
-        monkeypatch.setattr(torch, "__version__", '1.1.0')
-        with pytest.raises(ImportError):
-            OneCycleLR(max_lr=0.01, steps_per_epoch=1000, epochs=10)
 
     def test_cosine_annealing_warm_restarts(self, test_engine, step_on_iteration):
         warm_restarts = CosineAnnealingWarmRestarts(T_0=1, T_mult=1, eta_min=0,

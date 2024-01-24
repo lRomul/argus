@@ -4,7 +4,6 @@ It enables the PyTorch lr_schedulers to be used as normal argus Callbacks.
 """
 from typing import Optional, Callable, Iterable, Any, Union, List
 
-import torch
 from torch.optim import Optimizer
 from torch.optim import lr_scheduler as _scheduler
 
@@ -370,16 +369,12 @@ class MultiplicativeLR(LRScheduler):
                                   List[Callable[[int], float]]],
                  last_epoch: int = -1,
                  step_on_iteration: bool = False):
-        from distutils.version import LooseVersion
-        if LooseVersion(torch.__version__) >= LooseVersion("1.4.0"):
-            super().__init__(
-                lambda opt: _scheduler.MultiplicativeLR(opt,
-                                                        lr_lambda,
-                                                        last_epoch=last_epoch),
-                step_on_iteration=step_on_iteration
-            )
-        else:
-            raise ImportError("Update torch>=1.4.0 to use 'MultiplicativeLR'")
+        super().__init__(
+            lambda opt: _scheduler.MultiplicativeLR(opt,
+                                                    lr_lambda,
+                                                    last_epoch=last_epoch),
+            step_on_iteration=step_on_iteration
+        )
 
 
 class OneCycleLR(LRScheduler):
@@ -451,23 +446,19 @@ class OneCycleLR(LRScheduler):
                  div_factor: float = 25.,
                  final_div_factor: float = 1e4,
                  last_epoch: int = -1):
-        from distutils.version import LooseVersion
-        if LooseVersion(torch.__version__) >= LooseVersion("1.3.0"):
-            super().__init__(
-                lambda opt: _scheduler.OneCycleLR(opt,
-                                                  max_lr,
-                                                  total_steps=total_steps,
-                                                  epochs=epochs,
-                                                  steps_per_epoch=steps_per_epoch,
-                                                  pct_start=pct_start,
-                                                  anneal_strategy=anneal_strategy,
-                                                  cycle_momentum=cycle_momentum,
-                                                  base_momentum=base_momentum,
-                                                  max_momentum=max_momentum,
-                                                  div_factor=div_factor,
-                                                  final_div_factor=final_div_factor,
-                                                  last_epoch=last_epoch),
-                step_on_iteration=True
-            )
-        else:
-            raise ImportError("Update torch>=1.3.0 to use 'OneCycleLR'")
+        super().__init__(
+            lambda opt: _scheduler.OneCycleLR(opt,
+                                              max_lr,
+                                              total_steps=total_steps,
+                                              epochs=epochs,
+                                              steps_per_epoch=steps_per_epoch,
+                                              pct_start=pct_start,
+                                              anneal_strategy=anneal_strategy,
+                                              cycle_momentum=cycle_momentum,
+                                              base_momentum=base_momentum,
+                                              max_momentum=max_momentum,
+                                              div_factor=div_factor,
+                                              final_div_factor=final_div_factor,
+                                              last_epoch=last_epoch),
+            step_on_iteration=True
+        )
