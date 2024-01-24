@@ -39,15 +39,21 @@ Advanced examples
 * `Custom callback events. <https://github.com/lRomul/argus/blob/master/examples/custom_events.py>`_
 * `Custom build methods for creation of model parts. <https://github.com/lRomul/argus/blob/master/examples/custom_build_methods.py>`_
 
-Kaggle solutions
-----------------
+Solutions of competitions
+-------------------------
 
-* `1st place solution for Freesound Audio Tagging 2019 (mel-spectrograms, mixed precision) <https://github.com/lRomul/argus-freesound>`_
-* `14th place solution for TGS Salt Identification Challenge (segmentation, MeanTeacher) <https://github.com/lRomul/argus-tgs-salt>`_
-* `22nd place solution for RANZCR CLiP - Catheter and Line Position Challenge (DDP, EMA, mixed precision, pseudo labels) <https://github.com/lRomul/ranzcr-clip>`_
-* `50th place solution for Quick, Draw! Doodle Recognition Challenge (gradient accumulation, training on 50M images) <https://github.com/lRomul/argus-quick-draw>`_
-* `66th place solution for Kaggle Airbus Ship Detection Challenge (instance segmentation) <https://github.com/OniroAI/Universal-segmentation-baseline-Kaggle-Airbus-Ship-Detection>`_
-* `Solution for Humpback Whale Identification (metric learning: arcface, center loss) <https://github.com/lRomul/argus-humpback-whale>`_
-* `Solution for VSB Power Line Fault Detection (1d conv) <https://github.com/lRomul/argus-vsb-power>`_
-* `Solution for Bengali.AI Handwritten Grapheme Classification (EMA, mixed precision, CutMix) <https://github.com/lRomul/argus-bengali-ai>`_
-* `Solution for ALASKA2 Image Steganalysis competition (DDP, EMA, mixed precision, BitMix) <https://github.com/lRomul/argus-alaska>`_
+* `1st place solution for Sensorium Competition at NeurIPS 2023 <https://github.com/lRomul/sensorium>`_
+* `1st place solution for SoccerNet Ball Action Spotting Challenge at CVPR 2023 <https://github.com/lRomul/ball-action-spotting>`_
+* `1st place solution for SoccerNet Camera Calibration Challenge at CVPR 2023 <https://github.com/NikolasEnt/soccernet-calibration-sportlight>`_
+* `1st place solution for Freesound Audio Tagging 2019 at Kaggle <https://github.com/lRomul/argus-freesound>`_
+* `14th place solution for TGS Salt Identification Challenge at Kaggle <https://github.com/lRomul/argus-tgs-salt>`_
+* `22nd place solution for RANZCR CLiP - Catheter and Line Position Challenge at Kaggle <https://github.com/lRomul/ranzcr-clip>`_
+* `45th place solution for RANZCR CLiP - Catheter and Line Position Challenge at Kaggle <https://github.com/irrmnv/ranzcr-clip>`_
+* `50th place solution for Quick, Draw! Doodle Recognition Challenge at Kaggle <https://github.com/lRomul/argus-quick-draw>`_
+* `66th place solution for Airbus Ship Detection Challenge at Kaggle <https://github.com/OniroAI/Universal-segmentation-baseline-Kaggle-Airbus-Ship-Detection>`_
+* `Community Prize solution for Seismic Facies Identification Challenge at AIcrowd <https://github.com/irrmnv/seismic-facies-identification>`_
+* `Solution for Deep Chimpact: Depth Estimation for Wildlife Conservation at DrivenData <https://github.com/sankovalev/deep_chimpact.drivendata>`_
+* `Solution for Humpback Whale Identification at Kaggle <https://github.com/lRomul/argus-humpback-whale>`_
+* `Solution for VSB Power Line Fault Detection at Kaggle <https://github.com/lRomul/argus-vsb-power>`_
+* `Solution for Bengali.AI Handwritten Grapheme Classification at Kaggle <https://github.com/lRomul/argus-bengali-ai>`_
+* `Solution for ALASKA2 Image Steganalysis competition at Kaggle <https://github.com/lRomul/argus-alaska>`_
