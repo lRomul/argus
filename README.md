@@ -20,7 +20,7 @@ https://pytorch-argus.readthedocs.io
 ## Installation
 
 Requirements: 
-* torch>=1.1.0
+* torch>=2.0.0
 
 From pip:
 
@@ -31,7 +31,7 @@ pip install pytorch-argus
 From source:
 
 ```bash
-pip install -U git+https://github.com/lRomul/argus.git
+pip install -U git+https://github.com/lRomul/argus.git@dev
 ```
 
 ## Example

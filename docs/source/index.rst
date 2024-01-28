@@ -9,7 +9,7 @@ Installation
 
 Requirements:
 
-* torch>=1.1.0
+* torch>=2.0.0
 
 You can use pip to install Argus:
 

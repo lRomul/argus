@@ -27,4 +27,4 @@ RUN pip3 install --no-cache-dir \
 
 # Install requirements
 COPY ./ ./
-RUN pip3 install -e .[tests,docs,examples]
+RUN pip3 install --no-cache-dir -e .[tests,docs,examples]

@@ -5,13 +5,13 @@ import torch
 
 import argus
 from argus import types
-from argus.model.build import BuildModel
 from argus.engine import Engine, State
-from argus.callbacks import Callback, attach_callbacks
+from argus.model.build import BuildModel
+from argus.utils import deep_to, deep_detach
 from argus.callbacks.logging import default_logging
+from argus.callbacks import Callback, attach_callbacks
 from argus.metrics.metric import Metric, attach_metrics
 from argus.metrics.loss import Loss
-from argus.utils import deep_to, deep_detach
 
 __all__ = ["Model"]
 
@@ -34,6 +34,8 @@ class Model(BuildModel):
 
     Args:
         params (dict): A model parameters.
+        build_order (Iterable[str]): Order of building model attributes. The default
+            order is ('nn_module', 'optimizer', 'loss', 'device', 'prediction_transform').
 
     Examples:
 
@@ -82,9 +84,6 @@ class Model(BuildModel):
             model = FlexModel(params)
 
     """
-
-    def __init__(self, params: dict):
-        super().__init__(params)
 
     def train_step(self, batch, state: State) -> dict:
         """Perform a single train step.
