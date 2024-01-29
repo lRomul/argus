@@ -35,7 +35,7 @@ class Model(BuildModel):
     Args:
         params (dict): A model parameters.
         build_order (Iterable[str]): Order of building model attributes. The default
-            order is ('nn_module', 'optimizer', 'loss', 'device', 'prediction_transform').
+            order: ('nn_module', 'optimizer', 'loss', 'device', 'prediction_transform').
 
     Examples:
 
