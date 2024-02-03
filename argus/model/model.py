@@ -196,6 +196,9 @@ class Model(BuildModel):
                 List of callbacks to be attached to the validation process.
                 Defaults to `None`.
 
+        Returns:
+            dict: The metrics dictionary.
+
         """
         self._check_train_ready()
         metrics = [] if metrics is None else metrics
@@ -222,7 +225,8 @@ class Model(BuildModel):
             val_engine.run(val_loader, -1, 0)
 
         attach_callbacks(train_engine, callbacks)
-        train_engine.run(train_loader, 0, num_epochs)
+        state = train_engine.run(train_loader, 0, num_epochs)
+        return state.metrics
 
     def validate(self,
                  val_loader: Iterable,

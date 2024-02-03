@@ -91,10 +91,10 @@ class TestModelMethod:
                                   drop_last=True, batch_size=32)
         val_loader = DataLoader(val_dataset, shuffle=False, batch_size=64)
         val_loss_before = model.validate(val_loader)['val_loss']
-        model.fit(train_loader,
-                  val_loader=val_loader,
-                  num_epochs=32)
-        val_loss_after = model.validate(val_loader)['val_loss']
+        val_loss_after = model.fit(train_loader,
+                                   val_loader=val_loader,
+                                   num_epochs=32)['val_loss']
+        assert val_loss_after == model.validate(val_loader)['val_loss']
         assert val_loss_after < val_loss_before
         assert val_loss_after < 0.3
 
