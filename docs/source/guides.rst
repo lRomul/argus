@@ -240,7 +240,11 @@ The code below demonstrates a top-K accuracy metric, which implements the requir
 
 
     class TopKAccuracy(Metric):
-        """Calculates the top-K accuracy for multiclass classification."""
+        """Calculate the top-K accuracy for multiclass classification.
+
+        Args:
+            k (int): Number of top predictions to consider.
+        """
 
         name = 'top_k_accuracy'
         better = 'max'
@@ -288,7 +292,13 @@ correct answer was present among the top-K predictions.
 
 
     class TopKAccuracy(Metric):
-        """Calculates the top-K accuracy for multiclass classification."""
+        """Calculate the top-K accuracy for multiclass classification.
+
+        It also reports the average rank of the correct top-K predictions.
+
+        Args:
+            k (int): Number of top predictions to consider.
+        """
         name = 'top_k_accuracy'
         better = 'max'
 
