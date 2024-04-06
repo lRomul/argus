@@ -196,3 +196,132 @@ However, the model loading process may require customizations; some cases are pr
     * For more information see the :func:`argus.model.load_model` documentation.
     * More real-world examples of how to use `load_model` are available
       `here <https://github.com/lRomul/argus/blob/master/examples/load_model.py>`_.
+
+
+.. _custom metrics:
+
+Custom metrics
+--------------
+
+
+A custom metric can be implemented as a class, inheriting from 
+:class:`argus.metrics.Metric` and redefining the following methods as required:
+
+
+* :meth:`argus.metrics.Metric.reset`: Initialization or reset of the internal variables and accumulators.
+  Normally, the method is called authomatically before each epoch start.
+
+* :meth:`argus.metrics.Metric.update`: Update of the internal variables and accumulators based on the provided
+  ``step_output`` results for a single step.
+  The ``step_output`` is a dictionary containing the predictions, targets, and loss
+  value or other values as the result of a single :meth:`argus.model.Model.train_step` or :meth:`argus.model.Model.val_step`.
+  The method is called for each step in the loop. The metric will be evaluated
+  with the results of validation steps if ``val_loader`` was provided to :meth:`argus.model.Model.fit`.
+  The metric is evaluated with the results of training steps in case ``metrics_on_train=True`` in :meth:`argus.model.Model.fit`.
+  In the case both are enabled, the metrics will be computed independently for train and validation steps.
+
+* :meth:`argus.metrics.Metric.compute`: Computes and returns a metric value based on
+  the accumulated values. The method is called at the end of an epoch to obtain the
+  final metric value. Normally, the return of the method is a single float value. The value is reported
+  in the logs with the metric name and prefixes to indicate the stage (train or val) and the metric name itself.
+  For example, the results of a metric with name ``f1`` can be assesed as ``train_f1`` and ``val_f1``.
+  The metric name can be used to assign callbacks actions, such as use as ``monitor`` for
+  :class:`argus.callbacks.MonitorCheckpoint`.
+
+The :class:`argus.metrics.Metric` base class initialization requires two attributes: ``name`` and ``better``.
+The first attribute specifies the name of the evaluation metric, while the second indicates whether a higher value
+(`max`) or a lower value (`min`) means improvement for this metric.
+
+The code below demonstrates a top-K accuracy metric, which implements the required methods.
+
+.. code-block:: python
+
+    from argus.metrics import Metric
+
+
+    class TopKAccuracy(Metric):
+        """Calculates the top-K accuracy for multiclass classification."""
+
+        name = 'top_k_accuracy'
+        better = 'max'
+
+        def __init__(self, k: int = 5):
+            self.k = k
+            self.correct = 0
+            self.count = 0
+            # Parametrized name allows having several instances of the metric with different k values
+            self.name = f'top_{self.k}_accuracy'
+
+        def reset(self):
+            self.correct = 0
+            self.count = 0
+
+        def update(self, step_output: dict):
+            indices = torch.topk(step_output['prediction'], k=self.k, dim=1)[1]
+            target = step_output['target'].unsqueeze(1)
+            correct = torch.any(indices == target, dim=1)
+            self.correct += torch.sum(correct).item()
+            self.count += correct.shape[0]
+
+        def compute(self) -> float:
+            if self.count == 0:
+                raise RuntimeError('Must be at least one example for computation')
+            return self.correct / self.count
+
+
+In some more advanced use cases, it may be required to create a custom metric to
+report not only a single value but several additional values. That can be the case
+when the intermediate computed results are of interest for monitoring. This can
+be useful to optimise the metric compute costs and memory usage. In order to do this, one should redefine 
+:meth:`argus.metrics.Metric.epoch_complete` method. This method is called at the end of each epoch to update the model state
+with all the metrics values. All the values to report should be added to ``state.metrics`` dictionary, using distinctive value
+names as keys. The names prefix of the train stage is avalable in ``state.phase``
+
+The example below shows a modified top-K accuracy metric, which reports not only a top-K
+accuracy but also the average rank of the correct prediction for cases where the
+correct answer was present among the top-K predictions.
+
+.. code-block:: python
+
+    from argus.engine import State
+    from argus.metrics import Metric
+
+
+    class TopKAccuracy(Metric):
+        """Calculates the top-K accuracy for multiclass classification."""
+        name = 'top_k_accuracy'
+        better = 'max'
+
+        def __init__(self, k: int = 5):
+            self.k = k
+            self.correct = 0
+            self.rank = 0
+            self.count = 0
+            self.name = f'top_{self.k}_accuracy'
+
+        def reset(self):
+            self.correct = 0
+            self.rank = 0
+            self.count = 0
+
+        def update(self, step_output: dict):
+            indices = torch.topk(step_output['prediction'], k=self.k, dim=1)[1]
+            target = step_output['target'].unsqueeze(1)
+            correct = torch.any(indices == target, dim=1)
+            rank = torch.nonzero(indices == target)[:, 1]
+            self.correct += torch.sum(correct).item()
+            self.rank += torch.sum(rank).item()
+            self.count += correct.shape[0]
+
+        def compute(self) -> float:
+            if self.count == 0:
+                raise RuntimeError('Must be at least one example for computation')
+            return self.correct / self.count
+
+        def epoch_complete(self, state: State):
+            with torch.no_grad():
+                accuracy = self.compute()
+            rank = self.rank / self.count + 1.0  # +1.0 because ranks are 1-indexed
+            name_prefix = f"{state.phase}_" if state.phase else ''
+            state.metrics[f'{name_prefix}{self.name}'] = accuracy
+            state.metrics[f'{name_prefix}rank_{self.k}'] = rank
