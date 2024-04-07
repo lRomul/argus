@@ -207,8 +207,6 @@ class ReduceLROnPlateau(LRScheduler):
         factor (float, optional): Multiplicative factor. Defaults to 0.1.
         patience (int, optional): Number of training epochs without the
             metric improvement to update the learning rate. Defaults to 10.
-        verbose (bool, optional): Print info on each update to stdout.
-            Defaults to False.
         threshold (float, optional): Threshold for considering the changes
             significant. Defaults to 1e-4.
         threshold_mode (str, optional): Should be 'rel', 'abs'.
@@ -223,8 +221,8 @@ class ReduceLROnPlateau(LRScheduler):
     """
 
     def __init__(self, monitor='val_loss', better='auto', factor=0.1,
-                 patience=10, verbose=False, threshold=1e-4,
-                 threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-8):
+                 patience=10, threshold=1e-4, threshold_mode='rel',
+                 cooldown=0, min_lr=0, eps=1e-8):
         self.monitor = monitor
         self.patience = patience
         self.better, _, _ = init_better(better, monitor)
@@ -234,7 +232,6 @@ class ReduceLROnPlateau(LRScheduler):
                                                      mode=self.better,
                                                      factor=factor,
                                                      patience=patience,
-                                                     verbose=verbose,
                                                      threshold=threshold,
                                                      threshold_mode=threshold_mode,
                                                      cooldown=cooldown,
