@@ -21,9 +21,9 @@ RUN apt-get update && \
 
 # Install PyTorch
 RUN pip3 install --no-cache-dir \
-    torch==2.1.2 \
-    torchvision==0.16.2 \
-    torchaudio==2.1.2
+    torch==2.2.2 \
+    torchvision==0.17.2 \
+    torchaudio==2.2.2
 
 # Install requirements
 COPY ./ ./
