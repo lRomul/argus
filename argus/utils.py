@@ -1,8 +1,9 @@
-import torch
 import collections
-from functools import partial
+from typing import Any, Set, List, Type, Union
 from tempfile import TemporaryFile
-from typing import List, Union, Type, Set, Any
+from functools import partial
+
+import torch
 
 from argus import types
 
@@ -210,4 +211,4 @@ class AverageMeter:
 
     def update(self, value, n: int = 1):
         self.count += n
-        self.average += (value - self.average) / self.count
+        self.average += (value - self.average * n) / self.count
