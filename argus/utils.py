@@ -224,7 +224,7 @@ class AverageMeter:
         Args:
             value: Value to update the average meter with.
             n (int, optional): Number of elements accumulated by the value.
-                Defaults to 1.
+                Should be positive. Defaults to 1.
         """
         self.count += n
         self.average += (value - self.average * n) / self.count
