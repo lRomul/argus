@@ -1,13 +1,12 @@
-import pytest
-
 import torch
-from torch import nn
+import pytest
 import torch.nn.functional as F
+from torch import nn
 
 from argus import Model
-from argus.engine import Engine
-from argus.utils import Identity
 from argus.loss import pytorch_losses
+from argus.utils import Identity
+from argus.engine import Engine
 from argus.optimizer import pytorch_optimizers
 
 
@@ -174,6 +173,17 @@ def vision_argus_model_instance(argus_model_class):
                         (1e6 * torch.rand(dtype=torch.float32,
                                           size=(42,))).tolist()])
 def one_dim_num_sequence(request):
+    return request.param
+
+
+@pytest.fixture(scope='function',
+                params=[[(10, 2), (10, 2), (15, 3)],
+                        [(0, 3), (-10, 1), (10, 1)],
+                        [(p*0.1, p) for p in range(1, 10)],
+                        [(p*0.1*(p % 2 - 1), p) for p in range(1, 10)],
+                        [(0, p) for p in range(1, 5)]
+                        ])
+def pair_num_sequence(request):
     return request.param
 
 

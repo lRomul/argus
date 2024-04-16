@@ -122,6 +122,16 @@ def test_average_meter(one_dim_num_sequence):
     assert pytest.approx(average_meter.average) == average
 
 
+def test_average_meter_multivalues(pair_num_sequence):
+    average_meter = AverageMeter()
+    for value, n in pair_num_sequence:
+        average_meter.update(value, n)
+
+    average = sum(p[0] for p in pair_num_sequence)\
+        / sum(p[1] for p in pair_num_sequence)
+    assert pytest.approx(average_meter.average) == average
+
+
 def test_inheritors():
     class ParentClass:
         pass
