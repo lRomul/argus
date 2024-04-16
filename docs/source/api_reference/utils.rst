@@ -11,3 +11,8 @@ Deep conversions
 .. autofunction:: deep_detach
 
 .. autofunction:: deep_chunk
+
+Miscellaneous
+-------------
+.. autoclass:: AverageMeter
+   :members:

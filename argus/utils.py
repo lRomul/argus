@@ -199,16 +199,32 @@ def get_device_indices(devices: List[torch.device]) -> List[int]:
 
 
 class AverageMeter:
-    """Computes and stores the average by Welford's algorithm"""
+    """Compute and store the average by Welford's algorithm.
+
+    The class instances can be used to compute the average of any sequence of
+    values, for example, to average the loss or metrics over an epoch.
+
+    Use `average` attribute to get the average value. Make sure to check the
+    meter was updated with at least one element by assessing the `count`
+    attribute. Default value of `average` is 0 before updates.
+    """
 
     def __init__(self):
         self.average = 0
         self.count: int = 0
 
     def reset(self):
+        """Reset the average meter."""
         self.average = 0
         self.count = 0
 
     def update(self, value, n: int = 1):
+        """Update the average meter with a new value.
+
+        Args:
+            value: Value to update the average meter with.
+            n (int, optional): Number of elements accumulated by the value.
+                Defaults to 1.
+        """
         self.count += n
         self.average += (value - self.average * n) / self.count
