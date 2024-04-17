@@ -16,7 +16,7 @@ Basic examples
 Advanced examples
 -----------------
 
-* `CIFAR with DPP, mixed precision and gradient accumulation. <https://github.com/lRomul/argus/blob/master/examples/cifar_advanced.py>`_
+* `CIFAR with DDP, mixed precision and gradient accumulation. <https://github.com/lRomul/argus/blob/master/examples/cifar_advanced.py>`_
 
     Single GPU training:
 
