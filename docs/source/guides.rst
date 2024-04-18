@@ -192,6 +192,44 @@ However, the model loading process may require customizations; some cases are pr
         model = load_model('/path/to/model/file', prediction_transform={'device': my_device},
                            device=my_device)
 
+4. Partial weights loading and manipulation.
+
+    Sometimes it is necessary to load only some of the model's weights, for example,
+    to reuse a pretrained backbone while utilising new heads, or load a subset of weights
+    from a saved model. It also applies to cases when the pretrained model was trained outside of
+    argus and it is required to utilise some of the pretrained weights. In that situation,
+    it is possible to perform any operations on the model or optimizer state dict during the loading process.
+
+    To do this, it is necessary to define a function which takes the original state dicts
+    and updates them as needed; then, the function should be passed to :meth:`argus.model.load_model`
+    as an argument ``change_state_dict_func``.
+
+    .. code:: python
+
+        from argus import load_model
+
+        def update_state_dict(nn_state_dict: dict,
+                              optimizer_state_dict: Optional[dict] = None):
+                # TODO custom operations on the state dict
+            return nn_state_dict, optimizer_state_dict
+
+        model = load_model('/path/to/model/file',
+                           change_state_dict_func=update_state_dict)
+
+    In order to change some weights in an already created model, you can manipulate
+    the model's state dict directly and then load it using :meth:`torch.nn.Module.load_state_dict`:
+
+    .. code:: python
+
+        from argus import Model
+
+        model: Model = ...  # The model to be manipulated
+
+        nn_state_dict = model.get_nn_module().state_dict()
+        nn_state_dict = ...  # Perform required operations on the state dict
+
+        model.get_nn_module().load_state_dict(nn_state_dict)
+
 .. seealso::
     * For more information see the :func:`argus.model.load_model` documentation.
     * More real-world examples of how to use `load_model` are available
