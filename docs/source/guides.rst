@@ -193,7 +193,6 @@ However, the model loading process may require customizations; some cases are pr
                            device=my_device)
 
 4. Partial weights loading and manipulation.
-
     Sometimes it is necessary to load only some of the model's weights, for example,
     to reuse a pretrained backbone while utilising new heads, or load a subset of weights
     from a saved model. It also applies to cases when the pretrained model was trained outside of
@@ -216,6 +215,7 @@ However, the model loading process may require customizations; some cases are pr
         model = load_model('/path/to/model/file',
                            change_state_dict_func=update_state_dict)
 
+
     In order to change some weights in an already created model, you can manipulate
     the model's state dict directly and then load it using :meth:`torch.nn.Module.load_state_dict`:
 
@@ -229,6 +229,15 @@ However, the model loading process may require customizations; some cases are pr
         nn_state_dict = ...  # Perform required operations on the state dict
 
         model.get_nn_module().load_state_dict(nn_state_dict)
+
+
+5. Model import.
+    In cases where it is required to load a model that is not a typical PyTorch argus model,
+    which cannot be loaded with :meth:`torch.load`, for example, when the model was trained
+    using another framework or saved in a different format, one can implement a converter
+    loading function that takes the path to the model file as input, reads the file and converts
+    it to an appropriate state dictionary. The function should then be passed to
+    :meth:`argus.model.load_model` as an argument ``state_load_func``.
 
 .. seealso::
     * For more information see the :func:`argus.model.load_model` documentation.
