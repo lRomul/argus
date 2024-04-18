@@ -335,3 +335,20 @@ correct answer was present among the top-K predictions.
             name_prefix = f"{state.phase}_" if state.phase else ''
             state.metrics[f'{name_prefix}{self.name}'] = accuracy
             state.metrics[f'{name_prefix}rank_{self.k}'] = rank
+
+
+.. _custom callbacks:
+
+Custom callbacks
+----------------
+
+Custom callbacks can be implemented in a similar way as custom metrics. The custom
+callback class should inherit :class:`argus.callbacks.Callback` and redefine the methods,
+triggered by the required callback actions, such as ``epoch_complete`` or ``iteration_start``.
+See details and an example in :class:`argus.callbacks.Callback` documentation.
+
+It is also possible to define custom events to trigger a custom callback action in any specific
+moment of the training or validation loop. It requires registering the necessary custom events
+in :class:`argus.engine.EventEnum` and then raising the events with :meth:`argus.engine.State.engine.raise_event`.
+This will trigger all the custom callbacks, which implement the method for the custom event handling.
+See details in an `example <https://github.com/lRomul/argus/blob/master/examples/custom_events.py>`_ code.
