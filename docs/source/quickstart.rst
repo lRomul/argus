@@ -192,5 +192,5 @@ Argus allows managing different parts combinations of a pipeline.
 
     * Override methods of :class:`argus.model.Model`. For example, :meth:`argus.model.Model.train_step`
       and :meth:`argus.model.Model.val_step`. See :ref:`train_and_val_steps` guide for details.
-    * Create a custom :class:`argus.callbacks.Callback`.
-    * Use a custom :class:`argus.metrics.Metric`.
+    * Create a custom :class:`argus.callbacks.Callback`. See :ref:`custom_callbacks` guide.
+    * Implement a custom :class:`argus.metrics.Metric`. See :ref:`custom_metrics` guide.

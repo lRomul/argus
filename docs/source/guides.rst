@@ -198,7 +198,7 @@ However, the model loading process may require customizations; some cases are pr
       `here <https://github.com/lRomul/argus/blob/master/examples/load_model.py>`_.
 
 
-.. _custom metrics:
+.. _custom_metrics:
 
 Custom metrics
 --------------
@@ -337,7 +337,7 @@ correct answer was present among the top-K predictions.
             state.metrics[f'{name_prefix}rank_{self.k}'] = rank
 
 
-.. _custom callbacks:
+.. _custom_callbacks:
 
 Custom callbacks
 ----------------
