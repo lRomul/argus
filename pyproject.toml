@@ -56,7 +56,7 @@ version = { attr = "argus.__version__" }
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["argus"]
+include = ["argus*"]
 
 [tool.ruff]
 line-length = 89
