@@ -18,8 +18,8 @@ __all__ = [
 
 
 class EventEnum(Enum):
-    """Base class for engine events. User defined custom events should also
-    inherit this class. Example of creating custom events you can find
+    """Base class for engine events. User-defined custom events should also
+    inherit this class. An example of creating custom events is available
     `here <https://github.com/lRomul/argus/blob/master/examples/custom_events.py>`_.
     """
 
