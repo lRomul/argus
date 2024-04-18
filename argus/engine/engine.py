@@ -115,7 +115,6 @@ class State:
             phase_states[self.phase] = self
         self.phase_states = phase_states
         self.logger: logging.Logger = self.model.logger
-        self.data_loader: Optional[Iterable] = None
         self.exception: Optional[BaseException] = None
         self.engine: Optional[Engine] = engine
 
@@ -224,8 +223,7 @@ class Engine:
             State: An engine state.
 
         """
-        self.state.update(data_loader=data_loader,
-                          epoch=start_epoch,
+        self.state.update(epoch=start_epoch,
                           iteration=0,
                           stopped=False)
 
@@ -250,6 +248,7 @@ class Engine:
 
                 self.raise_event(Events.EPOCH_COMPLETE)
                 self.state.epoch += 1
+            del data_loader
 
             self.raise_event(Events.COMPLETE)
 
