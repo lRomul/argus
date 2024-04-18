@@ -242,6 +242,8 @@ class Engine:
                     self.state.step_output = self.step_method(batch, self.state)
                     self.raise_event(Events.ITERATION_COMPLETE)
                     self.state.step_output = None
+                    self.state.batch = None
+                    del batch
                     if self.state.stopped:
                         break
                     self.state.iteration += 1
