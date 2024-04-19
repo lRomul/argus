@@ -192,13 +192,83 @@ However, the model loading process may require customizations; some cases are pr
         model = load_model('/path/to/model/file', prediction_transform={'device': my_device},
                            device=my_device)
 
+4. Partial weights loading and manipulation.
+    Sometimes it is necessary to load only some of the model's weights, for example,
+    to reuse a pretrained backbone while utilising new heads, or load a subset of weights
+    from a saved model. It also applies to cases when the pretrained model was trained outside of
+    argus and it is required to utilise some of the pretrained weights. In that situation,
+    it is possible to perform any operations on the model or optimizer state dict during the loading process.
+
+    To do this, it is necessary to define a function which takes the original state dicts
+    and updates them as needed; then, the function should be passed to :meth:`argus.model.load_model`
+    as an argument ``change_state_dict_func``.
+
+    .. code:: python
+
+        from argus import load_model
+
+        def update_state_dict(nn_state_dict: dict,
+                              optimizer_state_dict: Optional[dict] = None):
+                # TODO custom operations on the state dict
+            return nn_state_dict, optimizer_state_dict
+
+        model = load_model('/path/to/model/file',
+                           change_state_dict_func=update_state_dict)
+
+
+    In order to change some weights in an already created model, you can manipulate
+    the model's state dict directly and then load it using :meth:`torch.nn.Module.load_state_dict`:
+
+    .. code:: python
+
+        from argus import Model
+
+        model: Model = ...  # The model to be manipulated
+
+        nn_state_dict = model.get_nn_module().state_dict()
+        nn_state_dict = ...  # Perform required operations on the state dict
+
+        model.get_nn_module().load_state_dict(nn_state_dict)
+
+
+5. Model import.
+    In cases where it is required to load a model that is not a typical PyTorch argus model,
+    which cannot be loaded with :func:`torch.load`, for example, when the model was trained
+    using another framework or saved in a different format, one can implement a converter
+    loading function that takes the path to the model file as input, reads the file and converts
+    it to an appropriate state dictionary. The function should then be passed to
+    :meth:`argus.model.load_model` as an argument ``state_load_func``.
+
 .. seealso::
     * For more information see the :func:`argus.model.load_model` documentation.
     * More real-world examples of how to use `load_model` are available
       `here <https://github.com/lRomul/argus/blob/master/examples/load_model.py>`_.
 
+.. _model_export:
 
-.. _custom metrics:
+Model export
+------------
+
+:meth:`argus.model.Model.get_nn_module` allows to get raw PyTorch ``nn.Module`` from an argus model.
+It can be beneficial, for instance, to convert a model into another format for optimised inference.
+
+The example below shows how to get ``nn.Module`` and convert it to ONNX format with
+dynamic batch size by using :func:`torch.onnx.export`.
+
+.. code:: python
+
+    # Assuming the model has one input and one output.
+    model = load_model('/path/to/model/file', device='cpu', loss=None,
+                       optimizer=None, prediction_transform=None)
+    nn_module = model.get_nn_module()
+    sample_input = torch.ones((1, 3, 224, 224))  # Model input tensor for batch_size=1
+
+    torch.onnx.export(nn_module, sample_input, '/path/to/save/onnx/file',
+                      input_names=['input_0'], output_names=['output_0'],
+                      dynamic_axes={'input_0': {0: 'batch_size'},
+                                    'output_0': {0: 'batch_size'}})
+
+.. _custom_metrics:
 
 Custom metrics
 --------------
@@ -335,3 +405,54 @@ correct answer was present among the top-K predictions.
             name_prefix = f"{state.phase}_" if state.phase else ''
             state.metrics[f'{name_prefix}{self.name}'] = accuracy
             state.metrics[f'{name_prefix}rank_{self.k}'] = rank
+
+
+.. _custom_callbacks:
+
+Custom callbacks
+----------------
+
+Custom callbacks can be implemented in a similar way as custom metrics. The custom
+callback class should inherit :class:`argus.callbacks.Callback` and redefine the methods,
+triggered by the required callback actions, such as ``epoch_complete`` or ``iteration_start``.
+See details and an example in :class:`argus.callbacks.Callback` documentation.
+
+It is also possible to define custom events to trigger a custom callback action in any specific
+moment of the training or validation loop. It requires registering the necessary custom events
+in :class:`argus.engine.EventEnum` and then raising the events with :meth:`argus.engine.State.engine.raise_event`.
+This will trigger all the custom callbacks, which implement the method for the custom event handling.
+See details in an `example <https://github.com/lRomul/argus/blob/master/examples/custom_events.py>`_ code.
+
+.. _LR_schedulers:
+
+Learning rate schedulers
+------------------------
+
+Argus learning rate schedulers can be used to adjust the learning rate during the training process.
+There are many types provided with *argus*; for details, see :doc:`api_reference/callbacks/lr_schedulers`.
+Once created, a scheduler should be added to the list of callbacks provided to :meth:`argus.model.Model.fit` as the
+``callbacks`` argument.
+
+The schedulers are implemented as special callbacks, inheriting from :class:`argus.callbacks.LRScheduler`.
+The class can be used to create custom schedulers or adapt a PyTorch :class:`torch.optim.lr_scheduler.LRScheduler` scheduler.
+
+The following shows an example of how to use :class:`argus.callbacks.LRScheduler`:
+
+.. code-block:: python
+
+    from torch.optim.optimizer import Optimizer
+    from torch.optim.lr_scheduler import ConstantLR
+    from argus.callbacks.lr_schedulers import LRScheduler
+
+    def get_lr_scheduler(optimizer: Optimizer):
+        scheduler = torch.optim.lr_scheduler.ConstantLR(optimizer, factor=0.1, total_iters=2)
+        return scheduler
+
+    lr_scheduler = LRScheduler(get_lr_scheduler)
+
+    model.fit(...,
+              callbacks=[lr_scheduler])
+
+Similar approach can be used to combine several schedulers with :class:`torch.optim.lr_scheduler.SequentialLR`
+or :class:`torch.optim.lr_scheduler.ChainedScheduler`. See an example in the
+`sequential_lr_scheduler.py <https://github.com/lRomul/argus/blob/master/examples/sequential_lr_scheduler.py>`_ code.
