@@ -233,7 +233,7 @@ However, the model loading process may require customizations; some cases are pr
 
 5. Model import.
     In cases where it is required to load a model that is not a typical PyTorch argus model,
-    which cannot be loaded with :meth:`torch.load`, for example, when the model was trained
+    which cannot be loaded with :func:`torch.load`, for example, when the model was trained
     using another framework or saved in a different format, one can implement a converter
     loading function that takes the path to the model file as input, reads the file and converts
     it to an appropriate state dictionary. The function should then be passed to
@@ -244,6 +244,29 @@ However, the model loading process may require customizations; some cases are pr
     * More real-world examples of how to use `load_model` are available
       `here <https://github.com/lRomul/argus/blob/master/examples/load_model.py>`_.
 
+.. _model_export:
+
+Model export
+------------
+
+:meth:`argus.model.get_nn_module` is useful to get raw PyTorch ``nn.Module`` from an argus model.
+It can be beneficial, for example, to convert model in another format for optimized inference.
+
+The example below shows how to get ``nn.Module`` and convert it to ONNX format with
+dynamic batch size by using :func:`torch.onnx.export`.
+
+.. code:: python
+
+    # Assuming the model has one input and one output.
+    model = load_model('/path/to/model/file', device='cpu', loss=None,
+                       optimizer=None, prediction_transform=None)
+
+    sample_input = torch.ones((1, 3, 224, 224))  # Model input tensor for batch_size=1
+
+    torch.onnx.export(model.get_nn_module(), sample_input, '/path/to/save/onnx/file',
+                      input_names=['input_0'], output_names=['output_0'],
+                      dynamic_axes={'input_0': {0: 'batch_size'},
+                                    'output_0': {0: 'batch_size'}})
 
 .. _custom_metrics:
 
