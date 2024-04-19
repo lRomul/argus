@@ -249,8 +249,8 @@ However, the model loading process may require customizations; some cases are pr
 Model export
 ------------
 
-:meth:`argus.model.get_nn_module` is useful to get raw PyTorch ``nn.Module`` from an argus model.
-It can be beneficial, for example, to convert model in another format for optimized inference.
+:meth:`argus.model.Model.get_nn_module` allows to get raw PyTorch ``nn.Module`` from an argus model.
+It can be beneficial, for instance, to convert a model into another format for optimised inference.
 
 The example below shows how to get ``nn.Module`` and convert it to ONNX format with
 dynamic batch size by using :func:`torch.onnx.export`.
@@ -260,10 +260,10 @@ dynamic batch size by using :func:`torch.onnx.export`.
     # Assuming the model has one input and one output.
     model = load_model('/path/to/model/file', device='cpu', loss=None,
                        optimizer=None, prediction_transform=None)
-
+    nn_module = model.get_nn_module()
     sample_input = torch.ones((1, 3, 224, 224))  # Model input tensor for batch_size=1
 
-    torch.onnx.export(model.get_nn_module(), sample_input, '/path/to/save/onnx/file',
+    torch.onnx.export(nn_module, sample_input, '/path/to/save/onnx/file',
                       input_names=['input_0'], output_names=['output_0'],
                       dynamic_axes={'input_0': {0: 'batch_size'},
                                     'output_0': {0: 'batch_size'}})
