@@ -81,3 +81,12 @@ OneCycleLR
    :members:
 
 PyTorch docs on :class:`torch.optim.lr_scheduler.OneCycleLR`.
+
+LRScheduler
+-----------
+
+Base learning rate scheduler callback. It can be used as a wrapper to adapt PyTorch or other custom
+learning rate schedulers.
+
+.. autoclass:: LRScheduler
+   :members:
