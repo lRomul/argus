@@ -422,3 +422,37 @@ moment of the training or validation loop. It requires registering the necessary
 in :class:`argus.engine.EventEnum` and then raising the events with :meth:`argus.engine.State.engine.raise_event`.
 This will trigger all the custom callbacks, which implement the method for the custom event handling.
 See details in an `example <https://github.com/lRomul/argus/blob/master/examples/custom_events.py>`_ code.
+
+.. _LR_schedulers:
+
+Learning rate schedulers
+------------------------
+
+Argus learning rate schedulers can be used to adjust the learning rate during the training process.
+There are many types provided with *argus*; for details, see :doc:`api_reference/callbacks/lr_schedulers`.
+Once created, a scheduler should be added to the list of callbacks provided to :meth:`argus.model.Model.fit` as the
+``callbacks`` argument.
+
+The schedulers are implemented as special callbacks, inheriting from :class:`argus.callbacks.LRScheduler`.
+The class can be used to create custom schedulers or adapt a PyTorch :class:`torch.optim.lr_scheduler.LRScheduler` scheduler.
+
+The following shows an example of how to use :class:`argus.callbacks.LRScheduler`:
+
+.. code-block:: python
+
+    from torch.optim.optimizer import Optimizer
+    from torch.optim.lr_scheduler import ConstantLR
+    from argus.callbacks.lr_schedulers import LRScheduler
+
+    def get_lr_scheduler(optimizer: Optimizer):
+        scheduler = torch.optim.lr_scheduler.ConstantLR(optimizer, factor=0.1, total_iters=2)
+        return scheduler
+
+    lr_scheduler = LRScheduler(get_lr_scheduler)
+
+    model.fit(...,
+              callbacks=[lr_scheduler])
+
+Similar approach can be used to combine several schedulers with :class:`torch.optim.lr_scheduler.SequentialLR`
+or :class:`torch.optim.lr_scheduler.ChainedScheduler`. See an example in the
+`sequential_lr_scheduler.py <https://github.com/lRomul/argus/blob/master/examples/sequential_lr_scheduler.py>`_ code.
