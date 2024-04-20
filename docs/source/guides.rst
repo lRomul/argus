@@ -257,6 +257,9 @@ dynamic batch size by using :func:`torch.onnx.export`.
 
 .. code:: python
 
+    import torch
+    from argus import load_model
+
     # Assuming the model has one input and one output.
     model = load_model('/path/to/model/file', device='cpu', loss=None,
                        optimizer=None, prediction_transform=None)
@@ -303,10 +306,12 @@ The first attribute specifies the name of the evaluation metric, while the secon
 (`max`) or a lower value (`min`) means improvement for this metric.
 
 The code below demonstrates a top-K accuracy metric, which implements the required methods.
+:class:`argus.utils.AverageMeter` used to compute the average metric value over the predictions.
 
 .. code-block:: python
 
     from argus.metrics import Metric
+    from argus.utils import AverageMeter
 
 
     class TopKAccuracy(Metric):
@@ -321,26 +326,24 @@ The code below demonstrates a top-K accuracy metric, which implements the requir
 
         def __init__(self, k: int = 5):
             self.k = k
-            self.correct = 0
-            self.count = 0
+            self.accuracy_meter = AverageMeter()
             # Parametrized name allows having several instances of the metric with different k values
             self.name = f'top_{self.k}_accuracy'
 
         def reset(self):
-            self.correct = 0
-            self.count = 0
+            self.accuracy_meter.reset()
 
         def update(self, step_output: dict):
             indices = torch.topk(step_output['prediction'], k=self.k, dim=1)[1]
             target = step_output['target'].unsqueeze(1)
-            correct = torch.any(indices == target, dim=1)
-            self.correct += torch.sum(correct).item()
-            self.count += correct.shape[0]
+            n_correct = torch.sum(torch.any(indices == target, dim=1)).item()
+            n_items = target.shape[0]
+            self.accuracy_meter.update(n_correct, n=n_items)
 
         def compute(self) -> float:
-            if self.count == 0:
+            if self.accuracy_meter.count == 0:
                 raise RuntimeError('Must be at least one example for computation')
-            return self.correct / self.count
+            return self.accuracy_meter.average
 
 
 In some more advanced use cases, it may be required to create a custom metric to
@@ -359,9 +362,10 @@ correct answer was present among the top-K predictions.
 
     from argus.engine import State
     from argus.metrics import Metric
+    from argus.utils import AverageMeter
 
 
-    class TopKAccuracy(Metric):
+    class TopKAccuracyRank(Metric):
         """Calculate the top-K accuracy for multiclass classification.
 
         It also reports the average rank of the correct top-K predictions.
@@ -374,34 +378,32 @@ correct answer was present among the top-K predictions.
 
         def __init__(self, k: int = 5):
             self.k = k
-            self.correct = 0
-            self.rank = 0
-            self.count = 0
+            self.accuracy_meter = AverageMeter()
+            self.rank_meter = AverageMeter()
             self.name = f'top_{self.k}_accuracy'
 
         def reset(self):
-            self.correct = 0
-            self.rank = 0
-            self.count = 0
+            self.accuracy_meter.reset()
+            self.rank_meter.reset()
 
         def update(self, step_output: dict):
             indices = torch.topk(step_output['prediction'], k=self.k, dim=1)[1]
             target = step_output['target'].unsqueeze(1)
-            correct = torch.any(indices == target, dim=1)
-            rank = torch.nonzero(indices == target)[:, 1]
-            self.correct += torch.sum(correct).item()
-            self.rank += torch.sum(rank).item()
-            self.count += correct.shape[0]
+            n_correct = torch.sum(torch.any(indices == target, dim=1)).item()
+            rank_sum = torch.sum(torch.nonzero(indices == target)[:, 1]).item()
+            n_items = target.shape[0]
+            self.accuracy_meter.update(n_correct, n=n_items)
+            self.rank_meter.update(rank_sum, n=n_items)
 
         def compute(self) -> float:
-            if self.count == 0:
+            if self.accuracy_meter.count == 0:
                 raise RuntimeError('Must be at least one example for computation')
-            return self.correct / self.count
+            return self.accuracy_meter.average
 
         def epoch_complete(self, state: State):
             with torch.no_grad():
                 accuracy = self.compute()
-            rank = self.rank / self.count + 1.0  # +1.0 because ranks are 1-indexed
+            rank = self.rank_meter.average + 1.0  # +1.0 because ranks are 1-indexed
             name_prefix = f"{state.phase}_" if state.phase else ''
             state.metrics[f'{name_prefix}{self.name}'] = accuracy
             state.metrics[f'{name_prefix}rank_{self.k}'] = rank
