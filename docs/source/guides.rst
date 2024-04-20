@@ -147,7 +147,7 @@ The simplest user case is allows to load a model with saved parameters and compo
 
 However, the model loading process may require customizations; some cases are provided below.
 
-1. Load the model to a specified device.
+1. Load the model to a specific device.
     Just provide the desired device name or a list of devices.
 
     .. code:: python
@@ -156,9 +156,10 @@ However, the model loading process may require customizations; some cases are pr
         model = load_model('/path/to/model/file', device='cuda:0')
 
     The feature is helpful if one wants to load the model to a specific device for training or inference
-    and also to load the model on a machine that does not have the device, which was specified before the
-    model file was saved. For example, if the model was saved with ``device=='cuda:1'``,
-    while the target machine is equipped with the only GPU, so, ``device=='cuda:0'`` is the only valid option.
+    and also to load the model on a machine that does not have the device, which was used before the
+    model file was saved. For example, if a model was saved with ``device='cuda:1'`` but the target machine
+    only has one GPU, one would need to load the model on that GPU. In this case, the device
+    should be specified as ``device='cuda:0'``, as it is the only valid GPU option.
 
     .. note::
 
