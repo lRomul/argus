@@ -100,6 +100,7 @@ if __name__ == "__main__":
 ```
 
 More examples you can find [here](https://pytorch-argus.readthedocs.io/en/latest/examples.html).
+Additional guides on how to customize and use argus component can be found in [Guides](https://pytorch-argus.readthedocs.io/en/latest/guides.html) section.
 
 
 ## Why this name, Argus?
