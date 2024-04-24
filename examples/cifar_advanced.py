@@ -230,7 +230,7 @@ if __name__ == "__main__":
     if distributed:
         @argus.callbacks.on_epoch_complete
         def schedule_sampler(state):
-            state.data_loader.sampler.set_epoch(state.epoch + 1)
+            train_loader.sampler.set_epoch(state.epoch + 1)
         callbacks += [schedule_sampler]
 
     model.fit(train_loader,
